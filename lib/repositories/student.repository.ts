@@ -1,0 +1,78 @@
+import { db } from "@/lib/db"
+import type { Prisma } from "@/app/generated/prisma/client"
+import type {
+  CreateStudentData,
+  IStudentRepository,
+  StudentFilters,
+  StudentListParams,
+  StudentListResult,
+  UpdateStudentData,
+} from "@/lib/repositories/interfaces"
+
+export class PrismaStudentRepository implements IStudentRepository {
+  async findMany({
+    search,
+    objetivo,
+    nivel,
+    modalidad,
+    isActive,
+    cursor,
+    limit,
+  }: StudentListParams): Promise<StudentListResult> {
+    const where: Prisma.StudentWhereInput = {
+      isActive,
+      objetivo,
+      nivel,
+      modalidad,
+      ...(search && {
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+          { dni: { contains: search } },
+        ],
+      }),
+    }
+
+    const items = await db.student.findMany({
+      where,
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    })
+
+    const hasMore = items.length > limit
+    const page = hasMore ? items.slice(0, limit) : items
+
+    return {
+      items: page,
+      nextCursor: hasMore ? page[page.length - 1].id : null,
+    }
+  }
+
+  findById(id: string) {
+    return db.student.findUnique({ where: { id } })
+  }
+
+  findByDni(dni: string) {
+    return db.student.findUnique({ where: { dni } })
+  }
+
+  create(data: CreateStudentData) {
+    return db.student.create({ data })
+  }
+
+  update(id: string, data: UpdateStudentData) {
+    return db.student.update({ where: { id }, data })
+  }
+
+  deactivate(id: string) {
+    return db.student.update({ where: { id }, data: { isActive: false } })
+  }
+
+  findAllActive({ objetivo, nivel, modalidad }: StudentFilters) {
+    return db.student.findMany({
+      where: { isActive: true, objetivo, nivel, modalidad },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    })
+  }
+}
