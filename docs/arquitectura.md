@@ -12,8 +12,8 @@
 |---|---|---|---|
 | Frontend + API | **Next.js** (App Router) | **16.3.1** ✅ | Un solo repo, un solo deploy. Server Components para lectura, Client Components para interactividad. |
 | Base de datos | **PostgreSQL** (Neon) | latest | Modelo de datos relacional. Integridad referencial nativa, JOINs eficientes, FK constraints reales. |
-| ORM | **Prisma** | 6.x | Type-safety en queries, migraciones controladas, schema como fuente de verdad. |
-| Autenticación | **Auth.js v5** (NextAuth) | 5.x | Solo para el trainer (admin). Alumnos acceden por DNI sin sesión formal. |
+| ORM | **Prisma** | **7.9.1** ✅ | Type-safety en queries, migraciones controladas, schema como fuente de verdad. Requiere driver adapter (`@prisma/adapter-pg`) desde v7. |
+| Autenticación | **Auth.js v5** (NextAuth) | 5.0.0-beta.32 ⚠️ | Solo para el trainer (admin). Alumnos acceden por DNI sin sesión formal. **Riesgo:** todavía en beta — vigilar el lanzamiento de una versión estable antes de un release de producción. |
 | Validación | **Zod** | 4.x | Validación de inputs en API Routes y formularios. Single source of truth para los schemas. |
 | Estilos | **Tailwind CSS v4** | 4.x | CSS nativo con variables. Sin `tailwind.config.js` — la config vive en `globals.css`. |
 | Componentes UI | **shadcn/ui** | latest | Componentes accesibles sobre Radix UI, 100% customizables, tokens mapeados a DESIGN.md. |
@@ -46,7 +46,8 @@
 ├── components/
 │   ├── ui/                   # Componentes shadcn/ui (generados por CLI)
 │   ├── admin/                # Componentes de negocio del panel trainer
-│   └── portal/               # Componentes de negocio del portal alumno
+│   ├── portal/                # Componentes de negocio del portal alumno
+│   └── shared/                # Componentes usados por admin Y portal (ej. VideoDialog)
 ├── lib/
 │   ├── db/                   # Cliente Prisma (singleton)
 │   ├── services/             # Lógica de negocio (capa de dominio)
@@ -93,6 +94,7 @@ phone                 TEXT
 objetivo              ENUM        (hipertrofia, fuerza, descenso)
 nivel                 ENUM        (principiante, intermedio, avanzado)
 modalidad             ENUM        (gimnasio, casa)
+membership_starts_at  DATE
 payment_expires_at    DATE
 health_notes          TEXT
 is_active             BOOLEAN     DEFAULT true      ← soft delete
@@ -421,46 +423,51 @@ El archivo `app/globals.css` traduce los tokens de `DESIGN.md` al sistema de var
 
 @layer base {
   :root {
-    /* Brand — del DESIGN.md */
-    --primary: #e60023;           /* colors.primary — Pinterest Red */
-    --primary-foreground: #ffffff; /* colors.on-primary */
+    /* Brand — del DESIGN.md, extraído del logo Santiago Ramón */
+    --primary: #f20f38;            /* colors.brand */
+    --primary-foreground: #ffffff; /* colors.on-brand */
+    --destructive: #8c041d;        /* colors.brand-deep */
 
     /* Superficies */
-    --background: #fbfbf9;        /* colors.surface-soft */
-    --card: #f6f6f3;              /* colors.surface-card */
-    --card-foreground: #000000;   /* colors.ink */
+    --background: #ffffff;         /* colors.canvas */
+    --card: #f2f2f2;               /* colors.surface-soft */
+    --card-foreground: #0d0d0d;    /* colors.ink */
 
     /* Texto */
-    --foreground: #33332e;        /* colors.body */
-    --muted-foreground: #62625b;  /* colors.mute */
+    --foreground: #0d0d0d;         /* colors.ink */
+    --muted-foreground: #6b6b6b;   /* colors.mute */
 
     /* Bordes */
-    --border: #dadad3;            /* colors.hairline */
-    --input: #dadad3;
-    --ring: #e60023;              /* focus ring en rojo de marca */
+    --border: #e5e5e5;             /* colors.hairline */
+    --input: #e5e5e5;
+    --ring: #f20f38;               /* focus ring en rojo de marca */
 
-    /* Tipografía — Inter sustituye Pin Sans */
+    /* Tipografía */
     --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+    --font-display: 'Oswald', -apple-system, system-ui, sans-serif; /* titulares y botones */
 
-    /* Radio — del DESIGN.md rounded tokens */
-    --radius: 1rem;               /* rounded.md = 16px */
+    /* Radio — del DESIGN.md rounded tokens (sin cambios respecto a lo ya implementado) */
+    --radius: 1rem;                /* rounded.md = 16px */
   }
 }
 ```
 
-> **Nota**: `--radius` de shadcn por defecto es `0.5rem`. Lo sobreescribimos a `1rem` para respetar el sistema de `rounded.md` (16px) de `DESIGN.md`. Los modales y cards grandes usan `rounded-[2rem]` (`rounded.lg` = 32px).
+> **Nota**: `--radius` se mantiene en `1rem`, igual a lo ya construido — el rediseño de paleta no reinicia el radio ya implementado. Modales usan `rounded-[1.5rem]` (`rounded.lg` = 24px).
 
 ### shadcn/ui → DESIGN.md mapping de componentes
 
 | DESIGN.md component | shadcn/ui component | Customización |
 |---|---|---|
-| `button-primary` | `<Button>` | variante `default`, color `--primary` |
-| `button-secondary` | `<Button variant="secondary">` | bg `--card` |
-| `text-input` | `<Input>` | radius `--radius` |
-| `modal-card` | `<Dialog>` | radius `2rem` |
-| `filter-chip` | `<Badge variant="outline">` | pill shape |
-| `pin-card` → exercise card | `<Card>` | sin padding interno |
-| Primary nav | `<Sidebar>` (admin) / custom (portal) | — |
+| `button-primary` | `<Button>` | variante `default`, color `--primary`, fuente `--font-display` |
+| `button-secondary` | `<Button variant="secondary">` | borde `--border` |
+| `button-destructive` | `<Button variant="destructive">` | color `--destructive` |
+| `text-input` | `<Input>` | radius `rounded.sm` (8px), foco `--ring` |
+| `modal-card` | `<Dialog>` | radius `1.5rem` |
+| `badge-neutral` / `badge-success` / `badge-overdue` | `<Badge>` | variantes por estado de cuota/progreso |
+| `card` / `card-soft` → alumno, ejercicio, día de rutina | `<Card>` | fondo `--card` en variante soft |
+| `data-table-row` | `<Table>` | zebra opcional con `--card` |
+| `sidebar-nav` | `<Sidebar>` (admin) | fondo `--foreground` (negro), item activo `--primary` |
+| `portal-header` | custom (portal) | fondo negro, nombre del alumno en `--font-display` |
 
 ---
 

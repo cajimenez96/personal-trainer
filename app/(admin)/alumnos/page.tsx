@@ -74,7 +74,12 @@ export default async function AlumnosPage({
       </Suspense>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Alumnos</h1>
-        <Button render={<Link href="/alumnos/nuevo" />}>Nuevo alumno</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" render={<Link href="/alumnos/importar" />}>
+            Importar CSV
+          </Button>
+          <Button render={<Link href="/alumnos/nuevo" />}>Nuevo alumno</Button>
+        </div>
       </div>
 
       <form className="flex flex-wrap items-end gap-3" method="get">
@@ -158,7 +163,7 @@ export default async function AlumnosPage({
                 <TableCell>{student.nivel ? NIVEL_LABEL[student.nivel] : "—"}</TableCell>
                 <TableCell>
                   {student.paymentExpiresAt ? (
-                    <Badge variant={isExpired(student.paymentExpiresAt) ? "destructive" : "secondary"}>
+                    <Badge variant={isExpired(student.paymentExpiresAt) ? "destructive" : "success"}>
                       {formatDate(student.paymentExpiresAt)}
                     </Badge>
                   ) : (

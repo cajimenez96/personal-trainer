@@ -54,8 +54,18 @@ export async function updateStudentAction(
     return { errors, values: raw }
   }
 
-  const { firstName, lastName, email, phone, objetivo, nivel, modalidad, paymentExpiresAt, healthNotes } =
-    parsed.data
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    objetivo,
+    nivel,
+    modalidad,
+    membershipStartsAt,
+    paymentExpiresAt,
+    healthNotes,
+  } = parsed.data
 
   await studentService.update(id, {
     firstName,
@@ -65,6 +75,7 @@ export async function updateStudentAction(
     objetivo: objetivo ?? null,
     nivel: nivel ?? null,
     modalidad: modalidad ?? null,
+    membershipStartsAt: membershipStartsAt ?? null,
     paymentExpiresAt: paymentExpiresAt ?? null,
     healthNotes: healthNotes ?? null,
   })
@@ -75,4 +86,9 @@ export async function updateStudentAction(
 export async function deactivateStudentAction(id: string) {
   await studentService.deactivate(id)
   redirect("/alumnos?deactivated=1")
+}
+
+export async function reactivateStudentAction(id: string) {
+  await studentService.reactivate(id)
+  redirect(`/alumnos/${id}?reactivated=1`)
 }

@@ -40,8 +40,23 @@ export class StudentService {
     return this.studentRepo.deactivate(id)
   }
 
+  reactivate(id: string) {
+    return this.studentRepo.reactivate(id)
+  }
+
   listAllActive(filters: StudentFilters) {
     return this.studentRepo.findAllActive(filters)
+  }
+
+  countActive() {
+    return this.studentRepo.countActive()
+  }
+
+  // "Expiring soon" includes already-overdue students — both need the trainer's attention.
+  countExpiringSoon(withinDays: number) {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() + withinDays)
+    return this.studentRepo.countExpiringSoon(cutoff)
   }
 
   async create(data: CreateStudentData) {

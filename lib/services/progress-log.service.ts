@@ -1,5 +1,6 @@
 import type {
   IProgressLogRepository,
+  ProgressHistoryFilters,
   UpsertProgressLogData,
 } from "@/lib/repositories/interfaces"
 import { PrismaProgressLogRepository } from "@/lib/repositories/progress-log.repository"
@@ -19,6 +20,10 @@ export class ProgressLogService {
 
   getForToday(studentId: string) {
     return this.progressLogRepo.findForDay(studentId, todayUTC())
+  }
+
+  getHistory(studentId: string, filters: ProgressHistoryFilters) {
+    return this.progressLogRepo.findByStudent(studentId, filters)
   }
 }
 

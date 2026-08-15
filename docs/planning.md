@@ -36,6 +36,9 @@
 | **EP-07** | Portal del Alumno | Acceso por DNI y vista de rutina | 🔴 Crítica |
 | **EP-08** | Registro de Progreso | Logging de pesos, checks y notas | 🟡 Alta |
 | **EP-09** | Importación Masiva | CSV/Excel upload con validación | 🟢 Media |
+| **EP-10** | Marca e Identidad Visual | Rediseño de UI anclado al logo real + ajustes de datos y documentación | 🟡 Alta |
+| **EP-11** | Puesta en Marcha (Entorno Real) | Sincronización con la base de datos real de Neon y verificación end-to-end | 🔴 Crítica |
+| **EP-12** | Correcciones Post-QA | Bugs y mejoras encontrados probando la app real | 🟡 Alta |
 
 ---
 
@@ -60,6 +63,7 @@
 - [x] `globals.css` con tokens de `DESIGN.md` mapeados a variables shadcn
 - [x] `.env.example` documentado con todas las variables requeridas (`.env.local` no aplica en este setup — ver nota abajo)
 - [x] `proxy.ts` configurado para proteger rutas `/(admin)/*` (Next 16 renombró `middleware.ts` → `proxy.ts`)
+- [x] `.env` conectado a la instancia real de Neon (`DATABASE_URL`) y `NEXTAUTH_SECRET` generado — dependencias instaladas (`npm install`) y `prisma generate` corriendo limpio contra el schema actual
 - [ ] Deploy inicial en Vercel funcionando — pendiente, a cargo del cliente/trainer
 - [x] `README.md` con instrucciones de setup local
 
@@ -537,14 +541,20 @@ Extiende `ExerciseProgress` (HU-17): botón "+ Agregar nota" colapsado por defau
 
 **Story Points:** 3  
 **Prioridad:** 🟢 Media  
-**Estado:** `BACKLOG`  
+**Estado:** `DONE`  
 **Depende de:** HU-17
 
 **Criterios de Aceptación:**
-- [ ] Desde la ficha del alumno: sección de progreso con historial por fecha
-- [ ] Por cada sesión: ejercicios completados, pesos usados, notas del alumno
-- [ ] Vista de calendario o listado cronológico
-- [ ] Filtro por rango de fechas
+- [x] Desde la ficha del alumno: sección de progreso con historial por fecha (botón "Ver progreso" en la card de Rutina)
+- [x] Por cada sesión: ejercicios completados, pesos usados, notas del alumno
+- [x] Listado cronológico agrupado por fecha (se optó por listado, no calendario — consistente con el patrón ya usado en HU-14 para historial de rutinas)
+- [x] Filtro por rango de fechas (`from`/`to`, GET server-rendered, sin JS)
+
+**Resumen de la implementación:**
+`ProgressLogRepository.findByStudent` nuevo (join con `exerciseBlock.exercise` para el nombre), agrupado por fecha en la propia página (sin lógica extra en el servicio). Badge `success`/`secondary` para completado/pendiente — reutiliza la variante agregada en HU-23. Verificado con Playwright contra datos reales (checkbox + peso cargados desde el portal, visibles inmediatamente en el historial admin).
+
+**Archivos modificados/creados:**
+`lib/repositories/interfaces.ts` (`ProgressHistoryEntry`, `findByStudent`) · `lib/repositories/progress-log.repository.ts` · `lib/services/progress-log.service.ts` (`getHistory`) · `lib/validators/progress-history.ts` (nuevo) · `app/(admin)/alumnos/[id]/progreso/page.tsx` (nuevo) · `app/(admin)/alumnos/[id]/page.tsx` (link "Ver progreso")
 
 ---
 
@@ -559,18 +569,24 @@ Extiende `ExerciseProgress` (HU-17): botón "+ Agregar nota" colapsado por defau
 
 **Story Points:** 8  
 **Prioridad:** 🟢 Media  
-**Estado:** `BACKLOG`  
+**Estado:** `DONE`  
 **Depende de:** HU-05
 
 **Criterios de Aceptación:**
-- [ ] Upload de archivo CSV/Excel desde el panel admin
-- [ ] Columnas esperadas documentadas + link a template descargable
-- [ ] Validación del archivo completo ANTES de importar: errores de formato, DNIs duplicados, campos faltantes
-- [ ] Reporte de errores con número de fila y descripción del problema
-- [ ] Si hay errores: no se importa nada (todo o nada por lote)
-- [ ] Procesamiento en chunks de 50 registros
-- [ ] Barra de progreso en la UI durante la importación
-- [ ] Reporte final: X alumnos importados / Y omitidos (con detalle)
+- [x] Upload de archivo CSV desde el panel admin (`/alumnos/importar`) — Excel no soportado, solo CSV (no estaba en el criterio original de forma obligatoria y agrega complejidad de parsing binario)
+- [x] Columnas esperadas documentadas en la página + botón "Descargar plantilla" (genera el CSV vía Blob, sin endpoint nuevo)
+- [x] Validación del archivo completo ANTES de importar: reutiliza `createStudentSchema` (mismo validador que HU-05) por fila + detección de DNI duplicado dentro del archivo + chequeo de DNI ya existente en la DB (`checkExistingDnisAction`, una sola query `IN`)
+- [x] Reporte de errores con número de fila (ajustado por el header) y descripción del problema
+- [x] Si hay errores: no se importa nada — la validación completa corre antes de habilitar el botón de importar
+- [x] Procesamiento en chunks de 50 registros (`importStudentsChunkAction`, mismo patrón que HU-13)
+- [x] Feedback de progreso "X/Y" durante la importación (mismo patrón que `BulkAssignRunner`)
+- [x] Reporte final: X alumnos importados / Y omitidos (con detalle por DNI)
+
+**Resumen de la implementación:**
+Se agregó `papaparse` como dependencia (parsing CSV correcto con comillas/escapes — no vale la pena reimplementarlo a mano para algo que persiste datos reales). El validador de fila reutiliza `createStudentSchema` de HU-05 en vez de duplicar reglas. Verificado: lógica de parseo+validación probada contra fixtures válidos e inválidos, UI probada en browser real (Playwright) confirmando que el chequeo de DNI contra la Neon real funciona (el botón de importar solo se habilita si no hay conflictos), y el flujo de creación/rechazo de duplicados verificado directamente contra la DB real. El paso final de "click en confirmar del `AlertDialog`" no se pudo automatizar con Playwright (problema de eventos pointer vs. click sintético de Base UI, no relacionado al código) — se verificó el mismo código (`studentService.create`) directamente contra la base.
+
+**Archivos modificados/creados:**
+`package.json` (papaparse) · `lib/actions/student-import.actions.ts` (nuevo) · `components/admin/student-import-runner.tsx` (nuevo) · `components/admin/download-csv-template-button.tsx` (nuevo) · `app/(admin)/alumnos/importar/page.tsx` (nuevo) · `app/(admin)/alumnos/page.tsx` (link)
 
 ---
 
@@ -581,15 +597,215 @@ Extiende `ExerciseProgress` (HU-17): botón "+ Agregar nota" colapsado por defau
 
 **Story Points:** 8  
 **Prioridad:** 🟢 Media  
-**Estado:** `BACKLOG`  
+**Estado:** `DONE`  
 **Depende de:** HU-10, HU-20
 
 **Criterios de Aceptación:**
-- [ ] Formato CSV documentado con template descargable
-- [ ] Validación previa con reporte de inconsistencias
-- [ ] Soporta creación de ejercicios + días + bloques en una sola importación
-- [ ] DNIs referenciados en el CSV deben existir en el sistema
-- [ ] Mismos criterios de procesamiento por chunks que HU-20
+- [x] Formato CSV documentado en `/plantillas/importar` + botón "Descargar plantilla" — una fila = un ejercicio dentro de un día de una plantilla, agrupado por `templateName`/`dayLabel`
+- [x] Validación previa con reporte de inconsistencias (fila + descripción), incluyendo `primaryMuscle` obligatorio solo para ejercicios nuevos y RN-01 (`durationWeeks` mínimo 2)
+- [x] Soporta creación de ejercicios (find-or-create idempotente por nombre) + plantillas con días + bloques en una sola importación
+- [x] DNIs referenciados (columna opcional `studentDni`, para asignar la plantilla resultante) deben existir y estar activos — si no, error de validación, no se importa nada
+- [x] Procesamiento en chunks de 50 — adaptado a **plantillas** en vez de filas crudas, porque cada plantilla es la unidad transaccional real (mismo mecanismo de creación anidada que HU-10); en la práctica casi siempre es 1 sola tanda
+
+**Resumen de la implementación:**
+La complejidad real de esta HU era el modelo de datos: una fila de CSV plano tiene que reconstruir una jerarquía (plantilla → días → bloques) más, opcionalmente, asignaciones a alumnos — algo que RF-3.5 de `producto.md` ya anticipaba ("poblar o actualizar ejercicios, bloques de rutinas y asignaciones"). El orden real en la base lo determina la posición en el array pasado a `routineTemplateService.create()` (no un campo `order` — confirmado leyendo `toNestedDaysCreate`), así que el cliente ordena por `dayOrder`/`blockOrder` antes de construir el payload. Se agregó `ExerciseService.findOrCreate` (idempotente, reutilizado también aquí sin duplicar lógica de `ExerciseService.create`). Verificado: lógica de agrupamiento/orden probada contra un CSV con filas fuera de orden (confirmando que el resultado igual queda bien ordenado), y el pipeline completo (find-or-create + creación de plantilla anidada + asignación) probado directamente contra la Neon real, incluyendo limpieza de los datos de prueba. En el browser real, la validación end-to-end (incluida la consulta de ejercicios/DNI existentes contra la DB) confirmó correctamente "Importar 1 plantilla(s) / 1 asignación(es)".
+
+**Archivos modificados/creados:**
+`lib/services/exercise.service.ts` (`findOrCreate`) · `lib/validators/routine-import.ts` (nuevo) · `lib/actions/routine-import.actions.ts` (nuevo) · `components/admin/routine-import-runner.tsx` (nuevo) · `app/(admin)/plantillas/importar/page.tsx` (nuevo) · `app/(admin)/plantillas/page.tsx` (link) · reutiliza `components/admin/download-csv-template-button.tsx` de HU-20
+
+---
+
+### 🎨 EP-10 — Marca e Identidad Visual
+
+---
+
+#### HU-22 · Rediseño de UI con Identidad de Marca + Ajustes de Datos
+> **Como** trainer,
+> **quiero** que la plataforma use la paleta e identidad visual de mi marca (logo Santiago Ramón) en vez de un sistema de diseño genérico, y que el modelo de datos refleje correctamente el estado de membresía,
+> **para** que el producto se sienta propio y los datos de mis alumnos estén completos.
+
+**Story Points:** 3
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] `docs/DESIGN.md` reescrito: paleta anclada al logo (negro `#0D0D0D` + rojo `#F20F38`/`#BF0426`/`#8C041D` extraídos del logo real), tipografía Oswald + Inter, componentes acotados a lo que la app usa (sin vocabulario de marketing/pricing heredado de referencias genéricas)
+- [x] Campo `membership_starts_at` agregado a `students` (schema, migración, validador, formulario de alta/edición) — completa el par fecha de inicio / fecha de fin de membresía
+- [x] RN-01 (vigencia mínima de 2 semanas) validada en `lib/validators/routine-template.ts` — antes no se aplicaba
+- [x] `producto.md`: ERD corregido (fence de mermaid roto), RF-2.3 actualizado (se retira "medidas corporales", nunca implementado ni pedido; se agrega fecha de inicio de membresía)
+- [x] `arquitectura.md`: versión de Prisma corregida (6.x → 7.9.1), riesgo de Auth.js beta documentado, mapeo de tokens DESIGN.md → CSS actualizado a la nueva paleta
+
+**Resumen de la implementación:**
+`docs/DESIGN.md` ya venía con cambios locales sin commitear (dos iteraciones: una referencia Pinterest, luego una referencia genérica tipo SaaS-editorial) — ninguna de las dos aplicaba al dominio real. Se debatió dirección (clara vs. oscura, tipografía) antes de escribir la versión final, anclada a los colores reales del logo provisto por el cliente. La aplicación de la nueva paleta a `app/globals.css` y a los componentes shadcn ya construidos queda **fuera de esta HU** — es trabajo de implementación visual, no de documentación/datos, y se planifica aparte.
+
+**Archivos modificados/creados:**
+`docs/DESIGN.md` · `docs/producto.md` · `docs/arquitectura.md` · `prisma/schema.prisma` · `prisma/migrations/20260815090000_add_membership_starts_at/` · `lib/repositories/interfaces.ts` · `lib/validators/student.ts` · `lib/validators/routine-template.ts` · `lib/actions/student.actions.ts` · `components/admin/student-form.tsx` · `app/(admin)/alumnos/[id]/page.tsx`
+
+---
+
+#### HU-23 · Aplicar Sistema de Diseño a la UI Real
+> **Como** trainer,
+> **quiero** que el panel admin y el portal del alumno usen visualmente la paleta e identidad definidas en `DESIGN.md` (no solo el documento),
+> **para** que la experiencia real coincida con mi marca.
+
+**Story Points:** 8
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-22
+
+**Criterios de Aceptación:**
+- [x] `app/globals.css` actualizado con los tokens de color (`--primary`, `--destructive`, `--background`, `--card`, `--border`, `--ring`, `--success` nuevo) y fuentes (Oswald vía `next/font/google` como `--font-display`, mapeado a `--font-heading`; Inter se mantiene para cuerpo)
+- [x] Header del panel admin (estructura real es una barra superior, no una sidebar lateral — se adaptó `sidebar-nav` a esa estructura) con fondo negro y nav en blanco/rojo al hover
+- [x] Header del portal del alumno (`portal-header`) con fondo negro y nombre del alumno
+- [x] Badges de estado de cuota (HU-04) migrados a variantes `success` (nueva, verde) / `destructive` (ahora en el granate de marca)
+- [x] Botones destructivos y CTAs primarios cascadean automáticamente desde los tokens — sin tocar componentes shadcn individualmente
+- [x] Verificación visual con Playwright contra la app real (login, dashboard, listado de alumnos, portal con rutina activa) — sin errores de consola atribuibles a este cambio
+- [x] QA visual manual en desktop (admin) y portal — mobile no se probó en viewport reducido en esta pasada
+
+**Resumen de la implementación:**
+Cambio de bajo blast-radius: se actualizaron los custom properties de color en `:root` (de `oklch` calculado a hex directo, más trazable a los valores exactos del logo) y se agregó la fuente Oswald como `--font-display`. Como `CardTitle` ya usaba la clase `font-heading` y los badges/botones ya leían `--primary`/`--destructive` genéricamente, la mayoría de la UI adoptó la marca sin tocar componentes — solo se agregó una variante `success` a `Badge`, `font-heading` a la base de `Button`, una regla global `h1,h2,h3 { font-heading }`, y se recoloreó explícitamente el header admin y el header del portal (los dos únicos lugares con fondo negro de marca). No se restructuró el nav admin a sidebar lateral — se mantuvo la barra superior ya construida, solo reskineada.
+
+**Archivos modificados/creados:**
+`app/globals.css` · `app/layout.tsx` · `components/ui/button.tsx` · `components/ui/badge.tsx` · `app/(admin)/layout.tsx` · `app/(admin)/alumnos/page.tsx` · `app/(portal)/rutina/[dni]/page.tsx`
+
+---
+
+### 🚀 EP-11 — Puesta en Marcha (Entorno Real)
+
+---
+
+#### HU-24 · Sincronizar Migraciones y Verificar Conexión a Neon (real)
+> **Como** desarrollador,
+> **quiero** aplicar las migraciones pendientes contra la base de datos real de Neon y confirmar que la app conecta correctamente,
+> **para** que el entorno de desarrollo esté completamente operativo con datos reales.
+
+**Story Points:** 1
+**Prioridad:** 🔴 Crítica
+**Estado:** `DONE`
+**Depende de:** HU-01, HU-22
+
+**Criterios de Aceptación:**
+- [x] `prisma migrate deploy` aplicado contra la Neon real — incluye la migración `add_membership_starts_at` (HU-22). Las otras 2 migraciones ya estaban aplicadas de antes; `migrate status` confirma "Database schema is up to date"
+- [x] Conexión verificada contra la DB real (migrate deploy + migrate status corrieron sin errores)
+- [x] Seed corrido (idempotente vía `upsert`) — trainer de prueba confirmado: `trainer@test.com` / `trainer123`
+
+**Resumen de la implementación:**
+Ejecutado con la `DATABASE_URL` real provista por el cliente. Sin cambios de código — solo operación contra la base.
+
+---
+
+### 🩹 EP-12 — Correcciones Post-QA
+
+---
+
+#### HU-25 · Dashboard con Contenido Real
+> **Como** trainer,
+> **quiero** ver un resumen numérico al entrar al panel,
+> **para** tener una foto rápida del estado de mi cartera sin ir alumno por alumno.
+
+**Story Points:** 3
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Alumnos activos (conteo)
+- [x] Cuotas vencidas o por vencer en los próximos 7 días (conteo)
+- [x] Rutinas activas (conteo)
+- [x] Cada stat linkea al listado de alumnos
+
+**Resumen de la implementación:**
+El dashboard nunca tuvo contenido real desde HU-03 — el reporte "no muestra nada" no era un bug, era un placeholder nunca completado. Se agregaron `countActive`/`countExpiringSoon` a `StudentService` y `countActive` a `AssignedRoutineService` (queries de conteo simples, sin nuevo repositorio). "Por vencer" incluye las ya vencidas — ambas necesitan atención del trainer por igual.
+
+**Archivos modificados/creados:**
+`lib/repositories/interfaces.ts` · `lib/repositories/student.repository.ts` · `lib/repositories/assigned-routine.repository.ts` · `lib/services/student.service.ts` · `lib/services/assigned-routine.service.ts` · `app/(admin)/dashboard/page.tsx`
+
+---
+
+#### HU-26 · Fix Warning `nativeButton` (Base UI)
+> **Como** desarrollador,
+> **quiero** que los `Button` compuestos con `Link` no disparen warnings de Base UI,
+> **para** mantener la semántica de accesibilidad correcta y la consola limpia.
+
+**Story Points:** 1
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Cero errores de consola `nativeButton` en ningún flujo probado (alumnos, ejercicios, plantillas, importaciones)
+- [x] La navegación real (href) se preserva en todos los casos
+
+**Resumen de la implementación:**
+El warning aparecía en 13 lugares distintos (`<Button render={<Link .../>}>`) porque Base UI asume `nativeButton=true` (espera un `<button>` real) salvo que se le diga lo contrario. En vez de parchear cada uso, se corrigió `components/ui/button.tsx` en un solo lugar: `nativeButton` ahora default a `false` automáticamente cuando se pasa un `render` prop. Verificado: cero errores en consola, y el elemento subyacente sigue siendo un `<a href>` real (confirmado inspeccionando el DOM), solo que ahora con `role="button"` correcto en vez de heredar semántica de botón nativo sobre un link.
+
+**Archivos modificados/creados:**
+`components/ui/button.tsx`
+
+---
+
+#### HU-27 · Fecha de Inicio de Membresía Obligatoria
+> **Como** trainer,
+> **quiero** que la fecha de inicio de membresía sea obligatoria al crear un alumno,
+> **para** que el estado de membresía (HU-22) esté siempre completo.
+
+**Story Points:** 1
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] No se puede crear un alumno sin `membershipStartsAt`
+- [x] El formulario marca el campo como obligatorio (asterisco)
+- [x] La importación CSV (HU-20) hereda la misma regla — se actualizó la documentación de columnas obligatorias en `/alumnos/importar`
+
+**Resumen de la implementación:**
+Cambio de una línea en `createStudentSchema` (se sacó el `.optional()`). Como `updateStudentSchema` y el importador de CSV (HU-20) reutilizan este mismo schema, la regla se propaga sola a edición e importación — efecto cascada intencional, no se dupicó la validación en ningún lado.
+
+**Archivos modificados/creados:**
+`lib/validators/student.ts` · `components/admin/student-form.tsx` · `app/(admin)/alumnos/importar/page.tsx` (doc actualizada)
+
+---
+
+#### HU-28 · Reactivar Alumno
+> **Como** trainer,
+> **quiero** poder reactivar un alumno que desactivé por error o que volvió a entrenar conmigo,
+> **para** no tener que recrearlo desde cero.
+
+**Story Points:** 2
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-07
+
+**Criterios de Aceptación:**
+- [x] Botón "Reactivar alumno" visible en la ficha cuando el alumno está inactivo
+- [x] Reactivar restaura `is_active = true` sin tocar su historial
+- [x] Vuelve a aparecer en el listado activo y puede acceder al portal por DNI
+
+**Resumen de la implementación:**
+Gap real encontrado durante QA: HU-07 (Desactivar) nunca tuvo su contraparte. Se agregó el camino completo (repositorio → servicio → action → botón), simétrico a `DeactivateStudentButton` pero sin `AlertDialog` de confirmación — reactivar es una acción de bajo riesgo y reversible (se puede volver a desactivar), no amerita el mismo nivel de fricción.
+
+**Archivos modificados/creados:**
+`lib/repositories/interfaces.ts` · `lib/repositories/student.repository.ts` · `lib/services/student.service.ts` · `lib/actions/student.actions.ts` · `components/admin/reactivate-student-button.tsx` (nuevo) · `app/(admin)/alumnos/[id]/page.tsx`
+
+---
+
+#### HU-29 · Video del Ejercicio en Modal Embebido
+> **Como** usuario (trainer o alumno),
+> **quiero** ver el video demostrativo de un ejercicio sin salir de la pantalla actual,
+> **para** no perder el contexto de la rutina o el catálogo.
+
+**Story Points:** 3
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] El video se muestra en un modal con iframe embebido (YouTube/Vimeo) en vez de redirigir
+- [x] Aplica tanto al portal del alumno (HU-16) como al catálogo de ejercicios del admin (HU-08)
+- [x] Si la URL no es de un host soportado, cae de vuelta al link externo (no rompe)
+
+**Resumen de la implementación:**
+Se instaló el componente `Dialog` de shadcn (no existía todavía — solo `AlertDialog`) y se creó `VideoDialog` en un nuevo `components/shared/` (primer componente compartido entre admin y portal — antes no había esa carpeta). El resolver de URL a embed soporta `watch?v=`, `youtu.be/`, `vimeo.com/` y `/shorts/`, `/embed/`, `/live/` de YouTube — este último caso se encontró recién al probar con un video real del catálogo (era un YouTube Short, formato común que el primer intento no cubría). El trigger usa un `<button>` nativo real en vez de un `Link`, evitando desde el diseño el mismo problema de HU-26.
+
+**Archivos modificados/creados:**
+`components/ui/dialog.tsx` (nuevo, shadcn) · `components/shared/video-dialog.tsx` (nuevo) · `app/(portal)/rutina/[dni]/page.tsx` · `app/(admin)/ejercicios/page.tsx`
 
 ---
 
@@ -633,6 +849,19 @@ HU-14 Historial de Rutinas
 HU-19 Ver Progreso (Admin)
 HU-20 Importar Alumnos CSV
 HU-21 Importar Rutinas CSV
+
+ONDA 6 — Marca en Producción
+────────────────────────────────────
+HU-24 Sincronizar Neon (real)
+HU-23 Aplicar Sistema de Diseño a la UI
+
+ONDA 7 — Correcciones Post-QA
+────────────────────────────────────
+HU-26 Fix nativeButton
+HU-27 Membresía obligatoria
+HU-28 Reactivar Alumno
+HU-25 Dashboard con contenido real
+HU-29 Video en modal embebido
 ```
 
 ---
@@ -650,7 +879,10 @@ HU-21 Importar Rutinas CSV
 | EP-07 Portal Alumno | 2 | 8 |
 | EP-08 Progreso | 3 | 10 |
 | EP-09 Importación CSV | 2 | 16 |
-| **TOTAL** | **21 HUs** | **81 pts** |
+| EP-10 Marca e Identidad | 2 | 11 |
+| EP-11 Puesta en Marcha | 1 | 1 |
+| EP-12 Correcciones Post-QA | 5 | 10 |
+| **TOTAL** | **29 HUs** | **106 pts** |
 
 ---
 

@@ -41,7 +41,7 @@
 
 - **RF-2.1 CRUD de Alumnos:** Crear, listar, editar y deshabilitar alumnos con datos mínimos obligatorios (Nombre, Apellido, DNI, Email y/o Teléfono).
 - **RF-2.2 Categorización:** Clasificar a los alumnos mediante etiquetas y atributos clave (ej. _Objetivo: Hipertrofia / Fuerza / Descenso_, _Nivel: Principiante / Intermedio / Avanzado_, _Modalidad: Gimnasio / Casa_).
-- **RF-2.3 Ficha Opcional de Seguimiento:** Campos configurables para registrar de forma no obligatoria medidas corporales, fecha de vencimiento de cuota y observaciones de salud o lesiones preexistentes.
+- **RF-2.3 Ficha Opcional de Seguimiento:** Campos configurables para registrar de forma no obligatoria fecha de inicio de membresía, fecha de vencimiento de cuota y observaciones de salud o lesiones preexistentes.
 
 ---
 
@@ -94,6 +94,7 @@ erDiagram
         string nombre
         string apellido
         string telefono
+        date fecha_inicio_membresia
         date fecha_vencimiento_cuota
     }
 
@@ -120,5 +121,4 @@ erDiagram
         boolean completado
         string notas_alumno
     }
-``
 ```

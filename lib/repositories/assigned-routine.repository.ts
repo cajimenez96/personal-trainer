@@ -80,4 +80,8 @@ export class PrismaAssignedRoutineRepository implements IAssignedRoutineReposito
       },
     })
   }
+
+  countActive() {
+    return db.assignedRoutine.count({ where: { status: "active" } })
+  }
 }

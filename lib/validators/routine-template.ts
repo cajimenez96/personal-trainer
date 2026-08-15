@@ -17,7 +17,7 @@ export const trainingDaySchema = z.object({
 export const createTemplateSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio"),
   description: z.string().trim().optional(),
-  durationWeeks: z.coerce.number().int().positive("Debe ser mayor a 0"),
+  durationWeeks: z.coerce.number().int().min(2, "La vigencia mínima es de 2 semanas (RN-01)"),
   days: z.array(trainingDaySchema),
 })
 

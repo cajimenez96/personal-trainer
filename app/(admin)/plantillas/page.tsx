@@ -25,7 +25,12 @@ export default async function PlantillasPage() {
       </Suspense>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Plantillas</h1>
-        <Button render={<Link href="/plantillas/nuevo" />}>Nueva plantilla</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" render={<Link href="/plantillas/importar" />}>
+            Importar CSV
+          </Button>
+          <Button render={<Link href="/plantillas/nuevo" />}>Nueva plantilla</Button>
+        </div>
       </div>
 
       {templates.length === 0 && (

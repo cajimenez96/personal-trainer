@@ -9,7 +9,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,58 +51,60 @@
 }
 
 :root {
-  /* ── Brand ── DESIGN.md colors.primary = Pinterest Red #e60023 */
-  --primary:            oklch(0.544 0.254 19.2);   /* #e60023 */
-  --primary-foreground: oklch(1 0 0);              /* #ffffff */
+  /* ── Brand ── DESIGN.md colors.brand, extraído del logo Santiago Ramón */
+  --primary:            #f20f38; /* colors.brand */
+  --primary-foreground: #ffffff; /* colors.on-brand */
 
   /* ── Surfaces ── */
-  --background:         oklch(0.990 0.003 95);     /* #fbfbf9 surface-soft */
-  --foreground:         oklch(0.268 0.012 85);     /* #33332e ink */
+  --background:         #ffffff; /* colors.canvas */
+  --foreground:         #0d0d0d; /* colors.ink */
 
-  --card:               oklch(0.977 0.004 95);     /* #f6f6f3 surface-card */
-  --card-foreground:    oklch(0.268 0.012 85);     /* #33332e */
+  --card:               #f2f2f2; /* colors.surface-soft */
+  --card-foreground:    #0d0d0d; /* colors.ink */
 
-  --popover:            oklch(0.977 0.004 95);
-  --popover-foreground: oklch(0.268 0.012 85);
+  --popover:            #ffffff;
+  --popover-foreground: #0d0d0d;
 
   /* ── Secondary / Muted ── */
-  --secondary:            oklch(0.955 0.005 95);
-  --secondary-foreground: oklch(0.268 0.012 85);
+  --secondary:            #f2f2f2; /* colors.surface-soft */
+  --secondary-foreground: #0d0d0d;
 
-  --muted:            oklch(0.955 0.005 95);
-  --muted-foreground: oklch(0.446 0.010 85);     /* #62625b mute */
+  --muted:            #f2f2f2;
+  --muted-foreground: #6b6b6b; /* colors.mute */
 
   /* ── Accent ── */
-  --accent:            oklch(0.955 0.005 95);
-  --accent-foreground: oklch(0.268 0.012 85);
+  --accent:            #f2f2f2;
+  --accent-foreground: #0d0d0d;
 
   /* ── State ── */
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: #8c041d; /* colors.brand-deep */
+  --success:            #16a34a; /* colors.success */
+  --success-foreground: #ffffff;
 
   /* ── Borders & Inputs ── */
-  --border: oklch(0.877 0.007 95);   /* #dadad3 hairline */
-  --input:  oklch(0.877 0.007 95);
-  --ring:   oklch(0.544 0.254 19.2); /* focus ring = brand red */
+  --border: #e5e5e5; /* colors.hairline */
+  --input:  #e5e5e5;
+  --ring:   #f20f38; /* colors.brand — focus ring */
 
   /* ── Charts ── */
-  --chart-1: oklch(0.544 0.254 19.2);
-  --chart-2: oklch(0.446 0.010 85);
-  --chart-3: oklch(0.877 0.007 95);
-  --chart-4: oklch(0.268 0.012 85);
-  --chart-5: oklch(0.700 0.150 19.2);
+  --chart-1: #f20f38;
+  --chart-2: #6b6b6b;
+  --chart-3: #e5e5e5;
+  --chart-4: #0d0d0d;
+  --chart-5: #bf0426;
 
-  /* ── Radius ── DESIGN.md rounded.md = 16px → 1rem base */
+  /* ── Radius ── sin cambios respecto a lo ya implementado */
   --radius: 0.75rem;
 
-  /* ── Sidebar ── */
-  --sidebar:                    oklch(0.977 0.004 95);
-  --sidebar-foreground:         oklch(0.268 0.012 85);
-  --sidebar-primary:            oklch(0.544 0.254 19.2);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent:             oklch(0.955 0.005 95);
-  --sidebar-accent-foreground:  oklch(0.268 0.012 85);
-  --sidebar-border:             oklch(0.877 0.007 95);
-  --sidebar-ring:               oklch(0.544 0.254 19.2);
+  /* ── Sidebar / nav de marca (negro del logo) ── */
+  --sidebar:                    #0d0d0d;
+  --sidebar-foreground:         #ffffff;
+  --sidebar-primary:            #f20f38;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:             #212121;
+  --sidebar-accent-foreground:  #ffffff;
+  --sidebar-border:             #212121;
+  --sidebar-ring:               #f20f38;
 }
 
 
@@ -147,5 +151,8 @@
   }
   html {
     @apply font-sans;
+  }
+  h1, h2, h3 {
+    @apply font-heading;
   }
 }

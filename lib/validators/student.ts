@@ -53,6 +53,10 @@ export const createStudentSchema = z.object({
   objetivo: z.preprocess(emptyToUndefined, z.enum(OBJETIVO_VALUES).optional()),
   nivel: z.preprocess(emptyToUndefined, z.enum(NIVEL_VALUES).optional()),
   modalidad: z.preprocess(emptyToUndefined, z.enum(MODALIDAD_VALUES).optional()),
+  membershipStartsAt: z.preprocess(
+    emptyToUndefined,
+    z.coerce.date({ error: "La fecha de inicio de membresía es obligatoria" }),
+  ),
   paymentExpiresAt: z.preprocess(emptyToUndefined, z.coerce.date().optional()),
   healthNotes: z.preprocess(emptyToUndefined, z.string().trim().optional()),
 })

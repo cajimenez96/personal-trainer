@@ -64,6 +64,7 @@ model Student {
   objetivo           Objetivo?
   nivel              Nivel?
   modalidad          Modalidad?
+  membershipStartsAt DateTime? @map("membership_starts_at") @db.Date
   paymentExpiresAt   DateTime? @map("payment_expires_at") @db.Date
   healthNotes        String?   @map("health_notes")
   isActive           Boolean   @default(true) @map("is_active") // soft delete

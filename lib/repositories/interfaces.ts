@@ -17,6 +17,7 @@ export interface CreateStudentData {
   objetivo?: Objetivo
   nivel?: Nivel
   modalidad?: Modalidad
+  membershipStartsAt?: Date
   paymentExpiresAt?: Date
   healthNotes?: string
 }
@@ -29,6 +30,7 @@ export interface UpdateStudentData {
   objetivo: Objetivo | null
   nivel: Nivel | null
   modalidad: Modalidad | null
+  membershipStartsAt: Date | null
   paymentExpiresAt: Date | null
   healthNotes: string | null
 }
@@ -58,7 +60,10 @@ export interface IStudentRepository {
   create(data: CreateStudentData): Promise<Student>
   update(id: string, data: UpdateStudentData): Promise<Student>
   deactivate(id: string): Promise<Student>
+  reactivate(id: string): Promise<Student>
   findAllActive(filters: StudentFilters): Promise<Student[]>
+  countActive(): Promise<number>
+  countExpiringSoon(before: Date): Promise<number>
 }
 
 export interface ExerciseFilters {
@@ -201,6 +206,7 @@ export interface IAssignedRoutineRepository {
   findActiveByStudentId(studentId: string): Promise<AssignedRoutineWithTemplate | null>
   findHistoryByStudentId(studentId: string): Promise<AssignedRoutineWithTemplate[]>
   findByIdWithDetails(id: string): Promise<AssignedRoutineRaw | null>
+  countActive(): Promise<number>
 }
 
 export interface UpsertProgressLogData {
@@ -220,7 +226,25 @@ export type ProgressLogEntry = {
   studentNotes: string | null
 }
 
+export type ProgressHistoryEntry = {
+  loggedDate: Date
+  exerciseBlockId: string
+  exerciseName: string
+  completed: boolean
+  weightKg: number | null
+  studentNotes: string | null
+}
+
+export interface ProgressHistoryFilters {
+  from?: Date
+  to?: Date
+}
+
 export interface IProgressLogRepository {
   upsert(data: UpsertProgressLogData): Promise<void>
   findForDay(studentId: string, loggedDate: Date): Promise<ProgressLogEntry[]>
+  findByStudent(
+    studentId: string,
+    filters: ProgressHistoryFilters,
+  ): Promise<ProgressHistoryEntry[]>
 }

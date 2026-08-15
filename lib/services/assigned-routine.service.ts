@@ -86,6 +86,10 @@ export class AssignedRoutineService {
     const raw = await this.assignedRoutineRepo.findByIdWithDetails(id)
     return raw ? mergeRoutineDetail(raw) : null
   }
+
+  countActive() {
+    return this.assignedRoutineRepo.countActive()
+  }
 }
 
 export const assignedRoutineService = new AssignedRoutineService(

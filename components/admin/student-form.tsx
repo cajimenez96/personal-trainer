@@ -99,6 +99,14 @@ export function StudentForm({
         <Field label="Email" name="email" type="email" error={errors.email} defaultValue={values.email} />
         <Field label="Teléfono" name="phone" error={errors.phone} defaultValue={values.phone} />
         <Field
+          label="Fecha inicio membresía"
+          name="membershipStartsAt"
+          type="date"
+          required
+          error={errors.membershipStartsAt}
+          defaultValue={values.membershipStartsAt}
+        />
+        <Field
           label="Fecha venc. cuota"
           name="paymentExpiresAt"
           type="date"

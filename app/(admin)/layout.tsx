@@ -17,15 +17,17 @@ export default function AdminLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b px-6 py-4">
+      <header className="flex items-center justify-between bg-[#0d0d0d] px-6 py-4 text-white">
         <div className="flex items-center gap-6">
-          <span className="font-semibold">Personal Trainer — Panel</span>
+          <span className="font-heading text-sm font-semibold tracking-wide uppercase">
+            Santiago Ramón — Panel
+          </span>
           <nav className="flex items-center gap-4">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="font-heading text-sm text-white/70 transition-colors hover:text-primary"
               >
                 {link.label}
               </Link>

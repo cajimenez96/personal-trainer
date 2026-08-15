@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { StudentForm } from "@/components/admin/student-form"
 import { DeactivateStudentButton } from "@/components/admin/deactivate-student-button"
+import { ReactivateStudentButton } from "@/components/admin/reactivate-student-button"
 import { FlashToast } from "@/components/admin/flash-toast"
 import { updateStudentAction } from "@/lib/actions/student.actions"
 import { studentService } from "@/lib/services/student.service"
@@ -43,6 +44,7 @@ export default async function AlumnoDetallePage({
     objetivo: student.objetivo ?? "",
     nivel: student.nivel ?? "",
     modalidad: student.modalidad ?? "",
+    membershipStartsAt: toDateInputValue(student.membershipStartsAt),
     paymentExpiresAt: toDateInputValue(student.paymentExpiresAt),
     healthNotes: student.healthNotes ?? "",
   }
@@ -50,19 +52,32 @@ export default async function AlumnoDetallePage({
   return (
     <div className="mx-auto max-w-2xl">
       <Suspense>
-        <FlashToast messages={{ assigned: "Rutina asignada correctamente." }} />
+        <FlashToast
+          messages={{
+            assigned: "Rutina asignada correctamente.",
+            reactivated: "Alumno reactivado.",
+          }}
+        />
       </Suspense>
 
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Rutina
-            <Button
-              variant="outline"
-              render={<Link href={`/alumnos/${student.id}/asignar`} />}
-            >
-              {activeRoutine ? "Reasignar rutina" : "Asignar rutina"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                render={<Link href={`/alumnos/${student.id}/progreso`} />}
+              >
+                Ver progreso
+              </Button>
+              <Button
+                variant="outline"
+                render={<Link href={`/alumnos/${student.id}/asignar`} />}
+              >
+                {activeRoutine ? "Reasignar rutina" : "Asignar rutina"}
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -124,14 +139,16 @@ export default async function AlumnoDetallePage({
             defaultValues={defaultValues}
           />
 
-          {student.isActive && (
-            <div className="mt-8 flex justify-end border-t pt-6">
+          <div className="mt-8 flex justify-end border-t pt-6">
+            {student.isActive ? (
               <DeactivateStudentButton
                 studentId={student.id}
                 studentName={`${student.firstName} ${student.lastName}`}
               />
-            </div>
-          )}
+            ) : (
+              <ReactivateStudentButton studentId={student.id} />
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

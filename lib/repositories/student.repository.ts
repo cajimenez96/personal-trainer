@@ -69,10 +69,24 @@ export class PrismaStudentRepository implements IStudentRepository {
     return db.student.update({ where: { id }, data: { isActive: false } })
   }
 
+  reactivate(id: string) {
+    return db.student.update({ where: { id }, data: { isActive: true } })
+  }
+
   findAllActive({ objetivo, nivel, modalidad }: StudentFilters) {
     return db.student.findMany({
       where: { isActive: true, objetivo, nivel, modalidad },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    })
+  }
+
+  countActive() {
+    return db.student.count({ where: { isActive: true } })
+  }
+
+  countExpiringSoon(before: Date) {
+    return db.student.count({
+      where: { isActive: true, paymentExpiresAt: { not: null, lte: before } },
     })
   }
 }

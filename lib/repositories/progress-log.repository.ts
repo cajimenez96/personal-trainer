@@ -1,6 +1,8 @@
 import { db } from "@/lib/db"
 import type {
   IProgressLogRepository,
+  ProgressHistoryEntry,
+  ProgressHistoryFilters,
   ProgressLogEntry,
   UpsertProgressLogData,
 } from "@/lib/repositories/interfaces"
@@ -43,6 +45,34 @@ export class PrismaProgressLogRepository implements IProgressLogRepository {
 
     return rows.map((row) => ({
       exerciseBlockId: row.exerciseBlockId,
+      completed: row.completed,
+      weightKg: row.weightKg ? row.weightKg.toNumber() : null,
+      studentNotes: row.studentNotes,
+    }))
+  }
+
+  async findByStudent(
+    studentId: string,
+    { from, to }: ProgressHistoryFilters,
+  ): Promise<ProgressHistoryEntry[]> {
+    const rows = await db.progressLog.findMany({
+      where: {
+        studentId,
+        ...((from || to) && {
+          loggedDate: {
+            ...(from && { gte: from }),
+            ...(to && { lte: to }),
+          },
+        }),
+      },
+      include: { exerciseBlock: { include: { exercise: true } } },
+      orderBy: [{ loggedDate: "desc" }, { createdAt: "desc" }],
+    })
+
+    return rows.map((row) => ({
+      loggedDate: row.loggedDate,
+      exerciseBlockId: row.exerciseBlockId,
+      exerciseName: row.exerciseBlock.exercise.name,
       completed: row.completed,
       weightKg: row.weightKg ? row.weightKg.toNumber() : null,
       studentNotes: row.studentNotes,

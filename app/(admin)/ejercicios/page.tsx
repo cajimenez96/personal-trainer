@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { FlashToast } from "@/components/admin/flash-toast"
+import { VideoDialog } from "@/components/shared/video-dialog"
 import { exerciseService } from "@/lib/services/exercise.service"
 import { exerciseListQuerySchema } from "@/lib/validators/exercise"
 
@@ -110,17 +111,12 @@ export default async function EjerciciosPage({
                 <TableCell>{exercise.secondaryMuscle ?? "—"}</TableCell>
                 <TableCell>
                   {exercise.videoUrl ? (
-                    <a
-                      href={exercise.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex"
-                    >
+                    <VideoDialog videoUrl={exercise.videoUrl} className="inline-flex">
                       <Badge variant="secondary" className="gap-1">
                         <PlayCircle className="size-3.5" />
                         Ver video
                       </Badge>
-                    </a>
+                    </VideoDialog>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

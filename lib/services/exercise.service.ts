@@ -57,6 +57,14 @@ export class ExerciseService {
     }
   }
 
+  // Idempotent find-or-create — used by the routine CSV importer, where the
+  // same exercise name can appear across many rows/templates in one file.
+  async findOrCreate(data: CreateExerciseData) {
+    const existing = await this.exerciseRepo.findByName(data.name)
+    if (existing) return existing
+    return this.create(data)
+  }
+
   async update(id: string, data: UpdateExerciseData) {
     const existing = await this.exerciseRepo.findByName(data.name)
     if (existing && existing.id !== id) throw new ExerciseNameTakenError(data.name)

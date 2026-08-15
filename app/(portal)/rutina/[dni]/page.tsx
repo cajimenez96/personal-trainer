@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ExerciseProgress } from "@/components/portal/exercise-progress"
+import { VideoDialog } from "@/components/shared/video-dialog"
 import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 import { progressLogService } from "@/lib/services/progress-log.service"
@@ -50,10 +51,10 @@ export default async function RutinaPage({
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <header className="border-b bg-card px-4 py-5">
-        <p className="text-sm text-muted-foreground">Hola,</p>
-        <h1 className="text-2xl font-bold">{student.firstName} {student.lastName}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{routine.templateName}</p>
+      <header className="bg-[#0d0d0d] px-4 py-5 text-white">
+        <p className="text-sm text-white/60">Hola,</p>
+        <h1 className="font-heading text-2xl font-semibold">{student.firstName} {student.lastName}</h1>
+        <p className="mt-1 text-sm text-white/60">{routine.templateName}</p>
       </header>
 
       <main className="flex flex-col gap-3 px-4 py-4">
@@ -96,14 +97,12 @@ export default async function RutinaPage({
                     </p>
                   )}
                   {block.exerciseVideoUrl && (
-                    <a
-                      href={block.exerciseVideoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <VideoDialog
+                      videoUrl={block.exerciseVideoUrl}
                       className="mt-3 inline-flex min-h-11 items-center font-semibold text-primary"
                     >
                       Ver video ↗
-                    </a>
+                    </VideoDialog>
                   )}
 
                   <ExerciseProgress
