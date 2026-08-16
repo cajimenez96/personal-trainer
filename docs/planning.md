@@ -39,10 +39,14 @@
 | **EP-10** | Marca e Identidad Visual | Rediseño de UI anclado al logo real + ajustes de datos y documentación | 🟡 Alta |
 | **EP-11** | Puesta en Marcha (Entorno Real) | Sincronización con la base de datos real de Neon y verificación end-to-end | 🔴 Crítica |
 | **EP-12** | Correcciones Post-QA | Bugs y mejoras encontrados probando la app real | 🟡 Alta |
+| **EP-13** | Seguimiento y Coaching (Fase 1) | Primera ola de MVP 2 — cronómetro, WhatsApp, peso corporal, bloques, objetivos flexibles | 🟡 Alta |
+| **EP-14** | Seguimiento y Coaching (Fase 2) | Segunda ola de MVP 2 — tempo prescrito | 🟢 Media |
 
 ---
 
-## Historias de Usuario
+## MVP 1 — Recorrido hasta ahora ✅
+
+> **Cerrado el 15/08/2026.** Las 29 historias de usuario de esta sección están `DONE` y conforman el primer MVP: administración de alumnos, catálogo de ejercicios, plantillas de rutinas, asignación individual/masiva, portal del alumno por DNI, registro de progreso, importación masiva por CSV, identidad de marca aplicada, y correcciones post-QA. El detalle completo de cada ticket (criterios, resumen de implementación, archivos) se conserva abajo como registro histórico — no se resume ni se borra nada, porque documenta decisiones técnicas reales (bugs encontrados, por qué se adaptó tal o cual criterio) que siguen siendo relevantes.
 
 ### 🏗️ EP-01 — Infraestructura
 
@@ -809,6 +813,278 @@ Se instaló el componente `Dialog` de shadcn (no existía todavía — solo `Ale
 
 ---
 
+## MVP 2 — Trabajo a Desarrollar
+
+> **Origen:** `docs/mvp2/Plataforma_Entrenamiento_Propuesta_Evolucion.md`, una propuesta de evolución hacia un "motor de seguimiento del entrenamiento" (Programar → Ejecutar → Medir → Evaluar → Ajustar). Se analizó completa contra la arquitectura real y se debatieron los puntos de mayor impacto antes de convertir nada en ticket — ver conversación del 15/08/2026. Lo que sigue son las decisiones de alcance tomadas y las historias que se derivan de ellas.
+
+### Decisiones de Alcance Tomadas
+
+| Propuesta original | Decisión | Motivo |
+|---|---|---|
+| Registro estructurado por serie (peso/reps/RIR por cada serie) | ❌ Descartado | El campo de notas libres que ya existe (HU-18) alcanza para que el alumno describa lo que hizo por serie. Costo de desarrollo: cero, ya está construido. **Consecuencia asumida:** PRs automáticos, 1RM estimado, gráficos de progreso y detección de estancamiento no son viables como cálculo del sistema sin datos numéricos estructurados — quedan en el backlog abierto de abajo. |
+| Fotos de progreso | ❌ Descartado | Sin excepciones, ningún estilo. No hay infraestructura de almacenamiento de archivos en el proyecto y no se va a construir para esto. |
+| Acceso del alumno: DNI + PIN | ❌ Descartado | Consistente con el problema original del producto ("sin contraseñas que se olviden", `producto.md`). El acceso sigue siendo solo por DNI. |
+| Multi-entrenador | ❌ Descartado | Un solo coach. El schema sigue sin `trainerId` en `Student`/`Exercise`/`RoutineTemplate` — si en el futuro hiciera falta, es una migración real, no una bandera que se prende. |
+| PRs automáticos, 1RM estimado, gráficos de progreso, detección de estancamiento | ❌ Descartado | Confirmado — no hacen falta gráficos ni cálculos automáticos de este tipo. Consistente con la decisión de no modelar series: sin datos numéricos estructurados no hay sobre qué graficar, y el profesor evalúa esto leyendo las notas del alumno. |
+| Cronómetro de descanso, WhatsApp, peso corporal, bloques/superseries, objetivos flexibles, notas tipificadas, adherencia simple | ✅ Aceptado | No dependen de la decisión de series — se convierten en las historias de esta sección. |
+
+---
+
+### 🎯 EP-13 — Seguimiento y Coaching (Fase 1)
+
+---
+
+#### HU-30 · Cronómetro de Descanso
+> **Como** alumno,
+> **quiero** que arranque un cronómetro de descanso apenas marco una serie o ejercicio como completado,
+> **para** saber cuándo retomar sin tener que mirar el reloj del gimnasio.
+
+**Story Points:** 3
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-17
+
+**Criterios de Aceptación:**
+- [x] Al marcar un ejercicio completado, arranca automáticamente un cronómetro de cuenta regresiva
+- [x] El tiempo default sale de `rest_secs` del bloque, incluyendo el override si existe
+- [x] Se puede pausar, sumar tiempo (+15s) y finalizar manualmente antes de que llegue a cero
+- [x] Aviso (sonido vía Web Audio API + vibración si el navegador la soporta) al llegar a cero
+- [x] No bloquea la pantalla — es una card más dentro del ejercicio, el resto de la rutina se sigue viendo
+
+**Resumen de la implementación:**
+`RestTimer` (nuevo, `components/portal`) es un componente de intervalo autocontenido — arranca al montarse, se remonta con `key` cada vez que el alumno vuelve a marcar el checkbox (así reinicia limpio en vez de arrastrar el estado anterior). Solo se muestra si el bloque tiene `restSecs` — si no está configurado, no aparece nada (no se inventa un default). Verificado en browser real con un descanso corto (8s): cuenta regresiva correcta, se detiene en cero sin pasar a negativo, "+15s" revive el timer después de llegar a cero, y "Finalizar" lo saca de la pantalla.
+
+**Archivos modificados/creados:**
+`components/portal/rest-timer.tsx` (nuevo) · `components/portal/exercise-progress.tsx` · `app/(portal)/rutina/[dni]/page.tsx`
+
+---
+
+#### HU-31 · Acciones Rápidas de WhatsApp
+> **Como** trainer,
+> **quiero** un botón que abra WhatsApp con un mensaje prearmado hacia un alumno,
+> **para** comunicarme rápido sin salir del panel ni escribir el mensaje de cero.
+
+**Story Points:** 2
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Botones de WhatsApp en la ficha del alumno, visibles solo si tiene teléfono cargado
+- [x] Abre `wa.me/<telefono>?text=<mensaje>` en una pestaña nueva (sin integración de API, sin chat interno)
+- [x] 2 mensajes prearmados con variables (nombre del alumno, fecha de vencimiento de cuota): aviso de cuota por vencer (solo si tiene `paymentExpiresAt` cargado) y aviso de rutina actualizada
+- [x] El teléfono se normaliza a solo-dígitos antes de armar el link
+
+**Resumen de la implementación:**
+`WhatsAppActions` es un Server Component — son `<a href="https://wa.me/...">` planos, no hace falta cliente ni estado. La normalización del teléfono es deliberadamente simple (`replace(/\D/g, "")`, sin inyectar código de país): hoy no hay ninguna validación de formato de teléfono en el alta de alumno (es texto libre), así que no había ningún "mismo criterio" para reutilizar — se corrigió esa suposición del criterio original antes de escribirlo. El botón de "cuota por vencer" no se muestra si el alumno no tiene `paymentExpiresAt` cargado, para no mandar un mensaje con una fecha inexistente. Verificado en browser real: las dos URLs se arman con el nombre y la fecha correctos, URL-encoded bien.
+
+**Archivos modificados/creados:**
+`components/admin/whatsapp-actions.tsx` (nuevo) · `app/(admin)/alumnos/[id]/page.tsx`
+
+---
+
+#### HU-32 · Peso Corporal Histórico
+> **Como** alumno,
+> **quiero** poder registrar mi peso corporal de tanto en tanto,
+> **para** que mi entrenador vea mi evolución además de las cargas que levanto.
+
+**Story Points:** 3
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Nueva tabla independiente `body_weight_logs` para el histórico de peso corporal (no se mezcla con `progress_logs`, que es peso *levantado* por ejercicio)
+- [x] Campo opcional en el header del portal para cargar peso corporal — no ligado a ningún ejercicio puntual, un registro por día como máximo (mismo patrón de `upsert` que `progress_logs`)
+- [x] Listado cronológico visible en la ficha del alumno (panel admin) — card "Peso Corporal", solo aparece si hay al menos un registro
+
+**Resumen de la implementación:**
+Mismo patrón en capas que el resto del proyecto (repo/servicio/validador), reutilizando `todayUTC()` de `progress-log.service.ts` en vez de duplicarlo. El campo vive en el header oscuro del portal (mismo lugar que el nombre del alumno), separado visualmente de los inputs de peso por ejercicio para que no se confundan. Verificado en browser real: se guarda desde el portal, persiste al recargar, y aparece correctamente en la ficha del alumno del admin. Encontrado durante la verificación: el server de desarrollo no recoge el cliente de Prisma regenerado en caliente — hubo que reiniciarlo después de `prisma generate` para que reconociera el modelo nuevo (no es un bug del código, es una limitación del proceso de Node ya arrancado).
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` (`BodyWeightLog`) · `prisma/migrations/20260816090000_add_body_weight_logs/` · `lib/repositories/interfaces.ts` · `lib/repositories/body-weight.repository.ts` (nuevo) · `lib/services/body-weight.service.ts` (nuevo) · `lib/actions/body-weight.actions.ts` (nuevo) · `components/portal/body-weight-input.tsx` (nuevo) · `app/(portal)/rutina/[dni]/page.tsx` · `app/(admin)/alumnos/[id]/page.tsx`
+
+---
+
+#### HU-33 · Bloques y Superseries en Plantillas
+> **Como** trainer,
+> **quiero** poder agrupar ejercicios dentro de un día en bloques (ej. superserie A1/A2, circuito),
+> **para** prescribir estructuras reales de gimnasio y no solo una lista plana de ejercicios.
+
+**Story Points:** 8
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-10, HU-21
+
+**Criterios de Aceptación:**
+- [x] Un día de entrenamiento puede agrupar 1 o más ejercicios bajo una misma etiqueta de bloque (A, B, C…)
+- [x] Descanso configurable a nivel de bloque, no solo por ejercicio individual
+- [x] El armador de plantillas (`TemplateBuilder`) permite crear/reordenar bloques, no solo ejercicios sueltos
+- [x] El portal del alumno muestra los ejercicios agrupados visualmente por bloque
+- [x] La importación CSV (HU-21) soporta la columna de agrupación sin romper el formato ya documentado
+
+> **Nota:** es la historia más grande de esta ola — toca el schema (nuevo nivel de agrupación entre día y ejercicio), el armador de plantillas completo, y el importador CSV. Si se quiere reducir el alcance de esta primera tanda de MVP2, esta es la candidata a mover a una ola siguiente.
+
+**Resumen de la implementación:**
+Se optó deliberadamente por **no** crear una tabla/relación nueva para el grupo: `ExerciseBlock` gana dos campos (`groupLabel` texto libre corto, ej. "A"; `groupRestSecs` descanso del bloque completo) y el agrupamiento visual se resuelve por **etiqueta + orden consecutivo** dentro del `blockOrder` ya existente — mismo criterio de simplicidad que el resto del schema (sin modelar un id relacional extra para algo que no lo necesita). `restSecs` (por ejercicio) y `groupRestSecs` (por bloque/superserie) son campos distintos e independientes: el primero sigue siendo el descanso después de ESE ejercicio puntual (normalmente 0 dentro de una superserie), el segundo es el descanso después de completar el bloque entero — se toma del último ejercicio del grupo para mostrarlo una sola vez. Se creó un helper compartido `lib/utils/group-blocks.ts` (`groupConsecutiveBlocks`) reutilizado por el armador de plantillas (preview), el portal del alumno y — de forma más liviana, solo con un badge "Bloque X" — la vista de solo lectura del admin. Deliberadamente **no** se hizo el grupo personalizable por alumno (`RoutineOverride`): es estructural, igual que qué ejercicios componen un día, así que siempre viene de la plantilla base. Verificado de punta a punta en browser real: se agrupó "Peso muerto" + "Pecho plano" bajo "Grupo A" con descanso post-bloque de 60s en el armador (preview mostró correctamente "Bloque A (superserie)"), se guardó contra la Neon real, y tanto el portal del alumno (`/rutina/39975255`) como la vista de solo lectura del admin mostraron el agrupamiento correctamente tras el guardado. El pipeline de importación CSV (`routineTemplateService.create`) se verificó directamente contra la base real con un script descartable, confirmando que `groupLabel`/`groupRestSecs` persisten.
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` · `prisma/migrations/20260816160000_add_exercise_block_grouping/` · `lib/repositories/interfaces.ts` · `lib/repositories/routine-template.repository.ts` · `lib/services/assigned-routine.service.ts` · `lib/validators/routine-template.ts` · `lib/validators/routine-import.ts` · `lib/actions/routine-import.actions.ts` · `lib/utils/group-blocks.ts` (nuevo) · `components/admin/template-builder.tsx` · `components/admin/routine-import-runner.tsx` · `app/(admin)/plantillas/[id]/page.tsx` · `app/(admin)/plantillas/importar/page.tsx` · `app/(portal)/rutina/[dni]/page.tsx` · `app/(admin)/alumnos/[id]/rutinas/[routineId]/page.tsx`
+
+---
+
+#### HU-34 · Objetivos Flexibles del Alumno
+> **Como** trainer,
+> **quiero** registrar un objetivo principal más objetivos secundarios y prioridades de un alumno,
+> **para** reflejar su plan real en vez de encasillarlo en una sola categoría fija.
+
+**Story Points:** 5
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Se mantiene el enum actual (`Objetivo`: hipertrofia/fuerza/descenso) como "objetivo principal" — no se rompe lo existente
+- [x] Campo adicional (`secondaryGoals`) para objetivos secundarios/prioridades en texto libre (ej. "mejorar sentadilla, espalda")
+- [x] Visible y editable en la ficha del alumno; opcional, no bloquea el alta
+
+**Resumen de la implementación:**
+Campo de texto libre (no lista estructurada) — consistente con el criterio de simplicidad usado en el resto de esta ola (HU-30/32/37: texto descriptivo en vez de estructura rígida cuando no hace falta más). Mismo patrón de siempre: schema → migración → validador → `CreateStudentData`/`UpdateStudentData` → `updateStudentAction` (único lugar que destructura campos explícitamente, `createStudentAction` no necesitó cambios porque pasa `parsed.data` completo) → `StudentForm`. Verificado en browser real contra la Neon: se guarda y precarga correctamente al recargar la ficha.
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` · `prisma/migrations/20260816140000_add_secondary_goals/` · `lib/validators/student.ts` · `lib/repositories/interfaces.ts` · `lib/actions/student.actions.ts` · `components/admin/student-form.tsx` · `app/(admin)/alumnos/[id]/page.tsx`
+
+---
+
+#### HU-35 · Notas Tipificadas
+> **Como** trainer,
+> **quiero** que las notas de progreso se distingan por tipo (sesión, incidencia, administrativa),
+> **para** poder filtrarlas y encontrar lo importante sin releer todo el historial.
+
+**Story Points:** 3
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+**Depende de:** HU-19
+
+**Criterios de Aceptación:**
+- [x] El registro de progreso admite un tipo de nota opcional (ej. sesión normal / incidencia / molestia)
+- [x] El historial de progreso (HU-19) permite filtrar por tipo además del rango de fechas ya existente
+
+> **Nota:** prioridad baja a propósito — confirmar que el volumen real de notas lo justifica antes de construirlo; con pocos alumnos, puede no aportar tanto como el resto de esta ola.
+
+**Resumen de la implementación:**
+`noteType` es un enum de Postgres (`NoteType`: `session`/`incident`/`discomfort`) en vez de texto libre — mismo criterio que `Objetivo`/`Nivel`/`Modalidad` ya existentes en el schema, porque necesita ser filtrable con igualdad exacta. Es el alumno quien elige el tipo al cargar la nota en el portal (selector junto al textarea de "+ Agregar nota"), no el trainer — tiene sentido porque es quien está registrando la sesión en el momento. En el historial admin se agregó un tercer filtro GET (`noteType`, mismo patrón sin JS que `from`/`to`) y un badge por nota (`destructive` para incidencia/molestia, para que salten a la vista sin releer todo el historial, que es el objetivo del ticket). **Bug encontrado y corregido en el camino:** el schema de query `progressHistoryQuerySchema` (`from`/`to`) no tenía el preprocesamiento `emptyToUndefined` que sí usa el resto del código base — un formulario GET envía siempre los 3 campos, y con `from`/`to` vacíos (`""`) `z.coerce.date()` fallaba, tirando abajo el `safeParse` completo y descartando silenciosamente también el filtro nuevo de `noteType` (caía a `filters = {}`, sin fallar visiblemente). Preexistía desde HU-19 pero nunca se manifestó porque hasta ahora "sin filtros" y "fallo silencioso de fecha vacía" daban el mismo resultado visible; se volvió visible recién al agregar un filtro que sí debía aplicarse incluso con fechas vacías. Se corrigió agregando el mismo preprocesamiento ya usado en `lib/validators/student.ts` y `lib/validators/routine-import.ts`. Verificado de punta a punta en browser real contra la Neon real: cargué una nota tipo "Molestia" desde el portal (`/rutina/39975255`), confirmé que persiste al recargar, verifiqué el badge "Molestia" en el historial admin, y probé el filtro con `noteType=incident` (0 resultados, correcto) y `noteType=discomfort` (1 resultado, correcto).
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` (`NoteType`) · `prisma/migrations/20260816180000_add_progress_log_note_type/` · `lib/validators/progress-note.ts` (nuevo) · `lib/repositories/interfaces.ts` · `lib/repositories/progress-log.repository.ts` · `lib/validators/progress-history.ts` · `lib/actions/progress.actions.ts` · `components/portal/exercise-progress.tsx` · `app/(portal)/rutina/[dni]/page.tsx` · `app/(admin)/alumnos/[id]/progreso/page.tsx`
+
+---
+
+#### HU-36 · Dashboard Deportivo: Adherencia y Alertas Simples
+> **Como** trainer,
+> **quiero** ver en el dashboard qué alumnos no entrenan hace varios días y una adherencia simple por alumno,
+> **para** saber a quién prestarle atención sin revisar ficha por ficha.
+
+**Story Points:** 5
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-25
+
+**Criterios de Aceptación:**
+- [x] Sección nueva en el dashboard: alumnos activos sin ningún registro de progreso en los últimos 7 días
+- [x] Adherencia simple por alumno: sesiones con al menos un registro / sesiones esperadas en el rango de su rutina activa
+- [x] Explícitamente **sin** volumen ni RIR — eso quedó fuera por la decisión de no modelar series (ver tabla de decisiones arriba)
+
+**Resumen de la implementación:**
+"Sesiones esperadas" es una aproximación deliberada por volumen, no por calendario: `(días de la plantilla) × (semanas transcurridas desde la asignación)`. No se puede calcular exacto porque el sistema no modela qué día de la semana corresponde a qué día de la plantilla (nunca se pidió esa granularidad). Se documenta esto explícitamente en la propia UI del dashboard, no se presenta como más preciso de lo que es. `AssignedRoutineRepository.findAdherenceStats()` hace una query por rutina activa (N+1 aceptable dado el volumen esperado de un solo entrenador) contando fechas distintas de `progress_logs` desde la asignación. Verificado con datos reales: un alumno recién asignado sin registros mostró correctamente "0/1 · 0%" y en la alerta de inactividad; otro que había registrado progreso ese mismo día mostró "1/1 · 100%" y no apareció en la alerta.
+
+**Archivos modificados/creados:**
+`lib/repositories/interfaces.ts` (`AdherenceStat`, `findAdherenceStats`) · `lib/repositories/assigned-routine.repository.ts` · `lib/services/assigned-routine.service.ts` (`getAdherenceStats`) · `app/(admin)/dashboard/page.tsx`
+
+---
+
+#### HU-37 · Prescripción Enriquecida: Peso, Intensidad y Esquema de Reps
+> **Como** trainer,
+> **quiero** poder prescribir peso, intensidad (RPE) y un esquema de repeticiones variable por ejercicio,
+> **para** que la rutina que ve el alumno tenga el mismo nivel de detalle que ya uso en mi planilla de Excel.
+
+**Story Points:** 8
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] `ExerciseBlock` y `RoutineOverride` ganan 3 campos nuevos: `weightKg` (peso prescrito), `intensity` (texto libre, ej. `@7`) y `repsScheme` (texto libre para esquemas variables, ej. `1x6 2x5 1x4`)
+- [x] `reps` sigue siendo un número simple para casos fijos; cuando `repsScheme` está presente, se muestra en su lugar
+- [x] El armador de plantillas (`TemplateBuilder`) permite cargar los 3 campos nuevos por ejercicio
+- [x] El formulario de personalización individual (`AssignmentForm`, HU-12) también los permite personalizar por alumno
+- [x] El portal del alumno muestra peso, intensidad y esquema de reps cuando existen, destacados en color de marca
+- [x] La importación CSV de rutinas (HU-21) soporta las 3 columnas nuevas como opcionales, sin romper el formato existente
+
+**Resumen de la implementación:**
+Esto **no es lo mismo** que el "registro por serie" descartado en la propuesta de MVP2 — ese era sobre lo que el alumno *reporta* haber hecho; esto es sobre lo que el trainer *prescribe*, un campo que ya existía (`ExerciseBlock`) y solo necesitaba 3 campos más. `weightKg` es `Decimal` en Postgres — Prisma lo devuelve como objeto `Decimal`, no `number`, así que hubo que agregar conversión explícita (`.toNumber()`) en `routine-template.repository.ts` (`findById`, `duplicate`) y `assigned-routine.repository.ts` (`findByIdWithDetails`), que antes devolvían el resultado de Prisma sin mapear porque ningún campo anterior lo requería. Verificado de punta a punta: creé una plantilla replicando una fila real del Excel del cliente (sentadilla: 4 series, esquema "1x6 2x5 1x4", 130kg, @7, descanso 150s), la asigné a un alumno, y el portal la mostró prácticamente idéntica al Excel original.
+
+**Hallazgo importante (no arreglado en esta HU, ver HU-38):** al verificar, encontré que **editar una plantilla que tiene una asignación con personalización (`RoutineOverride`) rompe con error 500** — preexistente desde HU-11, no relacionado a estos campos nuevos.
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` · `prisma/migrations/20260816120000_add_prescription_fields/` · `lib/repositories/interfaces.ts` · `lib/repositories/routine-template.repository.ts` · `lib/repositories/assigned-routine.repository.ts` · `lib/services/assigned-routine.service.ts` · `lib/validators/routine-template.ts` · `lib/validators/assignment.ts` · `components/admin/template-builder.tsx` · `components/admin/assignment-form.tsx` · `app/(admin)/plantillas/[id]/page.tsx` · `app/(portal)/rutina/[dni]/page.tsx` · `app/(admin)/alumnos/[id]/rutinas/[routineId]/page.tsx` · `lib/validators/routine-import.ts` · `lib/actions/routine-import.actions.ts` · `components/admin/routine-import-runner.tsx` · `app/(admin)/plantillas/importar/page.tsx`
+
+---
+
+#### HU-38 · Fix: Editar Plantilla con Personalizaciones/Progreso Asignados Falla
+> **Como** trainer,
+> **quiero** poder editar una plantilla aunque algún alumno tenga progreso o una personalización registrada sobre ella,
+> **para** no quedar bloqueado de ajustar mis plantillas ni perder el historial real de mis alumnos.
+
+**Story Points:** 8 *(re-estimado — el alcance real era mayor a los 3 pts originales, ver resumen)*
+**Prioridad:** 🔴 Crítica
+**Estado:** `DONE`
+**Depende de:** HU-11
+
+**Criterios de Aceptación:**
+- [x] Guardar cambios en una plantilla no falla cuando existen `RoutineOverride` o `ProgressLog` referenciando sus `exercise_blocks`
+- [x] Ningún dato histórico real (progreso del alumno, personalizaciones) se pierde al editar una plantilla — se descartó la opción de "perderlos silenciosamente"
+- [x] Si el trainer intenta eliminar específicamente un ejercicio/día que sí tiene historial, la operación se bloquea con un mensaje claro (no un error de base de datos crudo)
+
+**Resumen de la implementación:**
+El alcance creció al verificar: no era solo `routine_overrides` bloqueando por `RESTRICT` — **`progress_logs` (el historial real de peso/completado del alumno) tenía exactamente el mismo problema**, y ese es un caso mucho más común que las personalizaciones. Perder progreso registrado silenciosamente para "resolver" el error hubiera sido peor que el bug original, así que se descartó esa opción y se atacó la causa real: `RoutineTemplateRepository.update()` hacía `deleteMany({})` + `create` de **todos** los días/bloques en cada edición — incluso los que no cambiaron — generando IDs nuevos cada vez y rompiendo cualquier referencia externa.
+
+El fix reescribe `update()` como un diff real dentro de una transacción: los días/bloques que ya existían (identificados por `id`, ahora trackeado de punta a punta desde `TemplateBuilder` hasta el repositorio) se actualizan in-place preservando su id; solo los genuinamente nuevos se crean y solo los genuinamente removidos se eliminan. Antes de eliminar algo, se cuenta cuántos `progress_logs`/`routine_overrides` lo referencian — si hay alguno, la operación completa aborta con `TemplateBlockInUseError` (mismo patrón que `DniAlreadyExistsError`/`ExerciseNameTakenError` ya usado en el proyecto) y el formulario muestra el mensaje en vez de una pantalla de error genérica.
+
+Verificado exhaustivamente contra la Neon real con el caso que originalmente rompía ("Plantilla A", 1 override + 2 progress logs sobre su único bloque): (1) editar el peso prescrito del bloque existente — guardó bien, **el id del bloque no cambió**, override y progress logs intactos; (2) intentar eliminar ese mismo bloque — bloqueado con el mensaje "No se puede eliminar: 2 registro(s) de progreso y 1 personalización(es) todavía referencian ejercicios que se están quitando de la plantilla", y confirmado que nada se perdió en la base tras el intento fallido.
+
+**Archivos modificados/creados:**
+`lib/repositories/interfaces.ts` (`id?` en `CreateExerciseBlockData`/`CreateTrainingDayData`) · `lib/repositories/routine-template.repository.ts` (`update()` reescrito, `TemplateBlockInUseError`) · `lib/services/routine-template.service.ts` (re-export del error) · `lib/actions/routine-template.actions.ts` (captura el error) · `lib/validators/routine-template.ts` (`id` opcional) · `components/admin/template-builder.tsx` (trackea ids reales, muestra error general) · `app/(admin)/plantillas/[id]/page.tsx` (pasa ids reales)
+
+---
+
+### 🎯 EP-14 — Seguimiento y Coaching (Fase 2)
+
+> **Origen:** mismo documento de evolución que EP-13 (`docs/mvp2/Plataforma_Entrenamiento_Propuesta_Evolucion.md`). La tabla de "Decisiones de Alcance Tomadas" de EP-13 no cubría todo el documento — quedaban puntos sin decidir ni para adentro ni para afuera (readiness, molestias recurrentes, sustitución de ejercicios, biblioteca avanzada, tempo, mesociclos/deload, evaluación física). Se revisó ese remanente el 16/08/2026 y se decidió llevar únicamente **Tempo Prescrito** a esta fase — el resto queda fuera por ahora (esfuerzo medio/alto con ROI dudoso para un solo coach con pocos alumnos, o directamente descartado sin nueva justificación desde EP-13).
+
+---
+
+#### HU-39 · Tempo Prescrito
+> **Como** trainer,
+> **quiero** poder indicar el tempo de ejecución de un ejercicio (ej. "3-1-1-0" o "controlado"),
+> **para** que el alumno sepa el ritmo esperado, igual que ya indico peso e intensidad.
+
+**Story Points:** 2
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+**Depende de:** HU-37
+
+**Criterios de Aceptación:**
+- [x] `ExerciseBlock` y `RoutineOverride` ganan un campo `tempo` de texto libre y opcional (no obligatorio, no una métrica central — igual que `intensity`)
+- [x] El armador de plantillas (`TemplateBuilder`) permite cargarlo por ejercicio
+- [x] El formulario de personalización individual (`AssignmentForm`) permite personalizarlo por alumno
+- [x] El portal del alumno lo muestra cuando existe
+- [x] La importación CSV de rutinas soporta la columna nueva como opcional, sin romper el formato existente
+
+**Resumen de la implementación:**
+Calco directo del patrón ya usado para `intensity` en HU-37 — mismo tipo de campo (texto libre corto, opcional, sin validación de formato estricta porque el propio documento de origen dice explícitamente "no debe ser obligatorio ni convertirse en una métrica central"). Se agregó a `ExerciseBlock` y `RoutineOverride` (sí es personalizable por alumno, a diferencia de `groupLabel`/`groupRestSecs` de HU-33 que son estructurales). Verificado de punta a punta contra la Neon real: cargado en el armador de plantillas ("Peso muerto" con tempo "3-1-1-0"), confirmado en la vista previa y en el portal del alumno; luego personalizado por alumno vía `AssignmentForm` (override a "controlado") y confirmado que el portal muestra el valor personalizado en vez del de la plantilla base.
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` (`tempo` en `ExerciseBlock`/`RoutineOverride`) · `prisma/migrations/20260816200000_add_tempo/` · `lib/repositories/interfaces.ts` · `lib/repositories/routine-template.repository.ts` · `lib/repositories/assigned-routine.repository.ts` · `lib/services/assigned-routine.service.ts` · `lib/validators/routine-template.ts` · `lib/validators/assignment.ts` · `lib/validators/routine-import.ts` · `lib/actions/routine-import.actions.ts` · `components/admin/routine-import-runner.tsx` · `components/admin/template-builder.tsx` · `components/admin/assignment-form.tsx` · `app/(admin)/plantillas/[id]/page.tsx` · `app/(admin)/plantillas/importar/page.tsx` · `app/(portal)/rutina/[dni]/page.tsx` · `app/(admin)/alumnos/[id]/rutinas/[routineId]/page.tsx`
+
+---
+
 ## Roadmap por Olas (Waves)
 
 > En Kanban no hay sprints fijos, pero organizamos el trabajo en **olas de entrega** para dar visibilidad al cliente.
@@ -862,11 +1138,41 @@ HU-27 Membresía obligatoria
 HU-28 Reactivar Alumno
 HU-25 Dashboard con contenido real
 HU-29 Video en modal embebido
+
+════════════════════════════════════
+MVP 1 termina acá — HU-01 a HU-29
+════════════════════════════════════
+
+ONDA 8 — MVP 2, Fase 1
+────────────────────────────────────
+HU-30 Cronómetro de Descanso                    ✅
+HU-31 Acciones Rápidas de WhatsApp              ✅
+HU-32 Peso Corporal Histórico                   ✅
+HU-37 Prescripción Enriquecida (peso/RPE/reps)  ✅
+HU-38 Fix: editar plantilla con overrides       ✅ (creció a 8pts — también afectaba progress_logs)
+HU-34 Objetivos Flexibles                       ✅
+HU-36 Dashboard Deportivo (adherencia + alertas) ✅
+HU-33 Bloques y Superseries                      ✅
+HU-35 Notas Tipificadas                          ✅
+════════════════════════════════════
+MVP 2, Fase 1 (EP-13) termina acá — HU-30 a HU-38
+════════════════════════════════════
+
+ONDA 9 — MVP 2, Fase 2
+────────────────────────────────────
+HU-39 Tempo Prescrito                            ✅
+════════════════════════════════════
+MVP 2, Fase 2 (EP-14) termina acá — HU-39
+════════════════════════════════════
 ```
+
+**QA end-to-end de EP-13 (2026-08-16):** con las 9 HUs completas, se hizo una pasada integral en browser real (Neon) cruzando features entre sí en vez de HU por HU aislada: duplicar una plantilla con bloques agrupados (retiene `groupLabel`/`groupRestSecs`), asignar esa misma plantilla a un segundo alumno (dos asignaciones activas compartiendo los mismos `exercise_blocks`, sin crashear en ningún lado), intentar editar/quitar un bloque agrupado que tenía progreso real registrado (la protección de HU-38 lo bloqueó correctamente, sin 500, con los campos nuevos de HU-33 de por medio), y recorrer WhatsApp / peso corporal / objetivos flexibles / dashboard / cronómetro de descanso sobre los mismos alumnos de prueba para confirmar que nada se rompió. No aparecieron regresiones nuevas — el único hallazgo (el filtro de fechas vacío de HU-19 que tumbaba el filtro nuevo de HU-35) ya se corrigió y quedó documentado en la propia HU-35.
 
 ---
 
 ## Resumen de Story Points
+
+### MVP 1 (cerrado)
 
 | Épica | Tickets | Story Points |
 |---|---|---|
@@ -882,7 +1188,19 @@ HU-29 Video en modal embebido
 | EP-10 Marca e Identidad | 2 | 11 |
 | EP-11 Puesta en Marcha | 1 | 1 |
 | EP-12 Correcciones Post-QA | 5 | 10 |
-| **TOTAL** | **29 HUs** | **106 pts** |
+| **Subtotal MVP 1** | **29 HUs** | **106 pts** |
+
+### MVP 2
+
+| Épica | Tickets | Story Points |
+|---|---|---|
+| EP-13 Seguimiento y Coaching (Fase 1) — cerrada ✅ | 9 | 45 |
+| EP-14 Seguimiento y Coaching (Fase 2) — cerrada ✅ | 1 | 2 |
+| **Subtotal MVP 2** | **10 HUs** | **47 pts** |
+
+| | |
+|---|---|
+| **TOTAL GENERAL** | **39 HUs · 153 pts** |
 
 ---
 

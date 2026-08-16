@@ -122,6 +122,13 @@ export function StudentForm({
           defaultValue={values.objetivo}
           error={errors.objetivo}
         />
+        <Field
+          label="Objetivos secundarios / prioridades"
+          name="secondaryGoals"
+          error={errors.secondaryGoals}
+          defaultValue={values.secondaryGoals}
+          placeholder="Ej: mejorar sentadilla, espalda"
+        />
         <SelectField
           label="Nivel"
           name="nivel"
@@ -172,6 +179,7 @@ function Field({
   required,
   type = "text",
   inputMode,
+  placeholder,
 }: {
   label: string
   name: string
@@ -180,6 +188,7 @@ function Field({
   required?: boolean
   type?: string
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]
+  placeholder?: string
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -194,6 +203,7 @@ function Field({
         required={required}
         defaultValue={defaultValue}
         inputMode={inputMode}
+        placeholder={placeholder}
         aria-invalid={!!error}
       />
       {error && <p className="text-sm text-destructive">{error}</p>}

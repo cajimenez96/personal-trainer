@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button"
 import { StudentForm } from "@/components/admin/student-form"
 import { DeactivateStudentButton } from "@/components/admin/deactivate-student-button"
 import { ReactivateStudentButton } from "@/components/admin/reactivate-student-button"
+import { WhatsAppActions } from "@/components/admin/whatsapp-actions"
 import { FlashToast } from "@/components/admin/flash-toast"
 import { updateStudentAction } from "@/lib/actions/student.actions"
 import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
+import { bodyWeightService } from "@/lib/services/body-weight.service"
 
 // DB-backed detail (student + active routine) — must be fresh on every visit.
 export const dynamic = "force-dynamic"
@@ -30,9 +32,10 @@ export default async function AlumnoDetallePage({
 
   if (!student) notFound()
 
-  const [activeRoutine, routineHistory] = await Promise.all([
+  const [activeRoutine, routineHistory, bodyWeightHistory] = await Promise.all([
     assignedRoutineService.getActiveByStudentId(id),
     assignedRoutineService.getHistoryByStudentId(id),
+    bodyWeightService.history(id),
   ])
 
   const defaultValues = {
@@ -42,6 +45,7 @@ export default async function AlumnoDetallePage({
     email: student.email ?? "",
     phone: student.phone ?? "",
     objetivo: student.objetivo ?? "",
+    secondaryGoals: student.secondaryGoals ?? "",
     nivel: student.nivel ?? "",
     modalidad: student.modalidad ?? "",
     membershipStartsAt: toDateInputValue(student.membershipStartsAt),
@@ -123,13 +127,40 @@ export default async function AlumnoDetallePage({
         </CardContent>
       </Card>
 
+      {bodyWeightHistory.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Peso Corporal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="flex flex-col gap-1 text-sm">
+              {bodyWeightHistory.map((entry) => (
+                <li key={entry.id} className="flex items-center justify-between border-b py-1 last:border-b-0">
+                  <span className="text-muted-foreground">
+                    {new Intl.DateTimeFormat("es-AR").format(entry.loggedDate)}
+                  </span>
+                  <span className="font-medium">{entry.weightKg} kg</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>
-              {student.firstName} {student.lastName}
-            </CardTitle>
-            {!student.isActive && <Badge variant="destructive">Inactivo</Badge>}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <CardTitle>
+                {student.firstName} {student.lastName}
+              </CardTitle>
+              {!student.isActive && <Badge variant="destructive">Inactivo</Badge>}
+            </div>
+            <WhatsAppActions
+              phone={student.phone}
+              firstName={student.firstName}
+              paymentExpiresAt={student.paymentExpiresAt}
+            />
           </div>
         </CardHeader>
         <CardContent>

@@ -5,11 +5,13 @@ import { DownloadCsvTemplateButton } from "@/components/admin/download-csv-templ
 import { RoutineImportRunner } from "@/components/admin/routine-import-runner"
 
 const TEMPLATE_HEADERS =
-  "templateName,templateDescription,durationWeeks,dayLabel,dayOrder,exerciseName,primaryMuscle,secondaryMuscle,videoUrl,sets,reps,durationSecs,restSecs,trainerNotes,blockOrder,studentDni"
+  "templateName,templateDescription,durationWeeks,dayLabel,dayOrder,exerciseName,primaryMuscle,secondaryMuscle,videoUrl,sets,reps,repsScheme,weightKg,intensity,tempo,durationSecs,restSecs,trainerNotes,groupLabel,groupRestSecs,blockOrder,studentDni"
 const TEMPLATE_EXAMPLE = [
-  "Torso/Pierna 4 días,Plantilla de fuerza general,6,Día 1 - Torso,1,Press banca,pecho,tríceps,,4,8,,90,,1,",
-  "Torso/Pierna 4 días,,,Día 1 - Torso,1,Remo con barra,espalda,bíceps,,4,10,,90,,2,",
-  "Torso/Pierna 4 días,,,Día 2 - Pierna,2,Sentadilla,cuádriceps,glúteos,,4,8,,120,,1,12345678",
+  "Torso/Pierna 4 días,Plantilla de fuerza general,6,Día 1 - Torso,1,Press banca,pecho,tríceps,,4,8,,90,@7,3-1-1-0,,90,,,,1,",
+  "Torso/Pierna 4 días,,,Día 1 - Torso,1,Remo con barra,espalda,bíceps,,4,10,,,,,,90,,,,2,",
+  "Torso/Pierna 4 días,,,Día 2 - Pierna,2,Sentadilla,cuádriceps,glúteos,,4,,1x6 2x5 1x4,130,@7,,,120,,,,1,12345678",
+  "Torso/Pierna 4 días,,,Día 2 - Pierna,2,Curl femoral,isquiotibiales,,,3,12,,,,,,0,,A,60,2,",
+  "Torso/Pierna 4 días,,,Día 2 - Pierna,2,Extensión de cuádriceps,cuádriceps,,,3,12,,,,,,90,,A,60,3,",
 ].join("\n")
 const TEMPLATE_CONTENT = `${TEMPLATE_HEADERS}\n${TEMPLATE_EXAMPLE}\n`
 
@@ -61,6 +63,29 @@ export default function ImportarRutinasPage() {
               <code className="rounded bg-muted px-1">studentDni</code> (opcional): si se completa,
               la plantilla se asigna a ese alumno al finalizar la importación. Debe existir un
               alumno activo con ese DNI
+            </li>
+            <li>
+              <code className="rounded bg-muted px-1">repsScheme</code> (opcional): esquema de
+              reps variable por serie, ej. <code className="rounded bg-muted px-1">1x6 2x5 1x4</code> —
+              si se completa, se muestra en vez de <code className="rounded bg-muted px-1">reps</code>
+            </li>
+            <li>
+              <code className="rounded bg-muted px-1">weightKg</code> (opcional) e{" "}
+              <code className="rounded bg-muted px-1">intensity</code> (opcional, texto libre tipo{" "}
+              <code className="rounded bg-muted px-1">@7</code>): peso e intensidad prescritos
+            </li>
+            <li>
+              <code className="rounded bg-muted px-1">tempo</code> (opcional, ej.{" "}
+              <code className="rounded bg-muted px-1">3-1-1-0</code> o{" "}
+              <code className="rounded bg-muted px-1">controlado</code>): ritmo de ejecución
+            </li>
+            <li>
+              <code className="rounded bg-muted px-1">groupLabel</code> (opcional, ej.{" "}
+              <code className="rounded bg-muted px-1">A</code>): agrupa en una superserie/circuito
+              las filas consecutivas de un mismo día que comparten la misma etiqueta.{" "}
+              <code className="rounded bg-muted px-1">groupRestSecs</code> es el descanso al
+              terminar el bloque completo (distinto de <code className="rounded bg-muted px-1">restSecs</code>,
+              que es por ejercicio)
             </li>
           </ul>
           <DownloadCsvTemplateButton

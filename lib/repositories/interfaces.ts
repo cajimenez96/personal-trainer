@@ -3,6 +3,7 @@ import type {
   Exercise,
   Modalidad,
   Nivel,
+  NoteType,
   Objetivo,
   RoutineTemplate,
   Student,
@@ -15,6 +16,7 @@ export interface CreateStudentData {
   email?: string
   phone?: string
   objetivo?: Objetivo
+  secondaryGoals?: string
   nivel?: Nivel
   modalidad?: Modalidad
   membershipStartsAt?: Date
@@ -28,6 +30,7 @@ export interface UpdateStudentData {
   email: string | null
   phone: string | null
   objetivo: Objetivo | null
+  secondaryGoals: string | null
   nivel: Nivel | null
   modalidad: Modalidad | null
   membershipStartsAt: Date | null
@@ -97,15 +100,26 @@ export interface IExerciseRepository {
 }
 
 export interface CreateExerciseBlockData {
+  // Presente = actualizar este bloque existente (preserva su id, y por lo
+  // tanto cualquier progress_log/override que lo referencie). Ausente = crear
+  // un bloque nuevo. Ver HU-38: update() ya no destruye y recrea todo.
+  id?: string
   exerciseId: string
   sets: number
   reps?: number | null
+  repsScheme?: string | null
+  weightKg?: number | null
+  intensity?: string | null
+  tempo?: string | null
   durationSecs?: number | null
   restSecs?: number | null
   trainerNotes?: string | null
+  groupLabel?: string | null
+  groupRestSecs?: number | null
 }
 
 export interface CreateTrainingDayData {
+  id?: string
   label: string
   blocks: CreateExerciseBlockData[]
 }
@@ -136,10 +150,16 @@ export type RoutineTemplateWithFullDays = RoutineTemplate & {
       exerciseId: string
       sets: number
       reps: number | null
+      repsScheme: string | null
+      weightKg: number | null
+      intensity: string | null
+      tempo: string | null
       durationSecs: number | null
       restSecs: number | null
       trainerNotes: string | null
       blockOrder: number
+      groupLabel: string | null
+      groupRestSecs: number | null
     }[]
   }[]
 }
@@ -157,6 +177,10 @@ export interface AssignOverrideData {
   exerciseBlockId: string
   sets?: number | null
   reps?: number | null
+  repsScheme?: string | null
+  weightKg?: number | null
+  intensity?: string | null
+  tempo?: string | null
   durationSecs?: number | null
   restSecs?: number | null
   trainerNotes?: string | null
@@ -183,10 +207,16 @@ export type AssignedRoutineRaw = AssignedRoutine & {
         id: string
         sets: number
         reps: number | null
+        repsScheme: string | null
+        weightKg: number | null
+        intensity: string | null
+        tempo: string | null
         durationSecs: number | null
         restSecs: number | null
         trainerNotes: string | null
         blockOrder: number
+        groupLabel: string | null
+        groupRestSecs: number | null
         exercise: { name: string; videoUrl: string | null }
       }[]
     }[]
@@ -195,10 +225,22 @@ export type AssignedRoutineRaw = AssignedRoutine & {
     exerciseBlockId: string
     sets: number | null
     reps: number | null
+    repsScheme: string | null
+    weightKg: number | null
+    intensity: string | null
+    tempo: string | null
     durationSecs: number | null
     restSecs: number | null
     trainerNotes: string | null
   }[]
+}
+
+export type AdherenceStat = {
+  studentId: string
+  studentName: string
+  completedSessions: number
+  expectedSessions: number
+  daysSinceLastLog: number | null
 }
 
 export interface IAssignedRoutineRepository {
@@ -207,6 +249,7 @@ export interface IAssignedRoutineRepository {
   findHistoryByStudentId(studentId: string): Promise<AssignedRoutineWithTemplate[]>
   findByIdWithDetails(id: string): Promise<AssignedRoutineRaw | null>
   countActive(): Promise<number>
+  findAdherenceStats(): Promise<AdherenceStat[]>
 }
 
 export interface UpsertProgressLogData {
@@ -217,6 +260,7 @@ export interface UpsertProgressLogData {
   completed?: boolean
   weightKg?: number | null
   studentNotes?: string | null
+  noteType?: NoteType | null
 }
 
 export type ProgressLogEntry = {
@@ -224,6 +268,7 @@ export type ProgressLogEntry = {
   completed: boolean
   weightKg: number | null
   studentNotes: string | null
+  noteType: NoteType | null
 }
 
 export type ProgressHistoryEntry = {
@@ -233,11 +278,31 @@ export type ProgressHistoryEntry = {
   completed: boolean
   weightKg: number | null
   studentNotes: string | null
+  noteType: NoteType | null
 }
 
 export interface ProgressHistoryFilters {
   from?: Date
   to?: Date
+  noteType?: NoteType
+}
+
+export type BodyWeightEntry = {
+  id: string
+  loggedDate: Date
+  weightKg: number
+}
+
+export interface LogBodyWeightData {
+  studentId: string
+  loggedDate: Date
+  weightKg: number
+}
+
+export interface IBodyWeightRepository {
+  upsert(data: LogBodyWeightData): Promise<void>
+  findByStudent(studentId: string): Promise<BodyWeightEntry[]>
+  findForDay(studentId: string, loggedDate: Date): Promise<BodyWeightEntry | null>
 }
 
 export interface IProgressLogRepository {

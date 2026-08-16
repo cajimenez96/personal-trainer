@@ -1,7 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
-import { routineTemplateService } from "@/lib/services/routine-template.service"
+import { routineTemplateService, TemplateBlockInUseError } from "@/lib/services/routine-template.service"
 import {
   createTemplateSchema,
   type CreateTemplatePayload,
@@ -46,7 +46,14 @@ export async function updateTemplateAction(
     return { ok: false, errors }
   }
 
-  await routineTemplateService.update(id, parsed.data)
+  try {
+    await routineTemplateService.update(id, parsed.data)
+  } catch (err) {
+    if (err instanceof TemplateBlockInUseError) {
+      return { ok: false, errors: { general: err.message } }
+    }
+    throw err
+  }
 
   redirect("/plantillas?updated=1")
 }

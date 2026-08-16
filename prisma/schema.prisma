@@ -36,6 +36,14 @@ enum RoutineStatus {
   historic
 }
 
+// HU-35: clasificación liviana de la nota del alumno — no reemplaza el texto
+// libre, solo permite filtrar rápido sin releer todo el historial.
+enum NoteType {
+  session
+  incident
+  discomfort
+}
+
 // ─────────────────────────────────────────────
 // TRAINER (Admin — single user for MVP)
 // ─────────────────────────────────────────────
@@ -61,7 +69,8 @@ model Student {
   lastName           String    @map("last_name")
   email              String?
   phone              String?
-  objetivo           Objetivo?
+  objetivo           Objetivo? // objetivo principal — se mantiene rígido a propósito
+  secondaryGoals     String?   @map("secondary_goals") // texto libre: objetivos secundarios/prioridades (HU-34)
   nivel              Nivel?
   modalidad          Modalidad?
   membershipStartsAt DateTime? @map("membership_starts_at") @db.Date
@@ -73,6 +82,7 @@ model Student {
 
   assignedRoutines AssignedRoutine[]
   progressLogs     ProgressLog[]
+  bodyWeightLogs   BodyWeightLog[]
 
   @@index([dni], name: "idx_students_dni")
   @@map("students")
@@ -131,11 +141,23 @@ model ExerciseBlock {
   trainingDayId  String  @map("training_day_id")
   exerciseId     String  @map("exercise_id")
   sets           Int
-  reps           Int?                      // null if duration-based
+  reps           Int?                      // null if duration-based or using repsScheme
+  repsScheme     String? @map("reps_scheme")  // free text for variable schemes, e.g. "1x6 2x5 1x4"
+  weightKg       Decimal? @map("weight_kg") @db.Decimal(6, 2) // prescribed weight
+  intensity      String? // free text, e.g. "@7" (RPE-style notation) — not a strict enum
+  tempo          String? // free text, e.g. "3-1-1-0" or "controlado" — not obligatory, not a metric
   durationSecs   Int?    @map("duration_secs") // null if rep-based
   restSecs       Int?    @map("rest_secs")
   trainerNotes   String? @map("trainer_notes")
   blockOrder     Int     @map("block_order")
+  // HU-33: agrupa ejercicios consecutivos del mismo día bajo una etiqueta
+  // (ej. "A") para formar una superserie/circuito. No es un id relacional —
+  // el agrupamiento es por etiqueta + orden consecutivo (mismo criterio que
+  // el resto del schema, sin modelar un calendario/estructura extra).
+  groupLabel     String? @map("group_label")
+  // Descanso a nivel de bloque/grupo (después de completar todos los
+  // ejercicios del grupo), distinto de `restSecs` que es por ejercicio.
+  groupRestSecs  Int?    @map("group_rest_secs")
 
   trainingDay     TrainingDay      @relation(fields: [trainingDayId], references: [id], onDelete: Cascade)
   exercise        Exercise         @relation(fields: [exerciseId], references: [id])
@@ -180,6 +202,10 @@ model RoutineOverride {
   exerciseBlockId   String  @map("exercise_block_id")
   sets              Int?                       // null = use template value
   reps              Int?
+  repsScheme        String? @map("reps_scheme")
+  weightKg          Decimal? @map("weight_kg") @db.Decimal(6, 2)
+  intensity         String?
+  tempo             String?
   durationSecs      Int?    @map("duration_secs")
   restSecs          Int?    @map("rest_secs")
   trainerNotes      String? @map("trainer_notes")
@@ -203,6 +229,7 @@ model ProgressLog {
   weightKg          Decimal? @map("weight_kg") @db.Decimal(6, 2)
   completed         Boolean  @default(false)
   studentNotes      String?  @map("student_notes")
+  noteType          NoteType? @map("note_type")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -214,4 +241,24 @@ model ProgressLog {
   @@unique([studentId, exerciseBlockId, loggedDate], name: "unique_progress_per_day")
   @@index([studentId, loggedDate], name: "idx_progress_student_date")
   @@map("progress_logs")
+}
+
+// ─────────────────────────────────────────────
+// BODY WEIGHT LOGS (HU-32 — independiente de progress_logs,
+// que es peso LEVANTADO por ejercicio, no peso corporal)
+// ─────────────────────────────────────────────
+
+model BodyWeightLog {
+  id         String   @id @default(uuid())
+  studentId  String   @map("student_id")
+  loggedDate DateTime @map("logged_date") @db.Date
+  weightKg   Decimal  @map("weight_kg") @db.Decimal(6, 2)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id])
+
+  // Un registro de peso corporal por día por alumno
+  @@unique([studentId, loggedDate], name: "unique_body_weight_per_day")
+  @@index([studentId, loggedDate], name: "idx_body_weight_student_date")
+  @@map("body_weight_logs")
 }

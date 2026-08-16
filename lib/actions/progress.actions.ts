@@ -5,6 +5,7 @@ import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 import { progressLogService, todayUTC } from "@/lib/services/progress-log.service"
 import { dniSchema } from "@/lib/validators/portal"
+import { NOTE_TYPE_VALUES } from "@/lib/validators/progress-note"
 
 const logProgressSchema = z.object({
   dni: z.string(),
@@ -13,6 +14,7 @@ const logProgressSchema = z.object({
   completed: z.boolean(),
   weightKg: z.number().positive().nullable(),
   studentNotes: z.string().trim().max(500, "Máximo 500 caracteres").nullable(),
+  noteType: z.enum(NOTE_TYPE_VALUES).nullable().optional(),
 })
 
 export type LogProgressInput = z.infer<typeof logProgressSchema>
@@ -48,6 +50,7 @@ export async function logProgressAction(input: LogProgressInput): Promise<LogPro
     completed: parsed.data.completed,
     weightKg: parsed.data.weightKg,
     studentNotes: parsed.data.studentNotes,
+    noteType: parsed.data.noteType ?? null,
   })
 
   return { ok: true }

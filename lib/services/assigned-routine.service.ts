@@ -11,10 +11,18 @@ export type RoutineDetailBlock = {
   exerciseVideoUrl: string | null
   sets: number
   reps: number | null
+  repsScheme: string | null
+  weightKg: number | null
+  intensity: string | null
+  tempo: string | null
   durationSecs: number | null
   restSecs: number | null
   trainerNotes: string | null
   isOverridden: boolean
+  // HU-33: agrupamiento estructural de la plantilla — no es personalizable
+  // por alumno, por eso viene siempre del bloque base, nunca del override.
+  groupLabel: string | null
+  groupRestSecs: number | null
 }
 
 export type RoutineDetailDay = {
@@ -57,10 +65,16 @@ function mergeRoutineDetail(raw: AssignedRoutineRaw): RoutineDetail {
           exerciseVideoUrl: block.exercise.videoUrl,
           sets: override?.sets ?? block.sets,
           reps: override?.reps ?? block.reps,
+          repsScheme: override?.repsScheme ?? block.repsScheme,
+          weightKg: override?.weightKg ?? block.weightKg,
+          intensity: override?.intensity ?? block.intensity,
+          tempo: override?.tempo ?? block.tempo,
           durationSecs: override?.durationSecs ?? block.durationSecs,
           restSecs: override?.restSecs ?? block.restSecs,
           trainerNotes: override?.trainerNotes ?? block.trainerNotes,
           isOverridden: !!override,
+          groupLabel: block.groupLabel,
+          groupRestSecs: block.groupRestSecs,
         }
       }),
     })),
@@ -89,6 +103,10 @@ export class AssignedRoutineService {
 
   countActive() {
     return this.assignedRoutineRepo.countActive()
+  }
+
+  getAdherenceStats() {
+    return this.assignedRoutineRepo.findAdherenceStats()
   }
 }
 

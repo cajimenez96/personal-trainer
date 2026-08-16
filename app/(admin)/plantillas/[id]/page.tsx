@@ -31,14 +31,22 @@ export default async function PlantillaDetallePage({
     description: template.description ?? "",
     durationWeeks: String(template.durationWeeks),
     days: template.trainingDays.map((day) => ({
+      id: day.id,
       label: day.label,
       blocks: day.exerciseBlocks.map((block) => ({
+        id: block.id,
         exerciseId: block.exerciseId,
         sets: String(block.sets),
         reps: block.reps ? String(block.reps) : "",
+        repsScheme: block.repsScheme ?? "",
+        weightKg: block.weightKg ? String(block.weightKg) : "",
+        intensity: block.intensity ?? "",
+        tempo: block.tempo ?? "",
         durationSecs: block.durationSecs ? String(block.durationSecs) : "",
         restSecs: block.restSecs ? String(block.restSecs) : "",
         trainerNotes: block.trainerNotes ?? "",
+        groupLabel: block.groupLabel ?? "",
+        groupRestSecs: block.groupRestSecs ? String(block.groupRestSecs) : "",
       })),
     })),
   }

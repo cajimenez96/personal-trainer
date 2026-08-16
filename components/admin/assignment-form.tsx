@@ -11,7 +11,17 @@ import type { RoutineTemplateWithFullDays } from "@/lib/repositories/interfaces"
 
 type OverrideState = Record<
   string,
-  { sets: string; reps: string; durationSecs: string; restSecs: string; trainerNotes: string }
+  {
+    sets: string
+    reps: string
+    repsScheme: string
+    weightKg: string
+    intensity: string
+    tempo: string
+    durationSecs: string
+    restSecs: string
+    trainerNotes: string
+  }
 >
 
 export function AssignmentForm({
@@ -33,6 +43,10 @@ export function AssignmentForm({
   const emptyOverride: OverrideState[string] = {
     sets: "",
     reps: "",
+    repsScheme: "",
+    weightKg: "",
+    intensity: "",
+    tempo: "",
     durationSecs: "",
     restSecs: "",
     trainerNotes: "",
@@ -58,6 +72,10 @@ export function AssignmentForm({
             exerciseBlockId,
             sets: v.sets ? Number(v.sets) : undefined,
             reps: v.reps ? Number(v.reps) : undefined,
+            repsScheme: v.repsScheme || undefined,
+            weightKg: v.weightKg ? Number(v.weightKg) : undefined,
+            intensity: v.intensity || undefined,
+            tempo: v.tempo || undefined,
             durationSecs: v.durationSecs ? Number(v.durationSecs) : undefined,
             restSecs: v.restSecs ? Number(v.restSecs) : undefined,
             trainerNotes: v.trainerNotes || undefined,
@@ -101,7 +119,14 @@ export function AssignmentForm({
                   <p className="mb-2 text-sm font-medium">
                     {exerciseNames[block.exerciseId] ?? "Ejercicio"} — base: {block.sets}{" "}
                     series
-                    {block.reps ? ` × ${block.reps} reps` : ""}
+                    {block.repsScheme
+                      ? ` (${block.repsScheme})`
+                      : block.reps
+                        ? ` × ${block.reps} reps`
+                        : ""}
+                    {block.weightKg ? ` · ${block.weightKg}kg` : ""}
+                    {block.intensity ? ` · ${block.intensity}` : ""}
+                    {block.tempo ? ` · tempo ${block.tempo}` : ""}
                     {block.durationSecs ? ` · ${block.durationSecs}s` : ""}
                     {block.restSecs ? ` · descanso ${block.restSecs}s` : ""}
                   </p>
@@ -117,6 +142,33 @@ export function AssignmentForm({
                       placeholder={block.reps ? String(block.reps) : "—"}
                       value={o?.reps ?? ""}
                       onChange={(v) => updateOverride(block.id, { reps: v })}
+                    />
+                    <OverrideField
+                      label="Esquema reps"
+                      placeholder={block.repsScheme ?? "—"}
+                      value={o?.repsScheme ?? ""}
+                      onChange={(v) => updateOverride(block.id, { repsScheme: v })}
+                      type="text"
+                    />
+                    <OverrideField
+                      label="Peso (kg)"
+                      placeholder={block.weightKg ? String(block.weightKg) : "—"}
+                      value={o?.weightKg ?? ""}
+                      onChange={(v) => updateOverride(block.id, { weightKg: v })}
+                    />
+                    <OverrideField
+                      label="Intensidad"
+                      placeholder={block.intensity ?? "—"}
+                      value={o?.intensity ?? ""}
+                      onChange={(v) => updateOverride(block.id, { intensity: v })}
+                      type="text"
+                    />
+                    <OverrideField
+                      label="Tempo"
+                      placeholder={block.tempo ?? "—"}
+                      value={o?.tempo ?? ""}
+                      onChange={(v) => updateOverride(block.id, { tempo: v })}
+                      type="text"
                     />
                     <OverrideField
                       label="Duración (seg)"
@@ -166,18 +218,20 @@ function OverrideField({
   placeholder,
   value,
   onChange,
+  type = "number",
 }: {
   label: string
   placeholder: string
   value: string
   onChange: (value: string) => void
+  type?: "number" | "text"
 }) {
   return (
     <div className="flex flex-col gap-1">
       <Label className="text-xs">{label}</Label>
       <Input
-        type="number"
-        min={0}
+        type={type}
+        min={type === "number" ? 0 : undefined}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}

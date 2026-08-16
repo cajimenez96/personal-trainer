@@ -59,17 +59,32 @@ export default async function RutinaDetallePage({
                 <div key={block.id} className="rounded-md border p-3 text-sm">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="font-medium">{block.exerciseName}</span>
-                    {block.isOverridden && (
-                      <Badge variant="outline" className="text-xs">
-                        Personalizado
-                      </Badge>
-                    )}
+                    <div className="flex gap-1">
+                      {block.groupLabel && (
+                        <Badge variant="secondary" className="text-xs">
+                          Bloque {block.groupLabel}
+                        </Badge>
+                      )}
+                      {block.isOverridden && (
+                        <Badge variant="outline" className="text-xs">
+                          Personalizado
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <p className="text-muted-foreground">
                     {block.sets} series
-                    {block.reps ? ` × ${block.reps} reps` : ""}
+                    {block.repsScheme
+                      ? ` (${block.repsScheme})`
+                      : block.reps
+                        ? ` × ${block.reps} reps`
+                        : ""}
+                    {block.weightKg ? ` · ${block.weightKg}kg` : ""}
+                    {block.intensity ? ` · ${block.intensity}` : ""}
+                    {block.tempo ? ` · tempo ${block.tempo}` : ""}
                     {block.durationSecs ? ` · ${block.durationSecs}s` : ""}
                     {block.restSecs ? ` · descanso ${block.restSecs}s` : ""}
+                    {block.groupRestSecs ? ` · descanso post-bloque ${block.groupRestSecs}s` : ""}
                   </p>
                   {block.trainerNotes && (
                     <p className="mt-1 italic text-muted-foreground">"{block.trainerNotes}"</p>

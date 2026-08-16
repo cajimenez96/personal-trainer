@@ -53,9 +53,15 @@ export type TemplateImportBlock = {
   videoUrl?: string
   sets: number
   reps?: number
+  repsScheme?: string
+  weightKg?: number
+  intensity?: string
+  tempo?: string
   durationSecs?: number
   restSecs?: number
   trainerNotes?: string
+  groupLabel?: string
+  groupRestSecs?: number
 }
 
 export type TemplateImportUnit = {
@@ -109,9 +115,15 @@ export async function importRoutineTemplatesChunkAction(
             exerciseId: exerciseIdByName.get(block.exerciseName)!,
             sets: block.sets,
             reps: block.reps ?? null,
+            repsScheme: block.repsScheme ?? null,
+            weightKg: block.weightKg ?? null,
+            intensity: block.intensity ?? null,
+            tempo: block.tempo ?? null,
             durationSecs: block.durationSecs ?? null,
             restSecs: block.restSecs ?? null,
             trainerNotes: block.trainerNotes ?? null,
+            groupLabel: block.groupLabel ?? null,
+            groupRestSecs: block.groupRestSecs ?? null,
           })),
         })),
       })

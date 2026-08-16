@@ -4,6 +4,8 @@ import type {
 } from "@/lib/repositories/interfaces"
 import { PrismaRoutineTemplateRepository } from "@/lib/repositories/routine-template.repository"
 
+export { TemplateBlockInUseError } from "@/lib/repositories/routine-template.repository"
+
 export class RoutineTemplateService {
   constructor(private readonly templateRepo: IRoutineTemplateRepository) {}
 

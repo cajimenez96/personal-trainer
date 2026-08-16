@@ -51,6 +51,7 @@ export const createStudentSchema = z.object({
   ),
   phone: z.preprocess(emptyToUndefined, z.string().trim().optional()),
   objetivo: z.preprocess(emptyToUndefined, z.enum(OBJETIVO_VALUES).optional()),
+  secondaryGoals: z.preprocess(emptyToUndefined, z.string().trim().max(300).optional()),
   nivel: z.preprocess(emptyToUndefined, z.enum(NIVEL_VALUES).optional()),
   modalidad: z.preprocess(emptyToUndefined, z.enum(MODALIDAD_VALUES).optional()),
   membershipStartsAt: z.preprocess(

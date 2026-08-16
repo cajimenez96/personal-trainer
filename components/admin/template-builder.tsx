@@ -9,25 +9,48 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createTemplateAction, updateTemplateAction } from "@/lib/actions/routine-template.actions"
 import type { CreateTemplatePayload } from "@/lib/validators/routine-template"
+import { groupConsecutiveBlocks } from "@/lib/utils/group-blocks"
 
 type BlockState = {
   key: string
+  id?: string
   exerciseId: string
   sets: string
   reps: string
+  repsScheme: string
+  weightKg: string
+  intensity: string
+  tempo: string
   durationSecs: string
   restSecs: string
   trainerNotes: string
+  groupLabel: string
+  groupRestSecs: string
 }
 
 type DayState = {
   key: string
+  id?: string
   label: string
   blocks: BlockState[]
 }
 
 function emptyBlock(key: string): BlockState {
-  return { key, exerciseId: "", sets: "", reps: "", durationSecs: "", restSecs: "", trainerNotes: "" }
+  return {
+    key,
+    exerciseId: "",
+    sets: "",
+    reps: "",
+    repsScheme: "",
+    weightKg: "",
+    intensity: "",
+    tempo: "",
+    durationSecs: "",
+    restSecs: "",
+    trainerNotes: "",
+    groupLabel: "",
+    groupRestSecs: "",
+  }
 }
 
 export type TemplateInitialValues = {
@@ -35,14 +58,22 @@ export type TemplateInitialValues = {
   description: string
   durationWeeks: string
   days: {
+    id?: string
     label: string
     blocks: {
+      id?: string
       exerciseId: string
       sets: string
       reps: string
+      repsScheme: string
+      weightKg: string
+      intensity: string
+      tempo: string
       durationSecs: string
       restSecs: string
       trainerNotes: string
+      groupLabel: string
+      groupRestSecs: string
     }[]
   }[]
 }
@@ -65,6 +96,7 @@ export function TemplateBuilder({
   const [days, setDays] = useState<DayState[]>(() =>
     (initial?.days ?? []).map((day, dayIndex) => ({
       key: `initial-day-${dayIndex}`,
+      id: day.id,
       label: day.label,
       blocks: day.blocks.map((block, blockIndex) => ({
         key: `initial-block-${dayIndex}-${blockIndex}`,
@@ -142,14 +174,22 @@ export function TemplateBuilder({
       description: description || undefined,
       durationWeeks,
       days: days.map((d) => ({
+        id: d.id,
         label: d.label,
         blocks: d.blocks.map((b) => ({
+          id: b.id,
           exerciseId: b.exerciseId,
           sets: b.sets,
           reps: b.reps || undefined,
+          repsScheme: b.repsScheme || undefined,
+          weightKg: b.weightKg || undefined,
+          intensity: b.intensity || undefined,
+          tempo: b.tempo || undefined,
           durationSecs: b.durationSecs || undefined,
           restSecs: b.restSecs || undefined,
           trainerNotes: b.trainerNotes || undefined,
+          groupLabel: b.groupLabel || undefined,
+          groupRestSecs: b.groupRestSecs || undefined,
         })),
       })),
     }
@@ -203,23 +243,64 @@ export function TemplateBuilder({
                 {day.blocks.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin ejercicios.</p>
                 ) : (
-                  <ul className="mt-2 flex flex-col gap-1 text-sm">
-                    {day.blocks.map((block) => (
-                      <li key={block.key}>
-                        {exerciseName(block.exerciseId)} — {block.sets || "?"} series
-                        {block.reps && ` × ${block.reps} reps`}
-                        {block.durationSecs && ` · ${block.durationSecs}s`}
-                        {block.restSecs && ` · descanso ${block.restSecs}s`}
-                        {block.trainerNotes && ` — "${block.trainerNotes}"`}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="mt-2 flex flex-col gap-2 text-sm">
+                    {groupConsecutiveBlocks(day.blocks).map((entry, entryIndex) =>
+                      entry.kind === "single" ? (
+                        <p key={entry.block.key}>
+                          {exerciseName(entry.block.exerciseId)} — {entry.block.sets || "?"} series
+                          {entry.block.repsScheme
+                            ? ` (${entry.block.repsScheme})`
+                            : entry.block.reps && ` × ${entry.block.reps} reps`}
+                          {entry.block.weightKg && ` · ${entry.block.weightKg}kg`}
+                          {entry.block.intensity && ` · ${entry.block.intensity}`}
+                          {entry.block.tempo && ` · tempo ${entry.block.tempo}`}
+                          {entry.block.durationSecs && ` · ${entry.block.durationSecs}s`}
+                          {entry.block.restSecs && ` · descanso ${entry.block.restSecs}s`}
+                          {entry.block.trainerNotes && ` — "${entry.block.trainerNotes}"`}
+                        </p>
+                      ) : (
+                        <div
+                          key={`group-${entryIndex}-${entry.label}`}
+                          className="rounded-md border-l-2 border-primary bg-muted/30 p-2"
+                        >
+                          <p className="text-xs font-semibold text-primary">
+                            Bloque {entry.label} (superserie)
+                          </p>
+                          <ul className="mt-1 flex flex-col gap-1">
+                            {entry.blocks.map((block) => (
+                              <li key={block.key}>
+                                {exerciseName(block.exerciseId)} — {block.sets || "?"} series
+                                {block.repsScheme
+                                  ? ` (${block.repsScheme})`
+                                  : block.reps && ` × ${block.reps} reps`}
+                                {block.weightKg && ` · ${block.weightKg}kg`}
+                                {block.intensity && ` · ${block.intensity}`}
+                                {block.tempo && ` · tempo ${block.tempo}`}
+                                {block.trainerNotes && ` — "${block.trainerNotes}"`}
+                              </li>
+                            ))}
+                          </ul>
+                          {entry.blocks[entry.blocks.length - 1].groupRestSecs && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Descanso post-bloque:{" "}
+                              {entry.blocks[entry.blocks.length - 1].groupRestSecs}s
+                            </p>
+                          )}
+                        </div>
+                      ),
+                    )}
+                  </div>
                 )}
               </div>
             ))}
           </CardContent>
         </Card>
 
+        {errors.general && (
+          <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            {errors.general}
+          </p>
+        )}
         <Button onClick={handleSave} disabled={pending} className="w-full sm:w-auto">
           {pending ? "Guardando..." : mode === "edit" ? "Guardar cambios" : "Guardar plantilla"}
         </Button>
@@ -330,6 +411,59 @@ export function TemplateBuilder({
                     onChange={(v) => updateBlock(dayIndex, blockIndex, { restSecs: v })}
                   />
 
+                  <div className="sm:col-span-3 flex flex-col gap-1">
+                    <Label>Esquema de reps (si varía por serie)</Label>
+                    <Input
+                      value={block.repsScheme}
+                      placeholder="Ej: 1x6 2x5 1x4"
+                      onChange={(e) =>
+                        updateBlock(dayIndex, blockIndex, { repsScheme: e.target.value })
+                      }
+                    />
+                  </div>
+                  <NumberField
+                    label="Peso (kg)"
+                    value={block.weightKg}
+                    onChange={(v) => updateBlock(dayIndex, blockIndex, { weightKg: v })}
+                  />
+                  <div className="sm:col-span-2 flex flex-col gap-1">
+                    <Label>Intensidad</Label>
+                    <Input
+                      value={block.intensity}
+                      placeholder="Ej: @7"
+                      onChange={(e) =>
+                        updateBlock(dayIndex, blockIndex, { intensity: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="sm:col-span-2 flex flex-col gap-1">
+                    <Label>Tempo</Label>
+                    <Input
+                      value={block.tempo}
+                      placeholder="Ej: 3-1-1-0 o controlado"
+                      onChange={(e) =>
+                        updateBlock(dayIndex, blockIndex, { tempo: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label>Grupo (ej. A)</Label>
+                    <Input
+                      value={block.groupLabel}
+                      placeholder="A"
+                      maxLength={10}
+                      onChange={(e) =>
+                        updateBlock(dayIndex, blockIndex, { groupLabel: e.target.value })
+                      }
+                    />
+                  </div>
+                  <NumberField
+                    label="Descanso post-bloque (seg)"
+                    value={block.groupRestSecs}
+                    onChange={(v) => updateBlock(dayIndex, blockIndex, { groupRestSecs: v })}
+                  />
+
                   <div className="sm:col-span-5 flex flex-col gap-1">
                     <Label>Notas del trainer</Label>
                     <Input
@@ -374,6 +508,10 @@ export function TemplateBuilder({
               <Button variant="secondary" onClick={() => addBlock(dayIndex)} className="w-fit">
                 Agregar ejercicio
               </Button>
+              <p className="text-xs text-muted-foreground">
+                Ejercicios consecutivos con la misma letra de Grupo forman una superserie. El
+                descanso post-bloque se toma del último ejercicio del grupo.
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -382,6 +520,12 @@ export function TemplateBuilder({
           Agregar día
         </Button>
       </div>
+
+      {errors.general && (
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          {errors.general}
+        </p>
+      )}
 
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={() => setPreview(true)}>

@@ -16,6 +16,7 @@ export class PrismaProgressLogRepository implements IProgressLogRepository {
     completed,
     weightKg,
     studentNotes,
+    noteType,
   }: UpsertProgressLogData) {
     await db.progressLog.upsert({
       where: {
@@ -29,11 +30,13 @@ export class PrismaProgressLogRepository implements IProgressLogRepository {
         completed: completed ?? false,
         weightKg: weightKg ?? null,
         studentNotes: studentNotes ?? null,
+        noteType: noteType ?? null,
       },
       update: {
         ...(completed !== undefined && { completed }),
         ...(weightKg !== undefined && { weightKg }),
         ...(studentNotes !== undefined && { studentNotes }),
+        ...(noteType !== undefined && { noteType }),
       },
     })
   }
@@ -48,16 +51,18 @@ export class PrismaProgressLogRepository implements IProgressLogRepository {
       completed: row.completed,
       weightKg: row.weightKg ? row.weightKg.toNumber() : null,
       studentNotes: row.studentNotes,
+      noteType: row.noteType,
     }))
   }
 
   async findByStudent(
     studentId: string,
-    { from, to }: ProgressHistoryFilters,
+    { from, to, noteType }: ProgressHistoryFilters,
   ): Promise<ProgressHistoryEntry[]> {
     const rows = await db.progressLog.findMany({
       where: {
         studentId,
+        ...(noteType && { noteType }),
         ...((from || to) && {
           loggedDate: {
             ...(from && { gte: from }),
@@ -76,6 +81,7 @@ export class PrismaProgressLogRepository implements IProgressLogRepository {
       completed: row.completed,
       weightKg: row.weightKg ? row.weightKg.toNumber() : null,
       studentNotes: row.studentNotes,
+      noteType: row.noteType,
     }))
   }
 }

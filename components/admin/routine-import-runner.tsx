@@ -41,9 +41,15 @@ type BuilderBlock = {
   videoUrl?: string
   sets: number
   reps?: number
+  repsScheme?: string
+  weightKg?: number
+  intensity?: string
+  tempo?: string
   durationSecs?: number
   restSecs?: number
   trainerNotes?: string
+  groupLabel?: string
+  groupRestSecs?: number
 }
 
 type BuilderDay = { dayOrder: number; label: string; blocks: BuilderBlock[] }
@@ -79,9 +85,15 @@ function buildTemplateUnits(
               videoUrl: meta?.videoUrl,
               sets: block.sets,
               reps: block.reps,
+              repsScheme: block.repsScheme,
+              weightKg: block.weightKg,
+              intensity: block.intensity,
+              tempo: block.tempo,
               durationSecs: block.durationSecs,
               restSecs: block.restSecs,
               trainerNotes: block.trainerNotes,
+              groupLabel: block.groupLabel,
+              groupRestSecs: block.groupRestSecs,
             }
           }),
       })),
@@ -172,11 +184,17 @@ export function RoutineImportRunner() {
         primaryMuscle: row.primaryMuscle,
         secondaryMuscle: row.secondaryMuscle,
         videoUrl: row.videoUrl,
+        repsScheme: row.repsScheme,
+        weightKg: row.weightKg,
+        intensity: row.intensity,
+        tempo: row.tempo,
         sets: row.sets,
         reps: row.reps,
         durationSecs: row.durationSecs,
         restSecs: row.restSecs,
         trainerNotes: row.trainerNotes,
+        groupLabel: row.groupLabel,
+        groupRestSecs: row.groupRestSecs,
       })
 
       if (row.studentDni) {
