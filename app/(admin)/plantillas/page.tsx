@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FlashToast } from "@/components/admin/flash-toast"
+import { DeleteTemplateButton } from "@/components/admin/delete-template-button"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 
 // DB-backed listing — must reflect newly created templates on every request.
@@ -39,26 +40,35 @@ export default async function PlantillasPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {templates.map((template) => (
-          <Link key={template.id} href={`/plantillas/${template.id}`}>
-            <Card className="h-full transition-colors hover:bg-muted/50">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {template.name}
+          <Card key={template.id} className="relative h-full transition-colors hover:bg-muted/50">
+            {/* "Stretched link": ocupa toda la card salvo lo que tenga su propio
+                z-index (el botón de eliminar) — evita anidar un <button> dentro
+                de un <a>, que no es HTML válido. */}
+            <Link
+              href={`/plantillas/${template.id}`}
+              className="absolute inset-0"
+              aria-label={`Ver ${template.name}`}
+            />
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-2">
+                <span>{template.name}</span>
+                <div className="relative z-10 flex items-center gap-1">
                   <Badge variant="secondary">{template.durationWeeks} sem.</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {template.description && (
-                  <p className="mb-2 text-sm text-muted-foreground">{template.description}</p>
-                )}
-                <p className="text-sm">
-                  {template.trainingDays.length} día(s) ·{" "}
-                  {template.trainingDays.reduce((sum, d) => sum + d.exerciseBlocks.length, 0)}{" "}
-                  ejercicio(s)
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+                  <DeleteTemplateButton templateId={template.id} templateName={template.name} />
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {template.description && (
+                <p className="mb-2 text-sm text-muted-foreground">{template.description}</p>
+              )}
+              <p className="text-sm">
+                {template.trainingDays.length} día(s) ·{" "}
+                {template.trainingDays.reduce((sum, d) => sum + d.exerciseBlocks.length, 0)}{" "}
+                ejercicio(s)
+              </p>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TemplateBuilder, type TemplateInitialValues } from "@/components/admin/template-builder"
 import { DuplicateTemplateButton } from "@/components/admin/duplicate-template-button"
@@ -56,6 +57,10 @@ export default async function PlantillaDetallePage({
       <Suspense>
         <FlashToast messages={{ duplicated: "Plantilla duplicada correctamente." }} />
       </Suspense>
+      <Button variant="link" render={<Link href="/plantillas" />} className="mb-2 h-auto px-0">
+        <ArrowLeft className="size-4" />
+        Volver
+      </Button>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{template.name}</h1>
         <div className="flex gap-3">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Oswald } from "next/font/google";
+import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,9 +8,8 @@ const inter = Inter({
   display: "swap",
 });
 
-const oswald = Oswald({
+const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-display",
-  weight: ["500", "600", "700"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -24,13 +23,16 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Personal Trainer — Panel de Gestión",
   description: "Plataforma para gestión de alumnos, rutinas y progreso.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${oswald.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

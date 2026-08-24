@@ -1,47 +1,55 @@
-import { AuthError } from "next-auth"
-import { redirect } from "next/navigation"
-import { signIn } from "@/lib/auth"
-import { Button } from "@/components/ui/button"
+import Image from "next/image";
+import logoHome from "@/app/assets/home.png";
+import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
+import { signIn } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; callbackUrl?: string }>
+  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 }) {
-  const { error, callbackUrl } = await searchParams
+  const { error, callbackUrl } = await searchParams;
 
   async function login(formData: FormData) {
-    "use server"
+    "use server";
 
     try {
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),
         redirectTo: callbackUrl || "/dashboard",
-      })
+      });
     } catch (err) {
       if (err instanceof AuthError) {
-        const params = new URLSearchParams({ error: "CredentialsSignin" })
-        if (callbackUrl) params.set("callbackUrl", callbackUrl)
-        redirect(`/login?${params.toString()}`)
+        const params = new URLSearchParams({ error: "CredentialsSignin" });
+        if (callbackUrl) params.set("callbackUrl", callbackUrl);
+        redirect(`/login?${params.toString()}`);
       }
-      throw err
+      throw err;
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen flex-col md:flex-row items-center justify-center gap-24 bg-background p-4">
+      <Image
+        src={logoHome}
+        alt="Santiago Ramón Logo"
+        className="w-2xs md:w-auto object-contain"
+        priority
+      />
       <Card className="w-full max-w-sm">
-        <CardHeader>
+        <CardHeader className="flex flex-col items-center text-center">
           <CardTitle>Iniciar sesión</CardTitle>
           <CardDescription>Panel de administración del trainer</CardDescription>
         </CardHeader>
@@ -72,12 +80,12 @@ export default async function LoginPage({
                 Email o contraseña incorrectos.
               </p>
             )}
-            <Button type="submit" className="w-full">
+            <Button type="submit" size="lg" className="w-full">
               Ingresar
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

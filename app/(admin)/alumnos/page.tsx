@@ -12,16 +12,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { FlashToast } from "@/components/admin/flash-toast"
+import { ClickableTableRow } from "@/components/admin/clickable-table-row"
+import { ActionsCell } from "@/components/admin/actions-cell"
+import { StudentRowActions } from "@/components/admin/student-row-actions"
+import { FilterSelect } from "@/components/admin/filter-select"
 import { studentService } from "@/lib/services/student.service"
-import {
-  MODALIDAD_LABEL,
-  MODALIDAD_VALUES,
-  NIVEL_LABEL,
-  NIVEL_VALUES,
-  OBJETIVO_LABEL,
-  OBJETIVO_VALUES,
-  studentListQuerySchema,
-} from "@/lib/validators/student"
+import { objetivoService } from "@/lib/services/objetivo.service"
+import { modalidadService } from "@/lib/services/modalidad.service"
+import { NIVEL_LABEL, NIVEL_VALUES, studentListQuerySchema } from "@/lib/validators/student"
 
 const PAGE_SIZE = 20
 
@@ -43,16 +41,17 @@ export default async function AlumnosPage({
   const parsed = studentListQuerySchema.safeParse(raw)
   const query = parsed.success ? parsed.data : { isActive: true as const }
 
-  const { items, nextCursor } = await studentService.list({
-    ...query,
-    limit: PAGE_SIZE,
-  })
+  const [{ items, nextCursor }, objetivos, modalidades] = await Promise.all([
+    studentService.list({ ...query, limit: PAGE_SIZE }),
+    objetivoService.list(),
+    modalidadService.list(),
+  ])
 
   const baseParams = new URLSearchParams()
   if (query.search) baseParams.set("search", query.search)
-  if (query.objetivo) baseParams.set("objetivo", query.objetivo)
+  if (query.objetivoId) baseParams.set("objetivoId", query.objetivoId)
   if (query.nivel) baseParams.set("nivel", query.nivel)
-  if (query.modalidad) baseParams.set("modalidad", query.modalidad)
+  if (query.modalidadId) baseParams.set("modalidadId", query.modalidadId)
   baseParams.set("isActive", String(query.isActive))
 
   const nextHref = (() => {
@@ -97,32 +96,31 @@ export default async function AlumnosPage({
         </div>
 
         <FilterSelect
-          name="objetivo"
+          name="objetivoId"
           label="Objetivo"
-          value={query.objetivo}
-          options={OBJETIVO_VALUES}
-          labels={OBJETIVO_LABEL}
+          value={query.objetivoId}
+          items={objetivos.map((o) => ({ value: o.id, label: o.label }))}
         />
         <FilterSelect
           name="nivel"
           label="Nivel"
           value={query.nivel}
-          options={NIVEL_VALUES}
-          labels={NIVEL_LABEL}
+          items={NIVEL_VALUES.map((v) => ({ value: v, label: NIVEL_LABEL[v] }))}
         />
         <FilterSelect
-          name="modalidad"
+          name="modalidadId"
           label="Modalidad"
-          value={query.modalidad}
-          options={MODALIDAD_VALUES}
-          labels={MODALIDAD_LABEL}
+          value={query.modalidadId}
+          items={modalidades.map((m) => ({ value: m.id, label: m.label }))}
         />
         <FilterSelect
           name="isActive"
           label="Estado"
           value={String(query.isActive)}
-          options={["true", "false"]}
-          labels={{ true: "Activos", false: "Inactivos" }}
+          items={[
+            { value: "true", label: "Activos" },
+            { value: "false", label: "Inactivos" },
+          ]}
         />
 
         <Button type="submit" variant="secondary">
@@ -139,27 +137,26 @@ export default async function AlumnosPage({
               <TableHead>Objetivo</TableHead>
               <TableHead>Nivel</TableHead>
               <TableHead>Cuota</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No se encontraron alumnos.
                 </TableCell>
               </TableRow>
             )}
             {items.map((student) => (
-              <TableRow key={student.id} className="cursor-pointer">
+              <ClickableTableRow key={student.id} href={`/alumnos/${student.id}`}>
                 <TableCell>
                   <Link href={`/alumnos/${student.id}`} className="hover:underline">
                     {student.lastName}, {student.firstName}
                   </Link>
                 </TableCell>
                 <TableCell>{student.dni}</TableCell>
-                <TableCell>
-                  {student.objetivo ? OBJETIVO_LABEL[student.objetivo] : "—"}
-                </TableCell>
+                <TableCell>{student.objetivoRef?.label ?? "—"}</TableCell>
                 <TableCell>{student.nivel ? NIVEL_LABEL[student.nivel] : "—"}</TableCell>
                 <TableCell>
                   {student.paymentExpiresAt ? (
@@ -170,7 +167,14 @@ export default async function AlumnosPage({
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-              </TableRow>
+                <ActionsCell>
+                  <StudentRowActions
+                    studentId={student.id}
+                    studentName={`${student.firstName} ${student.lastName}`}
+                    isActive={student.isActive}
+                  />
+                </ActionsCell>
+              </ClickableTableRow>
             ))}
           </TableBody>
         </Table>
@@ -183,39 +187,6 @@ export default async function AlumnosPage({
           </Button>
         </div>
       )}
-    </div>
-  )
-}
-
-function FilterSelect({
-  name,
-  label,
-  value,
-  options,
-  labels,
-}: {
-  name: string
-  label: string
-  value: string | undefined
-  options: readonly string[]
-  labels: Record<string, string>
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      {/* Native select posted via the surrounding GET form — no client JS needed */}
-      <select
-        name={name}
-        defaultValue={value ?? ""}
-        className="h-9 w-40 rounded-md border border-input bg-background px-3 text-sm"
-      >
-        <option value="">Todos</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {labels[option]}
-          </option>
-        ))}
-      </select>
     </div>
   )
 }

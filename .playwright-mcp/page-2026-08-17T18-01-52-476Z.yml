@@ -1,0 +1,49 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link [ref=e5] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Santiago Ramón — Panel" [ref=e6]
+        - navigation [ref=e7]:
+          - link "Dashboard" [ref=e8] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Alumnos" [ref=e9] [cursor=pointer]:
+            - /url: /alumnos
+          - link "Ejercicios" [ref=e10] [cursor=pointer]:
+            - /url: /ejercicios
+          - link "Plantillas" [ref=e11] [cursor=pointer]:
+            - /url: /plantillas
+        - button "Cerrar sesión" [ref=e13]
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Plantillas" [level=1] [ref=e17]
+          - generic [ref=e18]:
+            - button "Importar CSV" [ref=e19] [cursor=pointer]
+            - button "Nueva plantilla" [ref=e20] [cursor=pointer]
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - link "Ver Copia de Rutina I" [ref=e23] [cursor=pointer]:
+              - /url: /plantillas/43348e0e-c904-4547-a82b-e39e8111651a
+            - generic [ref=e25]:
+              - generic [ref=e26]: Copia de Rutina I
+              - generic [ref=e27]:
+                - generic [ref=e28]: 4 sem.
+                - button "Eliminar Copia de Rutina I" [ref=e29]
+            - generic [ref=e30]:
+              - paragraph [ref=e31]: Esta distribución organiza 4 días de entrenamiento semanales (Torso A / Pierna A / Torso B / Pierna B) equilibrando volumen, patrones de movimiento e intensidad relativa (RIR).
+              - paragraph [ref=e32]: 2 día(s) · 6 ejercicio(s)
+          - generic [ref=e33]:
+            - link "Ver Rutina I" [ref=e34] [cursor=pointer]:
+              - /url: /plantillas/dbe924f6-5292-4b26-9ea4-1a55f769b0d4
+            - generic [ref=e36]:
+              - generic [ref=e37]: Rutina I
+              - generic [ref=e38]:
+                - generic [ref=e39]: 4 sem.
+                - button "Eliminar Rutina I" [ref=e40]
+            - generic [ref=e41]:
+              - paragraph [ref=e42]: Esta distribución organiza 4 días de entrenamiento semanales (Torso A / Pierna A / Torso B / Pierna B) equilibrando volumen, patrones de movimiento e intensidad relativa (RIR).
+              - paragraph [ref=e43]: 2 día(s) · 6 ejercicio(s)
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e49] [cursor=pointer]

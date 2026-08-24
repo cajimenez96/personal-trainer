@@ -6,6 +6,15 @@ import { PrismaRoutineTemplateRepository } from "@/lib/repositories/routine-temp
 
 export { TemplateBlockInUseError } from "@/lib/repositories/routine-template.repository"
 
+export class RoutineTemplateInUseError extends Error {
+  constructor() {
+    super(
+      "Esta plantilla tiene alumnos con una rutina asignada (activa o histórica) y no se puede eliminar.",
+    )
+    this.name = "RoutineTemplateInUseError"
+  }
+}
+
 export class RoutineTemplateService {
   constructor(private readonly templateRepo: IRoutineTemplateRepository) {}
 
@@ -31,6 +40,12 @@ export class RoutineTemplateService {
 
   countAssignments(id: string) {
     return this.templateRepo.countAssignments(id)
+  }
+
+  async delete(id: string) {
+    const referencedCount = await this.templateRepo.countAssignments(id)
+    if (referencedCount > 0) throw new RoutineTemplateInUseError()
+    await this.templateRepo.delete(id)
   }
 }
 

@@ -13,6 +13,8 @@ import { updateStudentAction } from "@/lib/actions/student.actions"
 import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 import { bodyWeightService } from "@/lib/services/body-weight.service"
+import { objetivoService } from "@/lib/services/objetivo.service"
+import { modalidadService } from "@/lib/services/modalidad.service"
 
 // DB-backed detail (student + active routine) — must be fresh on every visit.
 export const dynamic = "force-dynamic"
@@ -32,11 +34,14 @@ export default async function AlumnoDetallePage({
 
   if (!student) notFound()
 
-  const [activeRoutine, routineHistory, bodyWeightHistory] = await Promise.all([
-    assignedRoutineService.getActiveByStudentId(id),
-    assignedRoutineService.getHistoryByStudentId(id),
-    bodyWeightService.history(id),
-  ])
+  const [activeRoutine, routineHistory, bodyWeightHistory, objetivos, modalidades] =
+    await Promise.all([
+      assignedRoutineService.getActiveByStudentId(id),
+      assignedRoutineService.getHistoryByStudentId(id),
+      bodyWeightService.history(id),
+      objetivoService.list(),
+      modalidadService.list(),
+    ])
 
   const defaultValues = {
     firstName: student.firstName,
@@ -44,10 +49,10 @@ export default async function AlumnoDetallePage({
     dni: student.dni,
     email: student.email ?? "",
     phone: student.phone ?? "",
-    objetivo: student.objetivo ?? "",
+    objetivoId: student.objetivoId ?? "",
     secondaryGoals: student.secondaryGoals ?? "",
     nivel: student.nivel ?? "",
-    modalidad: student.modalidad ?? "",
+    modalidadId: student.modalidadId ?? "",
     membershipStartsAt: toDateInputValue(student.membershipStartsAt),
     paymentExpiresAt: toDateInputValue(student.paymentExpiresAt),
     healthNotes: student.healthNotes ?? "",
@@ -168,6 +173,8 @@ export default async function AlumnoDetallePage({
             mode="edit"
             action={updateStudentAction.bind(null, student.id)}
             defaultValues={defaultValues}
+            objetivos={objetivos}
+            modalidades={modalidades}
           />
 
           <div className="mt-8 flex justify-end border-t pt-6">

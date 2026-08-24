@@ -4,9 +4,17 @@ import { redirect } from "next/navigation"
 import { DniAlreadyExistsError, studentService } from "@/lib/services/student.service"
 import { createStudentSchema, updateStudentSchema } from "@/lib/validators/student"
 
+export type ExistingStudentConflict = {
+  id: string
+  name: string
+  dni: string
+  isActive: boolean
+}
+
 export type CreateStudentState = {
   errors?: Partial<Record<string, string>>
   values?: Record<string, string>
+  existingStudent?: ExistingStudentConflict
 }
 
 export async function createStudentAction(
@@ -29,7 +37,18 @@ export async function createStudentAction(
     await studentService.create(parsed.data)
   } catch (err) {
     if (err instanceof DniAlreadyExistsError) {
-      return { errors: { dni: err.message }, values: raw }
+      return {
+        errors: { dni: err.message },
+        values: raw,
+        existingStudent: err.existingStudent
+          ? {
+              id: err.existingStudent.id,
+              name: `${err.existingStudent.firstName} ${err.existingStudent.lastName}`.trim(),
+              dni: err.dni,
+              isActive: err.existingStudent.isActive,
+            }
+          : undefined,
+      }
     }
     throw err
   }
@@ -59,10 +78,10 @@ export async function updateStudentAction(
     lastName,
     email,
     phone,
-    objetivo,
+    objetivoId,
     secondaryGoals,
     nivel,
-    modalidad,
+    modalidadId,
     membershipStartsAt,
     paymentExpiresAt,
     healthNotes,
@@ -73,10 +92,10 @@ export async function updateStudentAction(
     lastName,
     email: email ?? null,
     phone: phone ?? null,
-    objetivo: objetivo ?? null,
+    objetivoId: objetivoId ?? null,
     secondaryGoals: secondaryGoals ?? null,
     nivel: nivel ?? null,
-    modalidad: modalidad ?? null,
+    modalidadId: modalidadId ?? null,
     membershipStartsAt: membershipStartsAt ?? null,
     paymentExpiresAt: paymentExpiresAt ?? null,
     healthNotes: healthNotes ?? null,

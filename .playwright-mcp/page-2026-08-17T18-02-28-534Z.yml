@@ -1,0 +1,44 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link [ref=e79] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Santiago Ramón — Panel" [ref=e80]
+        - navigation [ref=e7]:
+          - link "Dashboard" [ref=e81] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Alumnos" [ref=e82] [cursor=pointer]:
+            - /url: /alumnos
+          - link "Ejercicios" [ref=e83] [cursor=pointer]:
+            - /url: /ejercicios
+          - link "Plantillas" [ref=e84] [cursor=pointer]:
+            - /url: /plantillas
+        - button "Cerrar sesión" [ref=e85]
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Plantillas" [level=1] [ref=e86]
+          - generic [ref=e18]:
+            - button "Importar CSV" [ref=e87] [cursor=pointer]
+            - button "Nueva plantilla" [ref=e88] [cursor=pointer]
+        - generic [ref=e33]:
+          - link "Ver Rutina I" [ref=e89] [cursor=pointer]:
+            - /url: /plantillas/dbe924f6-5292-4b26-9ea4-1a55f769b0d4
+          - generic [ref=e36]:
+            - generic [ref=e37]: Rutina I
+            - generic [ref=e38]:
+              - generic [ref=e39]: 4 sem.
+              - button "Eliminar Rutina I" [ref=e90]
+          - generic [ref=e41]:
+            - paragraph [ref=e42]: Esta distribución organiza 4 días de entrenamiento semanales (Torso A / Pierna A / Torso B / Pierna B) equilibrando volumen, patrones de movimiento e intensidad relativa (RIR).
+            - paragraph [ref=e43]: 2 día(s) · 6 ejercicio(s)
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e91] [cursor=pointer]:
+    - generic [ref=e94]:
+      - text: Rendering
+      - generic [ref=e95]:
+        - generic [ref=e96]: .
+        - generic [ref=e97]: .
+        - generic [ref=e98]: .
+  - alert [ref=e53]

@@ -4,6 +4,20 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import { DniAlreadyExistsError, studentService } from "@/lib/services/student.service"
 import { createStudentSchema, type CreateStudentInput } from "@/lib/validators/student"
+import { objetivoService } from "@/lib/services/objetivo.service"
+import { modalidadService } from "@/lib/services/modalidad.service"
+
+// Objetivo/modalidad son listas cerradas administradas por el trainer (ver
+// dashboard) — el CSV las referencia por su texto (label) actual, no por id
+// (nadie quiere tipear UUIDs a mano en una planilla), así que el importador
+// necesita esto para resolver "Hipertrofia" -> el id real antes de crear.
+export async function getStudentImportRefsAction() {
+  const [objetivos, modalidades] = await Promise.all([
+    objetivoService.list(),
+    modalidadService.list(),
+  ])
+  return { objetivos, modalidades }
+}
 
 // Checks which of the given DNIs already exist in the DB — used to flag
 // duplicates against existing students before any row is imported (the

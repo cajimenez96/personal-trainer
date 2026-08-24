@@ -14,21 +14,10 @@ datasource db {
 // ENUMS
 // ─────────────────────────────────────────────
 
-enum Objetivo {
-  hipertrofia
-  fuerza
-  descenso
-}
-
 enum Nivel {
   principiante
   intermedio
   avanzado
-}
-
-enum Modalidad {
-  gimnasio
-  casa
 }
 
 enum RoutineStatus {
@@ -69,10 +58,10 @@ model Student {
   lastName           String    @map("last_name")
   email              String?
   phone              String?
-  objetivo           Objetivo? // objetivo principal — se mantiene rígido a propósito
+  objetivoId         String?   @map("objetivo_id") // objetivo principal — lista cerrada y administrable, no texto libre
   secondaryGoals     String?   @map("secondary_goals") // texto libre: objetivos secundarios/prioridades (HU-34)
   nivel              Nivel?
-  modalidad          Modalidad?
+  modalidadId        String?   @map("modalidad_id")
   membershipStartsAt DateTime? @map("membership_starts_at") @db.Date
   paymentExpiresAt   DateTime? @map("payment_expires_at") @db.Date
   healthNotes        String?   @map("health_notes")
@@ -80,12 +69,41 @@ model Student {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
+  // Sin onDelete override — RESTRICT por defecto, igual que Exercise: no se
+  // puede borrar un objetivo/modalidad mientras algún alumno lo tenga
+  // asignado (bloqueo explícito en el service, ver ObjetivoInUseError).
+  objetivoRef      Objetivo?         @relation(fields: [objetivoId], references: [id])
+  modalidadRef     Modalidad?        @relation(fields: [modalidadId], references: [id])
   assignedRoutines AssignedRoutine[]
   progressLogs     ProgressLog[]
   bodyWeightLogs   BodyWeightLog[]
 
   @@index([dni], name: "idx_students_dni")
   @@map("students")
+}
+
+// ─────────────────────────────────────────────
+// STUDENT TAXONOMIES (admin-manageable lists — not hardcoded enums)
+// ─────────────────────────────────────────────
+
+model Objetivo {
+  id        String   @id @default(uuid())
+  label     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  students Student[]
+
+  @@map("objetivos")
+}
+
+model Modalidad {
+  id        String   @id @default(uuid())
+  label     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  students Student[]
+
+  @@map("modalidades")
 }
 
 // ─────────────────────────────────────────────

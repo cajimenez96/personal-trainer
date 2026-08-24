@@ -1,14 +1,14 @@
 import { z } from "zod"
 
+const emptyToUndefined = (v: unknown) =>
+  typeof v === "string" && v.trim() === "" ? undefined : v
+
 export const exerciseListQuerySchema = z.object({
-  search: z.string().trim().min(1).optional(),
-  muscleGroup: z.string().trim().min(1).optional(),
+  search: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
+  muscleGroup: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
 })
 
 export type ExerciseListQuery = z.infer<typeof exerciseListQuerySchema>
-
-const emptyToUndefined = (v: unknown) =>
-  typeof v === "string" && v.trim() === "" ? undefined : v
 
 export const createExerciseSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio"),

@@ -12,18 +12,18 @@ import type {
 export class PrismaStudentRepository implements IStudentRepository {
   async findMany({
     search,
-    objetivo,
+    objetivoId,
     nivel,
-    modalidad,
+    modalidadId,
     isActive,
     cursor,
     limit,
   }: StudentListParams): Promise<StudentListResult> {
     const where: Prisma.StudentWhereInput = {
       isActive,
-      objetivo,
+      objetivoId,
       nivel,
-      modalidad,
+      modalidadId,
       ...(search && {
         OR: [
           { firstName: { contains: search, mode: "insensitive" } },
@@ -35,6 +35,7 @@ export class PrismaStudentRepository implements IStudentRepository {
 
     const items = await db.student.findMany({
       where,
+      include: { objetivoRef: true, modalidadRef: true },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       take: limit + 1,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
@@ -73,9 +74,15 @@ export class PrismaStudentRepository implements IStudentRepository {
     return db.student.update({ where: { id }, data: { isActive: true } })
   }
 
-  findAllActive({ objetivo, nivel, modalidad }: StudentFilters) {
+  findAllActive({ objetivoId, nivel, modalidadId, paymentExpired }: StudentFilters) {
     return db.student.findMany({
-      where: { isActive: true, objetivo, nivel, modalidad },
+      where: {
+        isActive: true,
+        objetivoId,
+        nivel,
+        modalidadId,
+        ...(paymentExpired && { paymentExpiresAt: { not: null, lt: new Date() } }),
+      },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     })
   }

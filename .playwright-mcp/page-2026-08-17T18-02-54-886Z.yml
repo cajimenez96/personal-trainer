@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link [ref=e122] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Santiago Ramón — Panel" [ref=e123]
+        - navigation [ref=e7]:
+          - link "Dashboard" [ref=e124] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Alumnos" [ref=e125] [cursor=pointer]:
+            - /url: /alumnos
+          - link "Ejercicios" [ref=e126] [cursor=pointer]:
+            - /url: /ejercicios
+          - link "Plantillas" [ref=e127] [cursor=pointer]:
+            - /url: /plantillas
+        - button "Cerrar sesión" [ref=e128]
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Plantillas" [level=1] [ref=e129]
+          - generic [ref=e18]:
+            - button "Importar CSV" [ref=e130] [cursor=pointer]
+            - button "Nueva plantilla" [ref=e131] [cursor=pointer]
+        - paragraph [ref=e132]: No hay plantillas creadas todavía.
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e49] [cursor=pointer]
+  - alert [ref=e53]

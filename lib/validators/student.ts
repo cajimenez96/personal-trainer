@@ -1,14 +1,6 @@
 import { z } from "zod"
 
-export const OBJETIVO_VALUES = ["hipertrofia", "fuerza", "descenso"] as const
 export const NIVEL_VALUES = ["principiante", "intermedio", "avanzado"] as const
-export const MODALIDAD_VALUES = ["gimnasio", "casa"] as const
-
-export const OBJETIVO_LABEL: Record<string, string> = {
-  hipertrofia: "Hipertrofia",
-  fuerza: "Fuerza",
-  descenso: "Descenso",
-}
 
 export const NIVEL_LABEL: Record<string, string> = {
   principiante: "Principiante",
@@ -16,16 +8,14 @@ export const NIVEL_LABEL: Record<string, string> = {
   avanzado: "Avanzado",
 }
 
-export const MODALIDAD_LABEL: Record<string, string> = {
-  gimnasio: "Gimnasio",
-  casa: "Casa",
-}
+const emptyToUndefined = (v: unknown) =>
+  typeof v === "string" && v.trim() === "" ? undefined : v
 
 export const studentListQuerySchema = z.object({
-  search: z.string().trim().min(1).optional(),
-  objetivo: z.enum(OBJETIVO_VALUES).optional(),
-  nivel: z.enum(NIVEL_VALUES).optional(),
-  modalidad: z.enum(MODALIDAD_VALUES).optional(),
+  search: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
+  objetivoId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  nivel: z.preprocess(emptyToUndefined, z.enum(NIVEL_VALUES).optional()),
+  modalidadId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   isActive: z
     .enum(["true", "false"])
     .optional()
@@ -34,9 +24,6 @@ export const studentListQuerySchema = z.object({
 })
 
 export type StudentListQuery = z.infer<typeof studentListQuerySchema>
-
-const emptyToUndefined = (v: unknown) =>
-  typeof v === "string" && v.trim() === "" ? undefined : v
 
 export const createStudentSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es obligatorio"),
@@ -50,10 +37,10 @@ export const createStudentSchema = z.object({
     z.string().trim().email("Email inválido").optional(),
   ),
   phone: z.preprocess(emptyToUndefined, z.string().trim().optional()),
-  objetivo: z.preprocess(emptyToUndefined, z.enum(OBJETIVO_VALUES).optional()),
+  objetivoId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   secondaryGoals: z.preprocess(emptyToUndefined, z.string().trim().max(300).optional()),
   nivel: z.preprocess(emptyToUndefined, z.enum(NIVEL_VALUES).optional()),
-  modalidad: z.preprocess(emptyToUndefined, z.enum(MODALIDAD_VALUES).optional()),
+  modalidadId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   membershipStartsAt: z.preprocess(
     emptyToUndefined,
     z.coerce.date({ error: "La fecha de inicio de membresía es obligatoria" }),

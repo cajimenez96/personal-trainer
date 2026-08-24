@@ -41,6 +41,7 @@
 | **EP-12** | Correcciones Post-QA | Bugs y mejoras encontrados probando la app real | 🟡 Alta |
 | **EP-13** | Seguimiento y Coaching (Fase 1) | Primera ola de MVP 2 — cronómetro, WhatsApp, peso corporal, bloques, objetivos flexibles | 🟡 Alta |
 | **EP-14** | Seguimiento y Coaching (Fase 2) | Segunda ola de MVP 2 — tempo prescrito | 🟢 Media |
+| **EP-15** | Mejoras de UI y Administración | UI de tablas/inputs, seed real, Objetivo/Modalidad administrables | 🟡 Alta |
 
 ---
 
@@ -1085,6 +1086,185 @@ Calco directo del patrón ya usado para `intensity` en HU-37 — mismo tipo de c
 
 ---
 
+### 🛠️ EP-15 — Mejoras de UI y Administración
+
+---
+
+#### HU-41 · Mejoras de UI: Inputs, Fecha por Defecto y Acciones en Tablas
+> **Como** trainer,
+> **quiero** distinguir visualmente qué campos puedo editar, no tener que tipear la fecha de hoy a mano, y tener acciones rápidas (ver/editar/desactivar-eliminar) desde cualquier tabla,
+> **para** operar más rápido sin fricción innecesaria.
+
+**Story Points:** 3
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Todos los inputs/textareas/selects editables tienen fondo blanco; los deshabilitados (ej. DNI) se siguen distinguiendo visualmente
+- [x] "Fecha inicio membresía" precarga la fecha de hoy en modo creación (en edición respeta la fecha real guardada)
+- [x] Las tablas de Alumnos y Ejercicios tienen una columna de Acciones (menú Editar / Desactivar-Reactivar o Eliminar) y toda la fila navega al detalle al hacer click, salvo la celda de acciones y la de video
+
+**Resumen de la implementación:**
+`Input`/`Textarea`/`Select` de shadcn pasaron de `bg-transparent` (heredaba el gris de la Card, `--card: #f2f2f2`) a `bg-background` (`#ffffff`) — cambio de una clase por componente, cubre toda la app de una sola vez. El menú de acciones se armó sobre `@base-ui/react/menu` (nuevo `components/ui/dropdown-menu.tsx`, mismo criterio de wrapping que `alert-dialog.tsx`); el AlertDialog de confirmación (desactivar/eliminar) se maneja con estado controlado (`open`/`onOpenChange`) en vez de depender del trigger del menú, porque anidar un trigger de diálogo dentro de un menú que se cierra al hacer click es un patrón frágil en cualquier librería headless — desacoplar los dos estados lo evita por completo. La fila clickeable (`ClickableTableRow`, client component con `router.push`) necesitó un wrapper `ActionsCell` aparte porque un Server Component no puede pasar un `onClick` inline a un Client Component (RSC no serializa funciones) — error real encontrado al verificar, no antes.
+
+**Archivos modificados/creados:**
+`components/ui/input.tsx` · `components/ui/textarea.tsx` · `components/ui/select.tsx` · `components/ui/dropdown-menu.tsx` (nuevo) · `components/admin/student-form.tsx` (fecha por defecto) · `components/admin/clickable-table-row.tsx` (nuevo) · `components/admin/actions-cell.tsx` (nuevo) · `components/admin/student-row-actions.tsx` (nuevo) · `components/admin/exercise-row-actions.tsx` (nuevo) · `app/(admin)/alumnos/page.tsx` · `app/(admin)/ejercicios/page.tsx`
+
+---
+
+#### HU-42 · Seed Real: Admin Único y Catálogo de Ejercicios
+> **Como** trainer,
+> **quiero** que el entorno arranque con mi usuario real y mi catálogo de ejercicios, no con datos de prueba,
+> **para** empezar a usar la plataforma de verdad.
+
+**Story Points:** 1
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] El seed crea un único trainer real (`sramon@coach.com`) — borra cualquier otro trainer de prueba que hubiera quedado
+- [x] El seed carga los 27 ejercicios reales (nombre, músculo principal, músculos secundarios) provistos, con upsert idempotente por nombre
+
+**Resumen de la implementación:**
+`prisma/seed.ts` reescrito: `db.trainer.deleteMany({ where: { email: { not: ADMIN.email } } })` antes del upsert real (garantiza un solo trainer), y `db.exercise.upsert` por cada uno de los 27 ejercicios (idempotente, mismo patrón que `ExerciseService.findOrCreate`). Corrido contra la Neon real vía `prisma db seed`. Verificado con login real con las credenciales nuevas.
+
+**Archivos modificados/creados:**
+`prisma/seed.ts`
+
+---
+
+#### HU-43 · Objetivo y Modalidad Administrables (no hardcodeados)
+> **Como** trainer,
+> **quiero** poder agregar, renombrar y eliminar las opciones de Objetivo y Modalidad desde el dashboard,
+> **para** no depender de un enum fijo en el código cada vez que necesito una categoría nueva.
+
+**Story Points:** 8
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-34
+
+**Criterios de Aceptación:**
+- [x] `Objetivo` y `Modalidad` dejan de ser enums de Postgres y pasan a ser tablas administrables (dos tablas dedicadas, no una genérica) — decisión tomada explícitamente con el trainer
+- [x] Nivel queda fuera de este alcance a propósito — sigue siendo un enum fijo, por decisión explícita
+- [x] Sección "Listas de alumnos" en el Dashboard con dos listas (Objetivos, Modalidades): agregar, renombrar inline, eliminar
+- [x] Borrado protegido: si algún alumno tiene la opción asignada, se bloquea con un mensaje claro (mismo criterio que `ExerciseInUseError`/`TemplateBlockInUseError`) — nunca se orfanea ni se pierde el dato silenciosamente
+- [x] Todos los puntos de consumo migrados: alta/edición de alumno, filtros del listado, asignación masiva, importación CSV
+
+**Resumen de la implementación:**
+Antes de tocar código se analizó el porqué de la decisión original (comentario en el schema: `objetivo` "se mantiene rígido a propósito", de HU-34) — esa decisión era sobre no volverlo texto libre, no sobre que fuera eterno-hardcodeado; una lista cerrada administrable sigue siendo "rígida" en el sentido correcto. Se migró de enum a modelo `Objetivo`/`Modalidad` (id + label único) vía una migración a mano que crea las tablas, siembra las 3+2 opciones que tenía el enum, hace backfill de `Student.objetivo_id`/`modalidad_id` desde los valores viejos, y recién ahí dropea las columnas enum y el tipo — todo en una sola migración transaccional, corrida contra la Neon real con datos reales de por medio (verificado que Carlos Jimenez conservó Fuerza/Gimnasio después del backfill).
+
+Decisión de diseño clave: el **label es la clave de negocio** en todos los puntos de entrada humano (CSV, ejemplos de importación), mientras que el **id** es lo que viaja por los selects/formularios/filtros (generados por el propio `<select>`, nunca tipeados a mano) — evita tener que exponer UUIDs en un CSV que alguien edita en Excel, sin necesitar un campo `slug` aparte. El importador CSV resuelve label→id contra la lista actual antes de validar (mismo criterio que la resolución de DNI/ejercicio ya usada en HU-20/21); si el texto no matchea ninguna opción vigente, es un error de fila, no una creación silenciosa de una categoría nueva.
+
+Capa de repos/servicios: dos implementaciones concretas (`ObjetivoRepository`/`ModalidadRepository`, `ObjetivoService`/`ModalidadService`) compartiendo un único tipo `ILabelOptionRepository` — decisión explícita de no generalizar en una tabla ni una clase repositorio genérica, siguiendo el mismo criterio que el resto del proyecto (Exercise y Student tampoco comparten una capa genérica pese a ser CRUDs similares). La capa de presentación sí se comparte (`ManagedListCard`, un solo componente cliente reusado para ambas listas) porque ahí la duplicación no aporta nada.
+
+**Bug encontrado al verificar:** los filtros del listado de alumnos y del catálogo de ejercicios estaban rotos desde antes de esta HU — el mismo patrón de fondo que ya se había arreglado en HU-35/HU-19 (`z.string().min(1).optional()` sin `emptyToUndefined` sobre un campo que un formulario GET real siempre manda, aunque sea vacío) rompía el `safeParse` completo y descartaba todos los filtros en silencio. Se corrigió en `studentListQuerySchema`, `exerciseListQuerySchema` y el `filtersSchema` local de `asignar-masivo`, verificado filtrando por Objetivo en el listado real.
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` (`Objetivo`, `Modalidad`, `Student.objetivoId`/`modalidadId`) · `prisma/migrations/20260816220000_objetivo_modalidad_lookup_tables/` · `lib/repositories/interfaces.ts` · `lib/repositories/objetivo.repository.ts` (nuevo) · `lib/repositories/modalidad.repository.ts` (nuevo) · `lib/repositories/student.repository.ts` · `lib/services/objetivo.service.ts` (nuevo) · `lib/services/modalidad.service.ts` (nuevo) · `lib/actions/objetivo.actions.ts` (nuevo) · `lib/actions/modalidad.actions.ts` (nuevo) · `lib/actions/student.actions.ts` · `lib/actions/student-import.actions.ts` · `lib/validators/student.ts` · `lib/validators/exercise.ts` · `components/admin/managed-list-card.tsx` (nuevo) · `components/admin/filter-select.tsx` (nuevo) · `components/admin/student-form.tsx` · `components/admin/student-import-runner.tsx` · `app/(admin)/dashboard/page.tsx` · `app/(admin)/alumnos/page.tsx` · `app/(admin)/alumnos/nuevo/page.tsx` · `app/(admin)/alumnos/[id]/page.tsx` · `app/(admin)/alumnos/importar/page.tsx` · `app/(admin)/plantillas/[id]/asignar-masivo/page.tsx`
+
+---
+
+#### HU-44 · Importador de Alumnos: Columnas en Español, Fechas DD-MM-AAAA y Zona de Carga Visible
+> **Como** trainer,
+> **quiero** completar el CSV de alumnos con columnas en español y fechas en el formato que uso normalmente, y ver claramente dónde subir el archivo,
+> **para** no depender de convenciones en inglés ni de un input casi invisible.
+
+**Story Points:** 3
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-20
+
+**Criterios de Aceptación:**
+- [x] Las columnas del CSV están en español (`nombre`, `apellido`, `telefono`, `fecha_inicio_membresia`, `fecha_vencimiento_cuota`, `notas_salud`, etc.)
+- [x] Las fechas se ingresan en formato DD-MM-AAAA (no AAAA-MM-DD)
+- [x] La UI de `/alumnos/importar` tiene una zona clara para arrastrar o elegir el archivo, con un botón explícito para cargarlo — no un `<input type="file">` desnudo
+
+**Resumen de la implementación:**
+El input nativo sin estilos existía desde HU-20, pero renderiza como un link de texto chico casi invisible según el navegador — se reemplazó por una zona de drop (borde punteado, ícono, drag & drop + click) que solo *selecciona* el archivo; la lectura/validación real ahora requiere un click explícito en "Cargar archivo" (antes se disparaba sola en el `onChange`), tal como se pidió.
+
+Los encabezados en español y el `createStudentSchema` interno (en inglés, sin tocar — lo usa también el formulario web) se concilian con una capa de traducción en el propio importador: se remapean las columnas del CSV (`nombre`→`firstName`, etc.) antes de validar, mismo criterio que ya se usaba para resolver `objetivo`/`modalidad` de texto a id (HU-43). Las fechas DD-MM-AAAA se convierten a ISO con una regex simple antes de llegar al schema — el `<input type="date">` del formulario web sigue mandando AAAA-MM-DD nativamente y no se tocó, evitando romper esa ruta. Verificado de punta a punta contra la Neon real: alumno importado con fecha `15-08-2026` quedó guardado como `2026-08-15` (15 de agosto, no una fecha mal interpretada), y una fecha en el formato viejo (`2026-08-15`) es rechazada con un error de fila claro en vez de importarse silenciosamente mal.
+
+**Archivos modificados/creados:**
+`components/admin/student-import-runner.tsx` · `app/(admin)/alumnos/importar/page.tsx`
+
+---
+
+#### HU-45 · Selector de Ejercicio con Búsqueda (Search-Select)
+> **Como** trainer,
+> **quiero** poder buscar un ejercicio por nombre en vez de desplazarme por un `<select>` largo,
+> **para** armar plantillas más rápido a medida que el catálogo crece.
+
+**Story Points:** 2
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] El selector de ejercicio en el armador de plantillas permite escribir para filtrar por nombre, en vez de un `<select>` nativo con toda la lista
+- [x] Reutiliza un componente propio del proyecto (no una librería nueva) para mantener consistencia con el resto de la UI
+
+**Resumen de la implementación:**
+Se confirmó que shadcn sí tiene un componente `combobox` para el estilo `base-nova` (el que ya usa este proyecto), construido sobre `@base-ui/react` — la misma librería de primitivos que ya sostiene `select.tsx`/`dropdown-menu.tsx`/`alert-dialog.tsx`, así que no suma una dependencia nueva. Se instalaron `components/ui/combobox.tsx` e `components/ui/input-group.tsx` adaptando el registry oficial: se sacó `IconPlaceholder` (un helper interno del sitio de docs de shadcn que no existe fuera de ahí) por íconos de `lucide-react` directos, y se ajustaron los imports a las rutas de este proyecto. Se dejaron afuera los subcomponentes de selección múltiple (`Chips`) por no hacer falta para un selector simple.
+
+En `TemplateBuilder`, el combobox usa ids de ejercicio como tipo de valor (no objetos) con `itemToStringLabel` resolviendo "Nombre (músculo)" — mantiene `block.exerciseId` como string igual que antes, sin tocar `toPayload()` ni el resto del componente. Encontrado y corregido al verificar: el mismo warning de `nativeButton` que ya había aparecido en HU-26, esta vez porque `ComboboxTrigger` sí renderiza un `<button>` real y el default del proyecto (`nativeButton ?? !render`) asume lo contrario cuando se le pasa un `render` — se corrigió pasando `nativeButton` explícito en ese único punto. Verificado en browser real: tipear "sent" filtra correctamente por substring (no solo prefijo) entre varios ejercicios que lo contienen, la selección persiste con el label completo, y el ejercicio elegido se guarda correctamente en la Neon real.
+
+**Archivos modificados/creados:**
+`components/ui/combobox.tsx` (nuevo) · `components/ui/input-group.tsx` (nuevo) · `components/admin/template-builder.tsx`
+
+---
+
+#### HU-46 · Armador de Plantillas: Jerarquía Visual (Esenciales/Avanzados) + Fix de Keys Duplicadas
+> **Como** trainer,
+> **quiero** que el armador de plantillas distinga los campos que casi siempre completo de los que uso rara vez, con más aire entre ellos,
+> **para** cargar una rutina rápido sin sentir que estoy llenando un formulario denso donde todo pesa igual.
+
+**Story Points:** 3
+**Prioridad:** 🟡 Alta
+**Estado:** `DONE`
+**Depende de:** HU-33, HU-37, HU-45
+
+**Criterios de Aceptación:**
+- [x] Cada bloque de ejercicio separa campos esenciales (siempre visibles) de avanzados (colapsados detrás de "Opciones avanzadas")
+- [x] Los campos avanzados tienen un ícono de información con tooltip explicando para qué sirven
+- [x] Si un bloque ya tiene algún campo avanzado cargado (plantilla existente), la sección arranca desplegada — no esconde datos que ya están ahí
+- [x] Se corrige el bug de keys de React duplicadas al agregar días/ejercicios rápido
+
+**Resumen de la implementación:**
+División: esenciales = Ejercicio, Series, Reps, Peso (kg), Descanso (seg) — lo que se completa en casi todos los ejercicios. Avanzados = Esquema de reps, Duración (seg), Intensidad, Tempo, Grupo, Descanso post-bloque, Notas del trainer — casos particulares (esquema variable, superseries, ejercicios por tiempo). El toggle es local por bloque (`Set<string>` de keys expandidas), no global, así que expandir uno no afecta a los demás. Se instaló `components/ui/tooltip.tsx` desde el registry de shadcn para el estilo `base-nova` (mismo criterio que `combobox`/`input-group` en HU-45), con un ícono `Info` de lucide-react como trigger.
+
+**Bug de raíz encontrado y corregido de paso** (reportado por el usuario con captura de consola): `keyCounter` para generar keys de React (`${uid}-${keyCounter++}`) era una variable local `let` declarada en el cuerpo del componente — se reinicia en cada render. Si dos clicks en "Agregar día"/"Agregar ejercicio" disparaban desde closures de renders distintos, ambos podían calcular el mismo sufijo y colisionar (`Encountered two children with the same key`). Se cambió a `useRef(0)`, que sí persiste entre renders. Verificado agregando 2 días y 3 ejercicios en secuencia rápida sin errores en consola.
+
+Verificado en browser real contra la Neon: plantilla creada con un ejercicio con Grupo="A" y Descanso post-bloque=60 guardada correctamente; al reabrir esa plantilla para editar, la sección avanzada de ese bloque aparece ya desplegada con los valores correctos (no hay que buscarlos).
+
+**Archivos modificados/creados:**
+`components/ui/tooltip.tsx` (nuevo) · `components/admin/template-builder.tsx`
+
+---
+
+#### HU-47 · Link "Volver" en Detalle de Plantilla y Asignación Masiva
+> **Como** trainer,
+> **quiero** un link "Volver" en las pantallas de detalle de plantilla y asignación masiva,
+> **para** no depender del botón atrás del navegador para salir de ahí.
+
+**Story Points:** 1
+**Prioridad:** 🟢 Media
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] `/plantillas/[id]` tiene un link "Volver" (`variant="link"`, con ícono) que navega a `/plantillas`
+- [x] `/plantillas/[id]/asignar-masivo` tiene el mismo link, navegando de vuelta al detalle de esa plantilla
+
+**Resumen de la implementación:**
+`Button` ya tenía un `variant="link"` sin usar en ningún lado del proyecto — se usó tal cual, con `ArrowLeft` de lucide-react, en vez de agregar un componente nuevo. Verificado en browser real: navega correctamente en ambas pantallas.
+
+**Archivos modificados/creados:**
+`app/(admin)/plantillas/[id]/page.tsx` · `app/(admin)/plantillas/[id]/asignar-masivo/page.tsx`
+
+---
+
+**Nota de cierre de EP-15:** el contraste de los botones `outline`/`secondary` y el cambio de tipografía (los dos puntos que quedaban abiertos de la conversación sobre UI) los resolvió el propio usuario directamente en el código, fuera de este flujo de tickets — confirmado visualmente en las verificaciones de HU-46/HU-47 (botones ya legibles sobre fondo gris). No se abre ticket para eso porque no hay una implementación de esta sesión que documentar.
+
+---
+
 ## Roadmap por Olas (Waves)
 
 > En Kanban no hay sprints fijos, pero organizamos el trabajo en **olas de entrega** para dar visibilidad al cliente.
@@ -1164,6 +1344,19 @@ HU-39 Tempo Prescrito                            ✅
 ════════════════════════════════════
 MVP 2, Fase 2 (EP-14) termina acá — HU-39
 ════════════════════════════════════
+
+ONDA 10 — Mejoras de UI y Administración
+────────────────────────────────────
+HU-41 Mejoras de UI (inputs, fecha, acciones en tablas)  ✅
+HU-42 Seed real (admin + catálogo de ejercicios)         ✅
+HU-43 Objetivo y Modalidad administrables                ✅
+HU-44 Importador de alumnos (español, fechas, zona de carga) ✅
+HU-45 Selector de ejercicio con búsqueda (combobox)      ✅
+HU-46 Jerarquía visual esenciales/avanzados + fix keys   ✅
+HU-47 Link "Volver" en plantilla/asignación masiva       ✅
+════════════════════════════════════
+EP-15 termina acá — HU-41 a HU-47 (contraste de botones y tipografía resueltos por el usuario directamente)
+════════════════════════════════════
 ```
 
 **QA end-to-end de EP-13 (2026-08-16):** con las 9 HUs completas, se hizo una pasada integral en browser real (Neon) cruzando features entre sí en vez de HU por HU aislada: duplicar una plantilla con bloques agrupados (retiene `groupLabel`/`groupRestSecs`), asignar esa misma plantilla a un segundo alumno (dos asignaciones activas compartiendo los mismos `exercise_blocks`, sin crashear en ningún lado), intentar editar/quitar un bloque agrupado que tenía progreso real registrado (la protección de HU-38 lo bloqueó correctamente, sin 500, con los campos nuevos de HU-33 de por medio), y recorrer WhatsApp / peso corporal / objetivos flexibles / dashboard / cronómetro de descanso sobre los mismos alumnos de prueba para confirmar que nada se rompió. No aparecieron regresiones nuevas — el único hallazgo (el filtro de fechas vacío de HU-19 que tumbaba el filtro nuevo de HU-35) ya se corrigió y quedó documentado en la propia HU-35.
@@ -1196,11 +1389,12 @@ MVP 2, Fase 2 (EP-14) termina acá — HU-39
 |---|---|---|
 | EP-13 Seguimiento y Coaching (Fase 1) — cerrada ✅ | 9 | 45 |
 | EP-14 Seguimiento y Coaching (Fase 2) — cerrada ✅ | 1 | 2 |
-| **Subtotal MVP 2** | **10 HUs** | **47 pts** |
+| EP-15 Mejoras de UI y Administración — cerrada ✅ | 7 | 21 |
+| **Subtotal MVP 2** | **17 HUs** | **68 pts** |
 
 | | |
 |---|---|
-| **TOTAL GENERAL** | **39 HUs · 153 pts** |
+| **TOTAL GENERAL** | **46 HUs · 174 pts** |
 
 ---
 

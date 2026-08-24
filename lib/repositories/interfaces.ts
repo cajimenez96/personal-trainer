@@ -1,10 +1,8 @@
 import type {
   AssignedRoutine,
   Exercise,
-  Modalidad,
   Nivel,
   NoteType,
-  Objetivo,
   RoutineTemplate,
   Student,
 } from "@/app/generated/prisma/client"
@@ -15,10 +13,10 @@ export interface CreateStudentData {
   dni: string
   email?: string
   phone?: string
-  objetivo?: Objetivo
+  objetivoId?: string
   secondaryGoals?: string
   nivel?: Nivel
-  modalidad?: Modalidad
+  modalidadId?: string
   membershipStartsAt?: Date
   paymentExpiresAt?: Date
   healthNotes?: string
@@ -29,10 +27,10 @@ export interface UpdateStudentData {
   lastName: string
   email: string | null
   phone: string | null
-  objetivo: Objetivo | null
+  objetivoId: string | null
   secondaryGoals: string | null
   nivel: Nivel | null
-  modalidad: Modalidad | null
+  modalidadId: string | null
   membershipStartsAt: Date | null
   paymentExpiresAt: Date | null
   healthNotes: string | null
@@ -40,10 +38,35 @@ export interface UpdateStudentData {
 
 export interface StudentFilters {
   search?: string
-  objetivo?: Objetivo
+  objetivoId?: string
   nivel?: Nivel
-  modalidad?: Modalidad
+  modalidadId?: string
   isActive?: boolean
+  // Cuota vencida a la fecha actual — distinto de "sin fecha registrada"
+  // (paymentExpiresAt null nunca cuenta como vencida).
+  paymentExpired?: boolean
+}
+
+// HU-40: listas administrables por el trainer (no hardcodeadas) — Objetivo y
+// Modalidad dejaron de ser enums de Postgres para ser tablas simples de
+// lookup (id + label), con protección de borrado si algún alumno las usa.
+export type LabelOption = {
+  id: string
+  label: string
+}
+
+export interface CreateLabelOptionData {
+  label: string
+}
+
+export interface ILabelOptionRepository {
+  findMany(): Promise<LabelOption[]>
+  findById(id: string): Promise<LabelOption | null>
+  findByLabel(label: string): Promise<LabelOption | null>
+  create(data: CreateLabelOptionData): Promise<LabelOption>
+  rename(id: string, label: string): Promise<LabelOption>
+  delete(id: string): Promise<void>
+  countStudentsUsing(id: string): Promise<number>
 }
 
 export interface StudentListParams extends StudentFilters {
@@ -51,8 +74,13 @@ export interface StudentListParams extends StudentFilters {
   limit: number
 }
 
+export type StudentWithTaxonomies = Student & {
+  objetivoRef: LabelOption | null
+  modalidadRef: LabelOption | null
+}
+
 export interface StudentListResult {
-  items: Student[]
+  items: StudentWithTaxonomies[]
   nextCursor: string | null
 }
 
@@ -170,6 +198,7 @@ export interface IRoutineTemplateRepository {
   findById(id: string): Promise<RoutineTemplateWithFullDays | null>
   update(id: string, data: CreateRoutineTemplateData): Promise<RoutineTemplateWithDays>
   duplicate(id: string): Promise<RoutineTemplateWithDays>
+  delete(id: string): Promise<void>
   countAssignments(id: string): Promise<number>
 }
 

@@ -9,7 +9,15 @@ import type {
 import { PrismaStudentRepository } from "@/lib/repositories/student.repository"
 
 export class DniAlreadyExistsError extends Error {
-  constructor(public readonly dni: string) {
+  constructor(
+    public readonly dni: string,
+    public readonly existingStudent?: {
+      id: string
+      firstName: string
+      lastName: string
+      isActive: boolean
+    },
+  ) {
     super(`Ya existe un alumno con DNI ${dni}`)
     this.name = "DniAlreadyExistsError"
   }
@@ -61,7 +69,14 @@ export class StudentService {
 
   async create(data: CreateStudentData) {
     const existing = await this.studentRepo.findByDni(data.dni)
-    if (existing) throw new DniAlreadyExistsError(data.dni)
+    if (existing) {
+      throw new DniAlreadyExistsError(data.dni, {
+        id: existing.id,
+        firstName: existing.firstName,
+        lastName: existing.lastName,
+        isActive: existing.isActive,
+      })
+    }
 
     try {
       return await this.studentRepo.create(data)
@@ -70,7 +85,18 @@ export class StudentService {
         err instanceof Prisma.PrismaClientKnownRequestError &&
         err.code === PRISMA_UNIQUE_CONSTRAINT
       ) {
-        throw new DniAlreadyExistsError(data.dni)
+        const found = await this.studentRepo.findByDni(data.dni)
+        throw new DniAlreadyExistsError(
+          data.dni,
+          found
+            ? {
+                id: found.id,
+                firstName: found.firstName,
+                lastName: found.lastName,
+                isActive: found.isActive,
+              }
+            : undefined,
+        )
       }
       throw err
     }

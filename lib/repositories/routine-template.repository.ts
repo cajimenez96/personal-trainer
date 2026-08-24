@@ -223,4 +223,8 @@ export class PrismaRoutineTemplateRepository implements IRoutineTemplateReposito
   countAssignments(id: string) {
     return db.assignedRoutine.count({ where: { templateId: id } })
   }
+
+  async delete(id: string) {
+    await db.routineTemplate.delete({ where: { id } })
+  }
 }

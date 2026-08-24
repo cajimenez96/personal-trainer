@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react"
 import Papa from "papaparse"
+import { Upload, X } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,11 +15,56 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { createStudentSchema, type CreateStudentInput } from "@/lib/validators/student"
 import {
   checkExistingDnisAction,
+  getStudentImportRefsAction,
   importStudentsChunkAction,
 } from "@/lib/actions/student-import.actions"
+
+function toLabelMap(items: { id: string; label: string }[]) {
+  return new Map(items.map((item) => [item.label.trim().toLowerCase(), item.id]))
+}
+
+// El CSV se pide en español para que quien lo llene no tenga que conocer los
+// nombres de campo internos — se traduce acá, una sola vez, antes de validar
+// con el mismo schema que ya usa el formulario web (que sigue en inglés).
+const CSV_HEADER_MAP: Record<string, string> = {
+  dni: "dni",
+  nombre: "firstName",
+  apellido: "lastName",
+  email: "email",
+  telefono: "phone",
+  objetivo: "objetivo",
+  nivel: "nivel",
+  modalidad: "modalidad",
+  fecha_inicio_membresia: "membershipStartsAt",
+  fecha_vencimiento_cuota: "paymentExpiresAt",
+  notas_salud: "healthNotes",
+}
+
+const DATE_FIELDS = ["membershipStartsAt", "paymentExpiresAt"] as const
+
+// El Excel/CSV usa DD-MM-YYYY (formato que la mayoría maneja de memoria) —
+// se convierte a ISO acá antes de validar, el <input type="date"> del
+// formulario web sigue mandando YYYY-MM-DD nativamente y no se toca.
+function ddmmyyyyToIso(value: string): string | null {
+  const match = value.trim().match(/^(\d{2})-(\d{2})-(\d{4})$/)
+  if (!match) return null
+  const [, day, month, year] = match
+  if (Number(day) < 1 || Number(day) > 31 || Number(month) < 1 || Number(month) > 12) return null
+  return `${year}-${month}-${day}`
+}
+
+function remapRow(raw: Record<string, string>): Record<string, string> {
+  const remapped: Record<string, string> = {}
+  for (const [key, value] of Object.entries(raw)) {
+    const field = CSV_HEADER_MAP[key.trim().toLowerCase()] ?? key
+    remapped[field] = value
+  }
+  return remapped
+}
 
 const CHUNK_SIZE = 50
 
@@ -33,7 +79,8 @@ type ImportReport = { succeeded: string[]; failed: { dni: string; error: string 
 
 export function StudentImportRunner() {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [fileName, setFileName] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [status, setStatus] = useState<"idle" | "validating" | "invalid" | "ready" | "importing">(
     "idle",
   )
@@ -43,7 +90,7 @@ export function StudentImportRunner() {
   const [report, setReport] = useState<ImportReport | null>(null)
 
   function reset() {
-    setFileName(null)
+    setSelectedFile(null)
     setStatus("idle")
     setErrors([])
     setValidRows([])
@@ -52,26 +99,83 @@ export function StudentImportRunner() {
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
-  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
+  function selectFile(file: File | undefined) {
     if (!file) return
+    setSelectedFile(file)
+    setStatus("idle")
+    setErrors([])
+  }
 
-    setFileName(file.name)
+  async function processFile() {
+    if (!selectedFile) return
     setStatus("validating")
     setReport(null)
 
-    const { data } = Papa.parse<Record<string, string>>(await file.text(), {
+    const { data } = Papa.parse<Record<string, string>>(await selectedFile.text(), {
       header: true,
       skipEmptyLines: true,
     })
+
+    const { objetivos, modalidades } = await getStudentImportRefsAction()
+    const objetivoByLabel = toLabelMap(objetivos)
+    const modalidadByLabel = toLabelMap(modalidades)
 
     const rowErrors: RowError[] = []
     const seenDnis = new Map<string, number>()
     const parsedRows: CreateStudentInput[] = []
 
-    data.forEach((raw, index) => {
+    data.forEach((rawSpanish, index) => {
       const rowNumber = index + 2 // +1 for 0-index, +1 for the header row
-      const parsed = createStudentSchema.safeParse(raw)
+      const raw = remapRow(rawSpanish)
+
+      // Fechas: DD-MM-YYYY -> ISO antes de tocar el schema.
+      let dateError = false
+      for (const field of DATE_FIELDS) {
+        if (!raw[field]?.trim()) continue
+        const iso = ddmmyyyyToIso(raw[field])
+        if (!iso) {
+          rowErrors.push({
+            row: rowNumber,
+            message: `${field}: "${raw[field]}" no es una fecha válida (formato esperado DD-MM-YYYY)`,
+          })
+          dateError = true
+          continue
+        }
+        raw[field] = iso
+      }
+      if (dateError) return
+
+      // objetivo/modalidad llegan como texto (label) desde el CSV — se
+      // resuelven a su id antes de validar con el mismo schema que usa el
+      // formulario web, que ya trabaja en términos de id.
+      const { objetivo: objetivoLabel, modalidad: modalidadLabel, ...rest } = raw
+      const row: Record<string, string> = { ...rest }
+
+      if (objetivoLabel?.trim()) {
+        const objetivoId = objetivoByLabel.get(objetivoLabel.trim().toLowerCase())
+        if (!objetivoId) {
+          rowErrors.push({
+            row: rowNumber,
+            message: `objetivo: "${objetivoLabel}" no coincide con ninguna opción cargada`,
+          })
+          return
+        }
+        row.objetivoId = objetivoId
+      }
+
+      if (modalidadLabel?.trim()) {
+        const modalidadId = modalidadByLabel.get(modalidadLabel.trim().toLowerCase())
+        if (!modalidadId) {
+          rowErrors.push({
+            row: rowNumber,
+            message: `modalidad: "${modalidadLabel}" no coincide con ninguna opción cargada`,
+          })
+          return
+        }
+        row.modalidadId = modalidadId
+      }
+
+      const parsed = createStudentSchema.safeParse(row)
 
       if (!parsed.success) {
         for (const issue of parsed.error.issues) {
@@ -166,19 +270,53 @@ export function StudentImportRunner() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setIsDragging(true)
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setIsDragging(false)
+          selectFile(e.dataTransfer.files?.[0])
+        }}
+        className={cn(
+          "flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors",
+          isDragging ? "border-primary bg-primary/5" : "border-input hover:bg-muted/50",
+        )}
+      >
+        <Upload className="size-8 text-muted-foreground" />
+        <p className="text-sm font-medium">Arrastrá tu archivo CSV acá</p>
+        <p className="text-xs text-muted-foreground">o hacé click para elegirlo</p>
         <input
           ref={fileInputRef}
           type="file"
           accept=".csv,text/csv"
-          onChange={handleFileChange}
-          className="text-sm"
+          onChange={(e) => selectFile(e.target.files?.[0])}
+          className="hidden"
         />
-        {fileName && <p className="text-sm text-muted-foreground">Archivo: {fileName}</p>}
       </div>
 
-      {status === "validating" && (
-        <p className="text-sm text-muted-foreground">Validando archivo...</p>
+      {selectedFile && (
+        <div className="flex items-center justify-between rounded-md border p-3">
+          <span className="text-sm">{selectedFile.name}</span>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={reset}
+              aria-label="Quitar archivo"
+            >
+              <X className="size-4" />
+            </Button>
+            <Button type="button" onClick={processFile} disabled={status === "validating"}>
+              {status === "validating" ? "Validando..." : "Cargar archivo"}
+            </Button>
+          </div>
+        </div>
       )}
 
       {status === "invalid" && (
@@ -193,9 +331,6 @@ export function StudentImportRunner() {
               </li>
             ))}
           </ul>
-          <Button variant="secondary" className="mt-4" onClick={reset}>
-            Elegir otro archivo
-          </Button>
         </div>
       )}
 

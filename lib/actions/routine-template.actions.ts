@@ -1,7 +1,12 @@
 "use server"
 
 import { redirect } from "next/navigation"
-import { routineTemplateService, TemplateBlockInUseError } from "@/lib/services/routine-template.service"
+import { revalidatePath } from "next/cache"
+import {
+  RoutineTemplateInUseError,
+  routineTemplateService,
+  TemplateBlockInUseError,
+} from "@/lib/services/routine-template.service"
 import {
   createTemplateSchema,
   type CreateTemplatePayload,
@@ -61,4 +66,18 @@ export async function updateTemplateAction(
 export async function duplicateTemplateAction(id: string) {
   const copy = await routineTemplateService.duplicate(id)
   redirect(`/plantillas/${copy.id}?duplicated=1`)
+}
+
+export type DeleteTemplateState = { ok: boolean; error?: string }
+
+export async function deleteTemplateAction(id: string): Promise<DeleteTemplateState> {
+  try {
+    await routineTemplateService.delete(id)
+  } catch (err) {
+    if (err instanceof RoutineTemplateInUseError) return { ok: false, error: err.message }
+    throw err
+  }
+
+  revalidatePath("/plantillas")
+  return { ok: true }
 }

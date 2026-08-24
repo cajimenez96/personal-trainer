@@ -13,6 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { FlashToast } from "@/components/admin/flash-toast"
+import { ClickableTableRow } from "@/components/admin/clickable-table-row"
+import { ActionsCell } from "@/components/admin/actions-cell"
+import { ExerciseRowActions } from "@/components/admin/exercise-row-actions"
 import { VideoDialog } from "@/components/shared/video-dialog"
 import { exerciseService } from "@/lib/services/exercise.service"
 import { exerciseListQuerySchema } from "@/lib/validators/exercise"
@@ -90,18 +93,19 @@ export default async function EjerciciosPage({
               <TableHead>Músculo primario</TableHead>
               <TableHead>Músculo secundario</TableHead>
               <TableHead>Video</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {exercises.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   No se encontraron ejercicios.
                 </TableCell>
               </TableRow>
             )}
             {exercises.map((exercise) => (
-              <TableRow key={exercise.id}>
+              <ClickableTableRow key={exercise.id} href={`/ejercicios/${exercise.id}`}>
                 <TableCell>
                   <Link href={`/ejercicios/${exercise.id}`} className="hover:underline">
                     {exercise.name}
@@ -109,7 +113,7 @@ export default async function EjerciciosPage({
                 </TableCell>
                 <TableCell>{exercise.primaryMuscle}</TableCell>
                 <TableCell>{exercise.secondaryMuscle ?? "—"}</TableCell>
-                <TableCell>
+                <ActionsCell>
                   {exercise.videoUrl ? (
                     <VideoDialog videoUrl={exercise.videoUrl} className="inline-flex">
                       <Badge variant="secondary" className="gap-1">
@@ -120,8 +124,11 @@ export default async function EjerciciosPage({
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
-                </TableCell>
-              </TableRow>
+                </ActionsCell>
+                <ActionsCell>
+                  <ExerciseRowActions exerciseId={exercise.id} exerciseName={exercise.name} />
+                </ActionsCell>
+              </ClickableTableRow>
             ))}
           </TableBody>
         </Table>

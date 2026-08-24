@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
+import { objetivoService } from "@/lib/services/objetivo.service"
+import { modalidadService } from "@/lib/services/modalidad.service"
+import { createObjetivoAction, renameObjetivoAction, deleteObjetivoAction } from "@/lib/actions/objetivo.actions"
+import { createModalidadAction, renameModalidadAction, deleteModalidadAction } from "@/lib/actions/modalidad.actions"
+import { ManagedListCard } from "@/components/admin/managed-list-card"
 
 // DB-backed counts — must reflect the current state on every visit.
 export const dynamic = "force-dynamic"
@@ -18,13 +23,16 @@ function adherenceBadgeVariant(ratio: number): "success" | "secondary" | "destru
 }
 
 export default async function DashboardPage() {
-  const [session, activeStudents, expiringSoon, activeRoutines, adherenceStats] = await Promise.all([
-    auth(),
-    studentService.countActive(),
-    studentService.countExpiringSoon(CUOTA_WARNING_DAYS),
-    assignedRoutineService.countActive(),
-    assignedRoutineService.getAdherenceStats(),
-  ])
+  const [session, activeStudents, expiringSoon, activeRoutines, adherenceStats, objetivos, modalidades] =
+    await Promise.all([
+      auth(),
+      studentService.countActive(),
+      studentService.countExpiringSoon(CUOTA_WARNING_DAYS),
+      assignedRoutineService.countActive(),
+      assignedRoutineService.getAdherenceStats(),
+      objetivoService.list(),
+      modalidadService.list(),
+    ])
 
   const stats = [
     { label: "Alumnos activos", value: activeStudents, href: "/alumnos" },
@@ -135,6 +143,26 @@ export default async function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">Listas de alumnos</h2>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <ManagedListCard
+            title="Objetivos"
+            items={objetivos}
+            createAction={createObjetivoAction}
+            renameAction={renameObjetivoAction}
+            deleteAction={deleteObjetivoAction}
+          />
+          <ManagedListCard
+            title="Modalidades"
+            items={modalidades}
+            createAction={createModalidadAction}
+            renameAction={renameModalidadAction}
+            deleteAction={deleteModalidadAction}
+          />
+        </div>
       </div>
     </div>
   )

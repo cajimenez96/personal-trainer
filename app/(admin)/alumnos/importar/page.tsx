@@ -3,19 +3,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DownloadCsvTemplateButton } from "@/components/admin/download-csv-template-button"
 import { StudentImportRunner } from "@/components/admin/student-import-runner"
-import {
-  MODALIDAD_VALUES,
-  NIVEL_VALUES,
-  OBJETIVO_VALUES,
-} from "@/lib/validators/student"
+import { objetivoService } from "@/lib/services/objetivo.service"
+import { modalidadService } from "@/lib/services/modalidad.service"
+import { NIVEL_VALUES } from "@/lib/validators/student"
 
 const TEMPLATE_HEADERS =
-  "dni,firstName,lastName,email,phone,objetivo,nivel,modalidad,membershipStartsAt,paymentExpiresAt,healthNotes"
+  "dni,nombre,apellido,email,telefono,objetivo,nivel,modalidad,fecha_inicio_membresia,fecha_vencimiento_cuota,notas_salud"
 const TEMPLATE_EXAMPLE =
-  "12345678,Juan,Pérez,juan@mail.com,+541122334455,hipertrofia,intermedio,gimnasio,2026-01-01,2026-09-01,"
+  "12345678,Juan,Pérez,juan@mail.com,+541122334455,Hipertrofia,intermedio,Gimnasio,01-01-2026,01-09-2026,"
 const TEMPLATE_CONTENT = `${TEMPLATE_HEADERS}\n${TEMPLATE_EXAMPLE}\n`
 
-export default function ImportarAlumnosPage() {
+export const dynamic = "force-dynamic"
+
+export default async function ImportarAlumnosPage() {
+  const [objetivos, modalidades] = await Promise.all([
+    objetivoService.list(),
+    modalidadService.list(),
+  ])
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -31,11 +36,11 @@ export default function ImportarAlumnosPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
           <p>
-            El archivo debe ser un CSV con encabezado. Columnas obligatorias:{" "}
+            El archivo debe ser un CSV con encabezado, columnas en español. Obligatorias:{" "}
             <code className="rounded bg-muted px-1">dni</code>,{" "}
-            <code className="rounded bg-muted px-1">firstName</code>,{" "}
-            <code className="rounded bg-muted px-1">lastName</code>,{" "}
-            <code className="rounded bg-muted px-1">membershipStartsAt</code>. El resto son
+            <code className="rounded bg-muted px-1">nombre</code>,{" "}
+            <code className="rounded bg-muted px-1">apellido</code>,{" "}
+            <code className="rounded bg-muted px-1">fecha_inicio_membresia</code>. El resto son
             opcionales — se pueden dejar vacías.
           </p>
           <div className="overflow-x-auto rounded-md border bg-muted/50 p-3">
@@ -43,20 +48,27 @@ export default function ImportarAlumnosPage() {
           </div>
           <ul className="list-inside list-disc text-muted-foreground">
             <li>
-              <code className="rounded bg-muted px-1">objetivo</code>:{" "}
-              {OBJETIVO_VALUES.join(", ")}
+              <code className="rounded bg-muted px-1">objetivo</code>: debe coincidir
+              exactamente con una opción cargada en el dashboard — actualmente{" "}
+              {objetivos.length > 0
+                ? objetivos.map((o) => o.label).join(", ")
+                : "no hay ninguna cargada"}
             </li>
             <li>
               <code className="rounded bg-muted px-1">nivel</code>: {NIVEL_VALUES.join(", ")}
             </li>
             <li>
-              <code className="rounded bg-muted px-1">modalidad</code>:{" "}
-              {MODALIDAD_VALUES.join(", ")}
+              <code className="rounded bg-muted px-1">modalidad</code>: debe coincidir
+              exactamente con una opción cargada en el dashboard — actualmente{" "}
+              {modalidades.length > 0
+                ? modalidades.map((m) => m.label).join(", ")
+                : "no hay ninguna cargada"}
             </li>
             <li>
-              <code className="rounded bg-muted px-1">membershipStartsAt</code> /{" "}
-              <code className="rounded bg-muted px-1">paymentExpiresAt</code>: formato{" "}
-              <code className="rounded bg-muted px-1">AAAA-MM-DD</code>
+              <code className="rounded bg-muted px-1">fecha_inicio_membresia</code> /{" "}
+              <code className="rounded bg-muted px-1">fecha_vencimiento_cuota</code>: formato{" "}
+              <code className="rounded bg-muted px-1">DD-MM-AAAA</code> (ej.{" "}
+              <code className="rounded bg-muted px-1">15-08-2026</code>)
             </li>
           </ul>
           <DownloadCsvTemplateButton
