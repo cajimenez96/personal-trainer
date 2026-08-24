@@ -55,3 +55,58 @@ export async function logProgressAction(input: LogProgressInput): Promise<LogPro
 
   return { ok: true }
 }
+
+const batchLogWeightsSchema = z.object({
+  dni: z.string(),
+  assignedRoutineId: z.string().uuid(),
+  entries: z.array(
+    z.object({
+      exerciseBlockId: z.string().uuid(),
+      weightKg: z.number().positive().nullable(),
+      studentNotes: z.string().trim().max(500, "Máximo 500 caracteres").nullable().optional(),
+    }),
+  ),
+})
+
+export type BatchLogWeightsInput = z.infer<typeof batchLogWeightsSchema>
+
+export async function batchLogWeightsAction(input: BatchLogWeightsInput): Promise<LogProgressState> {
+  const parsed = batchLogWeightsSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: "Datos inválidos." }
+
+  const dniParsed = dniSchema.safeParse(parsed.data.dni)
+  if (!dniParsed.success) return { ok: false, error: "DNI inválido." }
+
+  const student = await studentService.getByDni(dniParsed.data)
+  if (!student || !student.isActive) return { ok: false, error: "Alumno no encontrado." }
+
+  const routine = await assignedRoutineService.getDetail(parsed.data.assignedRoutineId)
+  if (!routine || routine.studentId !== student.id) {
+    return { ok: false, error: "Rutina no encontrada." }
+  }
+
+  const today = todayUTC()
+  for (const entry of parsed.data.entries) {
+    await progressLogService.upsert({
+      studentId: student.id,
+      assignedRoutineId: routine.id,
+      exerciseBlockId: entry.exerciseBlockId,
+      loggedDate: today,
+      weightKg: entry.weightKg,
+      studentNotes: entry.studentNotes ?? null,
+    })
+  }
+
+  return { ok: true }
+}
+
+export async function getStudentProgressHistoryAction(dni: string) {
+  const dniParsed = dniSchema.safeParse(dni)
+  if (!dniParsed.success) return { ok: false, error: "DNI inválido.", items: [] }
+
+  const student = await studentService.getByDni(dniParsed.data)
+  if (!student || !student.isActive) return { ok: false, error: "Alumno no encontrado.", items: [] }
+
+  const items = await progressLogService.getHistory(student.id, {})
+  return { ok: true, items }
+}

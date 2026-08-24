@@ -45,13 +45,13 @@ export default async function EjerciciosPage({
           }}
         />
       </Suspense>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Ejercicios</h1>
         <Button render={<Link href="/ejercicios/nuevo" />}>Nuevo ejercicio</Button>
       </div>
 
       <form className="flex flex-wrap items-end gap-3" method="get">
-        <div className="flex flex-col gap-1">
+        <div className="flex w-full flex-col gap-1 sm:w-56">
           <label htmlFor="search" className="text-sm text-muted-foreground">
             Buscar
           </label>
@@ -60,16 +60,16 @@ export default async function EjerciciosPage({
             name="search"
             placeholder="Nombre del ejercicio"
             defaultValue={query.search ?? ""}
-            className="w-56"
+            className="w-full"
           />
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex w-full flex-col gap-1 sm:w-48">
           <span className="text-sm text-muted-foreground">Grupo muscular</span>
           <select
             name="muscleGroup"
             defaultValue={query.muscleGroup ?? ""}
-            className="h-9 w-48 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
             <option value="">Todos</option>
             {muscleGroups.map((group) => (

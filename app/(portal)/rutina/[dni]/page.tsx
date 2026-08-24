@@ -1,7 +1,9 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { Play, ChevronDown } from "lucide-react"
 import { ExerciseProgress } from "@/components/portal/exercise-progress"
 import { BodyWeightInput } from "@/components/portal/body-weight-input"
+import { DayWeightsDialogs } from "@/components/portal/day-weights-dialog"
 import { VideoDialog } from "@/components/shared/video-dialog"
 import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
@@ -58,7 +60,7 @@ export default async function RutinaPage({
   const progressByBlock = new Map(todayProgress.map((p) => [p.exerciseBlockId, p]))
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <div className="min-h-screen bg-[#efefef] pb-12 dark:bg-background">
       <header className="bg-[#0d0d0d] px-4 py-5 text-white">
         <p className="text-sm text-white/60">Hola,</p>
         <h1 className="font-heading text-2xl font-semibold">{student.firstName} {student.lastName}</h1>
@@ -66,26 +68,38 @@ export default async function RutinaPage({
         <BodyWeightInput dni={parsed.data} initialWeightKg={todayBodyWeight?.weightKg ?? null} />
       </header>
 
-      <main className="flex flex-col gap-3 px-4 py-4">
+      <main className="flex flex-col gap-3 px-3 py-4 sm:px-4">
         {routine.days.length === 0 && (
           <p className="text-center text-muted-foreground">
             Esta rutina todavía no tiene días cargados.
           </p>
         )}
 
-        {routine.days.map((day, index) => (
+        {routine.days.map((day) => (
           <details
             key={day.id}
-            open={index === 0}
-            className="rounded-2xl border bg-card open:pb-2"
+            className="group rounded-2xl border border-border/80 bg-card shadow-sm transition-all open:pb-3"
           >
-            <summary className="flex min-h-11 cursor-pointer items-center px-4 py-3 text-lg font-semibold">
-              {day.label}
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 py-3.5 text-base font-bold text-[#d32f2f] hover:opacity-90 dark:text-red-400 [&::-webkit-details-marker]:hidden">
+              <span className="font-heading text-lg tracking-tight">
+                {day.label}
+              </span>
+              <ChevronDown className="size-5 transition-transform duration-200 group-open:rotate-180" />
             </summary>
 
-            <div className="flex flex-col gap-3 px-4 pb-2">
+            <div className="flex flex-col gap-3 px-4 pt-1">
+              {/* Botones de acción del día */}
+              {day.blocks.length > 0 && (
+                <DayWeightsDialogs
+                  dni={parsed.data}
+                  assignedRoutineId={routine.id}
+                  blocks={day.blocks}
+                  progressByBlock={progressByBlock}
+                />
+              )}
+
               {day.blocks.length === 0 && (
-                <p className="text-sm text-muted-foreground">Sin ejercicios.</p>
+                <p className="py-2 text-sm text-muted-foreground">Sin ejercicios.</p>
               )}
               {groupConsecutiveBlocks(day.blocks).map((entry, entryIndex) =>
                 entry.kind === "single" ? (
@@ -144,41 +158,55 @@ function ExerciseBlockCard({
   progressByBlock: Map<string, ProgressLogEntry>
 }) {
   return (
-    <div className="rounded-xl border bg-background p-4">
-      <p className="text-base font-semibold">{block.exerciseName}</p>
-      <p className="mt-1 text-sm text-foreground">
-        {block.sets} series
-        {block.repsScheme
-          ? ` (${block.repsScheme})`
-          : block.reps
-            ? ` × ${block.reps} reps`
-            : ""}
-        {block.durationSecs ? ` · ${block.durationSecs}s` : ""}
-      </p>
-      {(block.weightKg !== null || block.intensity !== null) && (
-        <p className="text-sm font-medium text-primary">
-          {block.weightKg !== null && `${block.weightKg} kg`}
-          {block.weightKg !== null && block.intensity !== null && " · "}
-          {block.intensity !== null && block.intensity}
+    <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="font-heading text-lg font-bold leading-snug tracking-tight text-foreground">
+          {block.exerciseName}
+        </h3>
+        {block.exerciseVideoUrl && (
+          <VideoDialog
+            videoUrl={block.exerciseVideoUrl}
+            className="flex h-9 w-12 shrink-0 items-center justify-center rounded-xl bg-[#e5252a] text-white shadow-sm transition-transform hover:bg-[#c91e23] active:scale-95"
+          >
+            <Play className="size-4 fill-white text-white" />
+          </VideoDialog>
+        )}
+      </div>
+
+      <div className="mt-2.5 flex flex-col gap-1 text-sm">
+        <p className="text-foreground">
+          <span className="font-bold">Series:</span> {block.sets}
         </p>
-      )}
-      {block.tempo !== null && (
-        <p className="text-sm text-muted-foreground">Tempo: {block.tempo}</p>
-      )}
-      {block.restSecs !== null && (
-        <p className="text-sm text-muted-foreground">Descanso: {block.restSecs}s</p>
-      )}
-      {block.trainerNotes && (
-        <p className="mt-2 text-sm italic text-muted-foreground">"{block.trainerNotes}"</p>
-      )}
-      {block.exerciseVideoUrl && (
-        <VideoDialog
-          videoUrl={block.exerciseVideoUrl}
-          className="mt-3 inline-flex min-h-11 items-center font-semibold text-primary"
-        >
-          Ver video ↗
-        </VideoDialog>
-      )}
+        <p className="text-foreground">
+          <span className="font-bold">Repeticiones:</span>{" "}
+          {block.repsScheme
+            ? block.repsScheme
+            : block.reps
+              ? block.reps
+              : "—"}
+          {block.durationSecs ? ` · ${block.durationSecs}s` : ""}
+        </p>
+        {block.restSecs !== null && (
+          <p className="text-muted-foreground">
+            <span className="font-semibold text-foreground">Descanso:</span> {block.restSecs}s
+          </p>
+        )}
+        {(block.weightKg !== null || block.intensity !== null) && (
+          <p className="text-sm font-medium text-primary">
+            {block.weightKg !== null && `Carga sugerida: ${block.weightKg} kg`}
+            {block.weightKg !== null && block.intensity !== null && " · "}
+            {block.intensity !== null && block.intensity}
+          </p>
+        )}
+        {block.tempo !== null && (
+          <p className="text-xs text-muted-foreground">Tempo: {block.tempo}</p>
+        )}
+        {block.trainerNotes && (
+          <p className="mt-1 text-xs italic text-muted-foreground">
+            &ldquo;{block.trainerNotes}&rdquo;
+          </p>
+        )}
+      </div>
 
       <ExerciseProgress
         dni={dni}

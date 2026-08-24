@@ -24,9 +24,9 @@ export default async function PlantillasPage() {
           }}
         />
       </Suspense>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Plantillas</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" render={<Link href="/plantillas/importar" />}>
             Importar CSV
           </Button>

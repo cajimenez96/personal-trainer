@@ -71,9 +71,9 @@ export default async function AlumnosPage({
           }}
         />
       </Suspense>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Alumnos</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" render={<Link href="/alumnos/importar" />}>
             Importar CSV
           </Button>
@@ -82,7 +82,7 @@ export default async function AlumnosPage({
       </div>
 
       <form className="flex flex-wrap items-end gap-3" method="get">
-        <div className="flex flex-col gap-1">
+        <div className="flex w-full flex-col gap-1 sm:w-56">
           <label htmlFor="search" className="text-sm text-muted-foreground">
             Buscar
           </label>
@@ -91,7 +91,7 @@ export default async function AlumnosPage({
             name="search"
             placeholder="Nombre o DNI"
             defaultValue={query.search ?? ""}
-            className="w-56"
+            className="w-full"
           />
         </div>
 

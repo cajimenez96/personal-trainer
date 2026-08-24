@@ -52,17 +52,22 @@ export function RestTimer({ seconds, onDismiss }: { seconds: number; onDismiss: 
   }, [running, remaining])
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
-      <span className="font-heading text-2xl font-semibold tabular-nums text-primary">
-        {formatTime(Math.max(remaining, 0))}
-      </span>
-      <span className="text-sm text-muted-foreground">Descanso</span>
-      <div className="ml-auto flex items-center gap-1">
+    <div className="fixed bottom-5 right-4 z-50 flex items-center gap-3 rounded-2xl border border-primary/40 bg-card/95 px-4 py-3 shadow-2xl backdrop-blur-md transition-all sm:bottom-6 sm:right-6">
+      <div className="flex flex-col">
+        <span className="font-heading text-2xl font-bold tabular-nums text-primary">
+          {formatTime(Math.max(remaining, 0))}
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Descanso
+        </span>
+      </div>
+
+      <div className="ml-2 flex items-center gap-1 border-l border-border pl-2">
         <button
           type="button"
           onClick={() => setRunning((r) => !r)}
           aria-label={running ? "Pausar descanso" : "Reanudar descanso"}
-          className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 text-foreground transition-colors hover:bg-muted active:scale-95"
         >
           {running ? <Pause className="size-4" /> : <Play className="size-4" />}
         </button>
@@ -70,7 +75,7 @@ export function RestTimer({ seconds, onDismiss }: { seconds: number; onDismiss: 
           type="button"
           onClick={() => setRemaining((r) => r + ADD_SECONDS)}
           aria-label="Agregar 15 segundos"
-          className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 text-foreground transition-colors hover:bg-muted active:scale-95"
         >
           <Plus className="size-4" />
         </button>
@@ -78,7 +83,7 @@ export function RestTimer({ seconds, onDismiss }: { seconds: number; onDismiss: 
           type="button"
           onClick={onDismiss}
           aria-label="Finalizar descanso"
-          className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground active:scale-95"
         >
           <X className="size-4" />
         </button>
