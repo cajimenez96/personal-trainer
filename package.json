@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:prod": "next dev --env-file=.env.prod",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:migrate:prod": "node --env-file=.env.prod ./node_modules/prisma/build/index.js migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:prod": "tsx --env-file=.env.prod prisma/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

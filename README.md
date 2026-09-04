@@ -38,6 +38,9 @@ Plataforma web para gestión de alumnos, rutinas y seguimiento de progreso. Ver 
    | `DATABASE_URL` | Connection string de PostgreSQL (Neon) |
    | `AUTH_URL` | URL base de la app (`http://localhost:3000` en local) |
    | `AUTH_SECRET` | Secreto para Auth.js — generar con `openssl rand -base64 32` |
+   | `SEED_ADMIN_EMAIL` | (Opcional) Email del trainer para el seed (`npx prisma db seed`) |
+   | `SEED_ADMIN_PASSWORD` | (Opcional) Contraseña inicial del trainer (mínimo 8 caracteres) |
+   | `SEED_ADMIN_NAME` | (Opcional) Nombre para mostrar del trainer |
 
 4. Aplicar el schema de Prisma y generar el cliente:
 

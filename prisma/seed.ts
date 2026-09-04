@@ -1,14 +1,33 @@
+import dotenv from "dotenv"
+dotenv.config({ path: ".env.local" })
+dotenv.config()
 import { PrismaClient } from "../app/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import bcrypt from "bcryptjs"
 
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is required to run seed.")
+}
+
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const db = new PrismaClient({ adapter })
 
-const ADMIN = {
-  email: "sramon@coach.com",
-  password: "SRamon2026.",
-  name: "Santiago Ramón",
+function getAdminCredentials() {
+  const email = process.env.SEED_ADMIN_EMAIL || process.env.ADMIN_EMAIL
+  const password = process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD
+  const name = process.env.SEED_ADMIN_NAME || process.env.ADMIN_NAME || "Santiago Ramón"
+
+  if (!email || !password) {
+    throw new Error(
+      "Missing required seed credentials. Please define SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD in your environment variables."
+    )
+  }
+
+  if (password.length < 8) {
+    throw new Error("SEED_ADMIN_PASSWORD must be at least 8 characters long.")
+  }
+
+  return { email, password, name }
 }
 
 const EXERCISES: { name: string; primaryMuscle: string; secondaryMuscle: string }[] = [
@@ -42,19 +61,20 @@ const EXERCISES: { name: string; primaryMuscle: string; secondaryMuscle: string 
 ]
 
 async function main() {
-  const passwordHash = await bcrypt.hash(ADMIN.password, 10)
+  const { email, password, name } = getAdminCredentials()
+  const passwordHash = await bcrypt.hash(password, 10)
 
   // Solo debe existir un trainer (single-coach MVP) — limpia cualquier otro
   // que haya quedado de un seed anterior antes de crear el real.
-  await db.trainer.deleteMany({ where: { email: { not: ADMIN.email } } })
+  await db.trainer.deleteMany({ where: { email: { not: email } } })
 
   await db.trainer.upsert({
-    where: { email: ADMIN.email },
-    update: { passwordHash, name: ADMIN.name },
+    where: { email },
+    update: { passwordHash, name },
     create: {
-      email: ADMIN.email,
+      email,
       passwordHash,
-      name: ADMIN.name,
+      name,
     },
   })
 
@@ -69,7 +89,7 @@ async function main() {
     })
   }
 
-  console.log(`Seeded trainer: ${ADMIN.email} / ${ADMIN.password}`)
+  console.log(`Seeded trainer: ${email} (${name})`)
   console.log(`Seeded ${EXERCISES.length} exercises`)
 }
 
