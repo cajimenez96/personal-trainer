@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:prod": "next dev --env-file=.env.prod",
+    "dev:prod": "node --env-file=.env.prod ./node_modules/next/dist/bin/next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",

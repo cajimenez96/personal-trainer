@@ -8,7 +8,12 @@ import type { NextRequest } from "next/server"
 const PUBLIC_PATHS = ["/", "/login"]
 
 function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/rutina")
+  return (
+    PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith("/rutina") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api/auth")
+  )
 }
 
 export async function proxy(request: NextRequest) {
@@ -22,7 +27,9 @@ export async function proxy(request: NextRequest) {
 
   if (!session) {
     const loginUrl = new URL("/login", request.url)
-    loginUrl.searchParams.set("callbackUrl", pathname)
+    const validCallback =
+      pathname && !pathname.startsWith("/_next") ? pathname : "/dashboard"
+    loginUrl.searchParams.set("callbackUrl", validCallback)
     return NextResponse.redirect(loginUrl)
   }
 
@@ -30,5 +37,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!api/auth|_next|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 }
