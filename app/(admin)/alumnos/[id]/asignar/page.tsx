@@ -1,7 +1,5 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { TemplatePicker } from "@/components/admin/template-picker"
 import { AssignmentForm } from "@/components/admin/assignment-form"
 import { studentService } from "@/lib/services/student.service"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
@@ -31,31 +29,7 @@ export default async function AsignarRutinaPage({
         <h1 className="mb-2 text-2xl font-semibold">Asignar rutina a {student.firstName} {student.lastName}</h1>
         <p className="mb-6 text-muted-foreground">Elegí una plantilla del catálogo.</p>
 
-        {templates.length === 0 && (
-          <p className="text-muted-foreground">No hay plantillas creadas todavía.</p>
-        )}
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {templates.map((t) => (
-            <Link key={t.id} href={`/alumnos/${id}/asignar?template=${t.id}`}>
-              <Card className="h-full transition-colors hover:bg-muted/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    {t.name}
-                    <Badge variant="secondary">{t.durationWeeks} sem.</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm">
-                    {t.trainingDays.length} día(s) ·{" "}
-                    {t.trainingDays.reduce((sum, d) => sum + d.exerciseBlocks.length, 0)}{" "}
-                    ejercicio(s)
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <TemplatePicker templates={templates} hrefForTemplate={(templateId) => `/alumnos/${id}/asignar?template=${templateId}`} />
       </div>
     )
   }
