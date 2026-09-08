@@ -25,6 +25,12 @@ enum RoutineStatus {
   historic
 }
 
+enum GenericLevel {
+  basico
+  intermedio
+  avanzado
+}
+
 // HU-35: clasificación liviana de la nota del alumno — no reemplaza el texto
 // libre, solo permite filtrar rápido sin releer todo el historial.
 enum NoteType {
@@ -138,6 +144,7 @@ model RoutineTemplate {
 
   trainingDays     TrainingDay[]
   assignedRoutines AssignedRoutine[]
+  genericProfiles  GenericProfile[]
 
   @@map("routine_templates")
 }
@@ -232,6 +239,22 @@ model RoutineOverride {
   exerciseBlock   ExerciseBlock   @relation(fields: [exerciseBlockId], references: [id])
 
   @@map("routine_overrides")
+}
+
+// ─────────────────────────────────────────────
+// GENERIC PROFILES (shared, non-Student access by level — no tracking)
+// ─────────────────────────────────────────────
+
+model GenericProfile {
+  id                 String       @id @default(uuid())
+  level              GenericLevel @unique
+  passwordHash       String       @map("password_hash")
+  assignedTemplateId String?      @map("assigned_template_id")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  assignedTemplate RoutineTemplate? @relation(fields: [assignedTemplateId], references: [id], onDelete: SetNull)
+
+  @@map("generic_profiles")
 }
 
 // ─────────────────────────────────────────────
