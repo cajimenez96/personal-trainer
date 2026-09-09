@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Papa from "papaparse"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DownloadCsvTemplateButton } from "@/components/admin/download-csv-template-button"
@@ -14,6 +15,13 @@ const TEMPLATE_EXAMPLE = [
   "Torso/Pierna 4 días,,,Día 2 - Pierna,2,Extensión de cuádriceps,cuádriceps,,,3,12,,,,,,90,,A,60,3,",
 ].join("\n")
 const TEMPLATE_CONTENT = `${TEMPLATE_HEADERS}\n${TEMPLATE_EXAMPLE}\n`
+
+// La tabla de ayuda se deriva del mismo TEMPLATE_CONTENT que se descarga (parseado,
+// no separado a mano por comas) para que nunca queden desincronizados.
+const { data: TEMPLATE_TABLE_ROWS } = Papa.parse<string[]>(TEMPLATE_CONTENT.trim(), {
+  skipEmptyLines: true,
+})
+const [TEMPLATE_TABLE_HEADER, ...TEMPLATE_TABLE_DATA] = TEMPLATE_TABLE_ROWS
 
 export default function ImportarRutinasPage() {
   return (
@@ -37,8 +45,32 @@ export default function ImportarRutinasPage() {
             <code className="rounded bg-muted px-1">dayLabel</code> dentro de esa plantilla forman
             el mismo día.
           </p>
-          <div className="overflow-x-auto rounded-md border bg-muted/50 p-3">
-            <code className="whitespace-pre text-xs">{TEMPLATE_CONTENT}</code>
+          <div className="overflow-x-auto rounded-md border bg-muted/50">
+            <table className="text-xs">
+              <thead>
+                <tr>
+                  {TEMPLATE_TABLE_HEADER.map((col) => (
+                    <th
+                      key={col}
+                      className="whitespace-nowrap border-b px-2 py-1.5 text-left font-mono font-medium"
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {TEMPLATE_TABLE_DATA.map((row, i) => (
+                  <tr key={i} className="border-t border-border/50">
+                    {row.map((cell, j) => (
+                      <td key={j} className="whitespace-nowrap px-2 py-1.5 font-mono text-muted-foreground">
+                        {cell || "—"}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <ul className="list-inside list-disc text-muted-foreground">
             <li>
@@ -63,6 +95,12 @@ export default function ImportarRutinasPage() {
               <code className="rounded bg-muted px-1">studentDni</code> (opcional): si se completa,
               la plantilla se asigna a ese alumno al finalizar la importación. Debe existir un
               alumno activo con ese DNI
+            </li>
+            <li>
+              <code className="rounded bg-muted px-1">reps</code> (opcional): un número entero fijo
+              por serie, ej. <code className="rounded bg-muted px-1">8</code>. No admite rangos
+              (<code className="rounded bg-muted px-1">8-10</code>) — para eso dejalo vacío y usá{" "}
+              <code className="rounded bg-muted px-1">repsScheme</code>
             </li>
             <li>
               <code className="rounded bg-muted px-1">repsScheme</code> (opcional): esquema de
