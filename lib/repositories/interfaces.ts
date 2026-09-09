@@ -1,6 +1,7 @@
 import type {
   AssignedRoutine,
   Exercise,
+  GenericLevel,
   Nivel,
   NoteType,
   RoutineTemplate,
@@ -341,4 +342,20 @@ export interface IProgressLogRepository {
     studentId: string,
     filters: ProgressHistoryFilters,
   ): Promise<ProgressHistoryEntry[]>
+}
+
+export type GenericProfileWithTemplate = {
+  id: string
+  level: GenericLevel
+  passwordHash: string
+  assignedTemplateId: string | null
+  assignedTemplate: { id: string; name: string } | null
+  updatedAt: Date
+}
+
+export interface IGenericProfileRepository {
+  findAll(): Promise<GenericProfileWithTemplate[]>
+  findByLevel(level: GenericLevel): Promise<GenericProfileWithTemplate | null>
+  assignTemplate(level: GenericLevel, templateId: string | null): Promise<GenericProfileWithTemplate>
+  updatePasswordHash(level: GenericLevel, passwordHash: string): Promise<void>
 }

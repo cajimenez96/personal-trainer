@@ -4,13 +4,14 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Menu, X, LayoutDashboard, Users, Dumbbell, Layers, LogOut } from "lucide-react"
+import { Menu, X, LayoutDashboard, Users, Dumbbell, Layers, LogOut, UserCog } from "lucide-react"
 import logoNavbar from "@/app/assets/navbar.png"
 import { Button } from "@/components/ui/button"
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/alumnos", label: "Alumnos", icon: Users },
+  { href: "/alumnos-genericos", label: "Genéricos", icon: UserCog },
   { href: "/ejercicios", label: "Ejercicios", icon: Dumbbell },
   { href: "/plantillas", label: "Plantillas", icon: Layers },
 ]

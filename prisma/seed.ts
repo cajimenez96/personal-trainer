@@ -60,6 +60,12 @@ const EXERCISES: { name: string; primaryMuscle: string; secondaryMuscle: string 
   { name: "Elevación de piernas colgado", primaryMuscle: "Recto abdominal (porción inferior)", secondaryMuscle: "Flexores de cadera (psoas ilíaco), antebrazos" },
 ]
 
+const GENERIC_PROFILE_DEFAULTS: { level: "basico" | "intermedio" | "avanzado"; password: string }[] = [
+  { level: "basico", password: "olympia.basico" },
+  { level: "intermedio", password: "olympia.intermedio" },
+  { level: "avanzado", password: "olympia.avanzado" },
+]
+
 async function main() {
   const { email, password, name } = getAdminCredentials()
   const passwordHash = await bcrypt.hash(password, 10)
@@ -91,6 +97,17 @@ async function main() {
 
   console.log(`Seeded trainer: ${email} (${name})`)
   console.log(`Seeded ${EXERCISES.length} exercises`)
+
+  for (const { level, password } of GENERIC_PROFILE_DEFAULTS) {
+    const genericPasswordHash = await bcrypt.hash(password, 10)
+    await db.genericProfile.upsert({
+      where: { level },
+      update: {},
+      create: { level, passwordHash: genericPasswordHash },
+    })
+  }
+
+  console.log(`Seeded ${GENERIC_PROFILE_DEFAULTS.length} generic profiles`)
 }
 
 main()
