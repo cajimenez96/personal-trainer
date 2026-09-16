@@ -1,15 +1,20 @@
 import Image from "next/image";
-import logoHome from "@/app/assets/home.png";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { studentService } from "@/lib/services/student.service";
 import { genericProfileService } from "@/lib/services/generic-profile.service";
+import { evaluateStudentAccess } from "@/lib/utils/student-access";
 import { dniSchema } from "@/lib/validators/portal";
+import { siteConfig } from "@/lib/config/site";
 
 const ERROR_MESSAGES: Record<string, string> = {
   "not-found":
     "No encontramos un alumno activo con ese DNI, ni una clave válida. Consultá con tu entrenador.",
+  expired:
+    "Tu acceso está pausado por cuota vencida. Ponete en contacto con tu entrenador para renovar tu plan.",
+  blocked:
+    "El acceso a tu rutina se encuentra suspendido por el entrenador. Consultá con él para más información.",
 };
 
 export default async function PortalHomePage({
@@ -27,7 +32,17 @@ export default async function PortalHomePage({
     const dniParsed = dniSchema.safeParse(value);
     if (dniParsed.success) {
       const student = await studentService.getByDni(dniParsed.data);
-      if (student?.isActive) {
+      if (student) {
+        const access = evaluateStudentAccess(student);
+        if (!access.allowed) {
+          if (access.reason === "expired") {
+            redirect("/?error=expired");
+          }
+          if (access.reason === "manual_blocked") {
+            redirect("/?error=blocked");
+          }
+          redirect("/?error=not-found");
+        }
         redirect(`/rutina/${dniParsed.data}`);
       }
     } else {
@@ -42,31 +57,32 @@ export default async function PortalHomePage({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="flex w-full max-w-sm flex-col items-center gap-16">
+      <div className="flex w-full max-w-sm flex-col items-center">
         <Image
-          src={logoHome}
-          alt="Santiago Ramón Logo"
-          className="w-2xs object-contain"
+          src={siteConfig.branding.logoHome}
+          alt={`${siteConfig.name} Logo`}
+          width={480}
+          height={210}
+          className="w-3xl h-auto object-cover"
           priority
         />
         <div>
-          <h1 className="mb-2 text-center text-3xl font-bold tracking-tight">
-            Tu rutina de hoy
-          </h1>
-          <p className="mb-8 text-center text-muted-foreground">
-            Ingresá tu DNI o tu clave para ver tu rutina de entrenamiento.
+          <p className="mb-2 text-center text-xl font-bold tracking-tight">
+            {siteConfig.trainer.headline}
+          </p>
+          <p className="mb-8 text-center text-muted-foreground text-md">
+            {siteConfig.trainer.tagline}
           </p>
 
           <form action={lookup} className="w-full flex flex-col gap-3">
             <Input
               name="dni"
               type="text"
-              autoComplete="off"
-              placeholder="Tu DNI o tu clave"
+              autoComplete="on"
               aria-label="DNI o clave"
               aria-invalid={!!error}
               required
-              className="h-12 rounded-xl px-5 text-center text-lg font-semibold tracking-widest"
+              className="h-10 rounded-xl px-5 text-center text-md font-semibold tracking-widest"
             />
 
             {error && (
@@ -75,7 +91,7 @@ export default async function PortalHomePage({
               </p>
             )}
 
-            <Button type="submit" size="lg" className="w-full rounded-xl">
+            <Button type="submit" className="w-full rounded-xl">
               Ver mi rutina
             </Button>
           </form>

@@ -1,11 +1,15 @@
 import type {
+  AccessOverride,
   AssignedRoutine,
   Exercise,
   GenericLevel,
   Nivel,
   NoteType,
+  Payment,
+  Plan,
   RoutineTemplate,
   Student,
+  StudentSubscription,
 } from "@/app/generated/prisma/client"
 
 export interface CreateStudentData {
@@ -20,6 +24,7 @@ export interface CreateStudentData {
   modalidadId?: string
   membershipStartsAt?: Date
   paymentExpiresAt?: Date
+  accessOverride?: AccessOverride
   healthNotes?: string
 }
 
@@ -34,6 +39,7 @@ export interface UpdateStudentData {
   modalidadId: string | null
   membershipStartsAt: Date | null
   paymentExpiresAt: Date | null
+  accessOverride?: AccessOverride
   healthNotes: string | null
 }
 
@@ -42,6 +48,7 @@ export interface StudentFilters {
   objetivoId?: string
   nivel?: Nivel
   modalidadId?: string
+  planId?: string
   isActive?: boolean
   // Cuota vencida a la fecha actual — distinto de "sin fecha registrada"
   // (paymentExpiresAt null nunca cuenta como vencida).
@@ -78,6 +85,14 @@ export interface StudentListParams extends StudentFilters {
 export type StudentWithTaxonomies = Student & {
   objetivoRef: LabelOption | null
   modalidadRef: LabelOption | null
+  subscriptions?: {
+    id: string
+    planId: string
+    plan: {
+      id: string
+      name: string
+    }
+  }[]
 }
 
 export interface StudentListResult {
@@ -359,3 +374,164 @@ export interface IGenericProfileRepository {
   assignTemplate(level: GenericLevel, templateId: string | null): Promise<GenericProfileWithTemplate>
   updatePasswordHash(level: GenericLevel, passwordHash: string): Promise<void>
 }
+
+// ─────────────────────────────────────────────
+// PLANS & SUBSCRIPTIONS
+// ─────────────────────────────────────────────
+
+export interface PlanDTO {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  durationDays: number
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CreatePlanData {
+  name: string
+  description?: string | null
+  price: number
+  durationDays?: number
+}
+
+export interface UpdatePlanData {
+  name: string
+  description?: string | null
+  price: number
+  durationDays?: number
+  isActive?: boolean
+}
+
+export interface IPlanRepository {
+  findAll(includeInactive?: boolean): Promise<PlanDTO[]>
+  findById(id: string): Promise<PlanDTO | null>
+  findByName(name: string): Promise<PlanDTO | null>
+  create(data: CreatePlanData): Promise<PlanDTO>
+  update(id: string, data: UpdatePlanData): Promise<PlanDTO>
+  delete(id: string): Promise<void>
+  countActive(): Promise<number>
+  countSubscriptions(planId: string): Promise<number>
+}
+
+export interface CreateSubscriptionData {
+  studentId: string
+  planId: string
+  priceSnapshot: number
+  startDate: Date
+  expiresAt: Date
+}
+
+export type StudentSubscriptionWithPlan = {
+  id: string
+  studentId: string
+  planId: string
+  priceSnapshot: number
+  startDate: Date
+  expiresAt: Date
+  createdAt: Date
+  plan: PlanDTO
+}
+
+export interface ISubscriptionRepository {
+  create(data: CreateSubscriptionData): Promise<StudentSubscriptionWithPlan>
+  findByStudentId(studentId: string): Promise<StudentSubscriptionWithPlan[]>
+  findLatestByStudentId(studentId: string): Promise<StudentSubscriptionWithPlan | null>
+  findById(id: string): Promise<StudentSubscriptionWithPlan | null>
+}
+
+// ─────────────────────────────────────────────
+// PAYMENTS & LEDGER
+// ─────────────────────────────────────────────
+
+export interface CreatePaymentData {
+  studentId: string
+  subscriptionId?: string | null
+  amount: number
+  paidAt: Date
+  notes?: string | null
+}
+
+export interface PaymentDTO {
+  id: string
+  studentId: string
+  subscriptionId: string | null
+  amount: number
+  paidAt: Date
+  notes: string | null
+  createdAt: Date
+}
+
+export type PaymentWithSubscription = PaymentDTO & {
+  subscription: StudentSubscriptionWithPlan | null
+}
+
+export interface IPaymentRepository {
+  create(data: CreatePaymentData): Promise<PaymentDTO>
+  findByStudentId(studentId: string): Promise<PaymentWithSubscription[]>
+  findById(id: string): Promise<PaymentDTO | null>
+  delete(id: string): Promise<void>
+}
+
+export type LedgerTransaction = {
+  id: string
+  type: "CHARGE" | "PAYMENT"
+  date: Date
+  description: string
+  amount: number
+  referenceId?: string
+}
+
+export type AccountStatement = {
+  totalCharges: number
+  totalPaid: number
+  balance: number
+  transactions: LedgerTransaction[]
+}
+
+// ─────────────────────────────────────────────
+// DASHBOARD METRICS & REPORTS
+// ─────────────────────────────────────────────
+
+export interface FinancialSummaryDTO {
+  monthlyRevenue: number
+  totalPendingBalance: number
+  debtorStudentsCount: number
+  totalPaidAllTime: number
+}
+
+export interface PlanMetricsItemDTO {
+  id: string
+  name: string
+  price: number
+  durationDays: number
+  isActive: boolean
+  activeStudentsCount: number
+  estimatedMonthlyRevenue: number
+}
+
+export interface PlanMetricsDTO {
+  activePlansCount: number
+  maxActivePlans: number
+  plans: PlanMetricsItemDTO[]
+  unassignedStudentsCount: number
+}
+
+export interface ExpiringStudentDTO {
+  id: string
+  firstName: string
+  lastName: string
+  dni: string
+  phone: string | null
+  paymentExpiresAt: Date | null
+  daysRemaining: number | null
+  isOverdue: boolean
+  planName: string | null
+  planPrice: number | null
+  pendingBalance: number
+  accessOverride: "auto" | "allowed" | "blocked"
+  isActive: boolean
+}
+

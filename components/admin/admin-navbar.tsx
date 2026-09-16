@@ -1,33 +1,44 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { Menu, X, LayoutDashboard, Users, Dumbbell, Layers, LogOut, UserCog } from "lucide-react"
-import logoNavbar from "@/app/assets/navbar.png"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  Users,
+  Dumbbell,
+  Layers,
+  LogOut,
+  UserCog,
+  CreditCard,
+} from "lucide-react";
+import { siteConfig } from "@/lib/config/site";
+import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/alumnos", label: "Alumnos", icon: Users },
+  { href: "/planes", label: "Planes", icon: CreditCard },
   { href: "/alumnos-genericos", label: "Genéricos", icon: UserCog },
   { href: "/ejercicios", label: "Ejercicios", icon: Dumbbell },
   { href: "/plantillas", label: "Plantillas", icon: Layers },
-]
+];
 
 export function AdminNavbar({
   signOutAction,
 }: {
-  signOutAction: () => Promise<void>
+  signOutAction: () => Promise<void>;
 }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   // Close mobile menu on route change
   useEffect(() => {
-    setIsOpen(false)
-  }, [pathname])
+    setIsOpen(false);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-40 bg-[#0d0d0d] px-4 py-3 text-white shadow-md sm:px-6">
@@ -35,9 +46,10 @@ export function AdminNavbar({
         {/* Brand / Logo */}
         <Link href="/dashboard" className="flex items-center">
           <Image
-            src={logoNavbar}
-            alt="Santiago Ramón — Panel"
-            className="w-32 object-contain sm:w-40"
+            src={siteConfig.branding.logoNavbar}
+            alt={`${siteConfig.name} — Panel`}
+            width={220}
+            height={100}
             priority
           />
         </Link>
@@ -45,7 +57,8 @@ export function AdminNavbar({
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
+            const isActive =
+              pathname === link.href || pathname.startsWith(`${link.href}/`);
             return (
               <Link
                 key={link.href}
@@ -58,7 +71,7 @@ export function AdminNavbar({
               >
                 {link.label}
               </Link>
-            )
+            );
           })}
         </nav>
 
@@ -87,8 +100,9 @@ export function AdminNavbar({
         <div className="mt-3 border-t border-white/10 pb-4 pt-3 md:hidden">
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => {
-              const Icon = link.icon
-              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
+              const Icon = link.icon;
+              const isActive =
+                pathname === link.href || pathname.startsWith(`${link.href}/`);
               return (
                 <Link
                   key={link.href}
@@ -102,7 +116,7 @@ export function AdminNavbar({
                   <Icon className="size-5 shrink-0" />
                   <span>{link.label}</span>
                 </Link>
-              )
+              );
             })}
           </nav>
 
@@ -121,5 +135,5 @@ export function AdminNavbar({
         </div>
       )}
     </header>
-  )
+  );
 }

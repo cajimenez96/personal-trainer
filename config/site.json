@@ -1,0 +1,32 @@
+{
+  "name": "Santiago Ramón",
+  "shortName": "Santiago",
+  "title": "Santiago Ramón — Personal Trainer",
+  "description": "Plataforma de entrenamiento personalizado, gestión de alumnos, rutinas y progreso físico.",
+  "trainer": {
+    "name": "Santiago Ramón",
+    "role": "Personal Trainer",
+    "headline": "Bienvenido!",
+    "tagline": "Ingresá tu DNI o tu clave.",
+    "contactPhone": "+54 9 11 0000-0000",
+    "email": "contacto@santiagoramon.com"
+  },
+  "branding": {
+    "logoNavbar": "/assets/navbar.png",
+    "logoHome": "/assets/home.png",
+    "favicon": "/favicon.ico"
+  },
+  "seo": {
+    "titleTemplate": "%s | Santiago Ramón Trainer",
+    "defaultTitle": "Santiago Ramón — Personal Trainer",
+    "description": "Plataforma para gestión de alumnos, rutinas personalizadas y seguimiento de progreso físico.",
+    "keywords": [
+      "personal trainer",
+      "rutinas de entrenamiento",
+      "gimnasio",
+      "fitness",
+      "seguimiento de progreso"
+    ],
+    "locale": "es_AR"
+  }
+}

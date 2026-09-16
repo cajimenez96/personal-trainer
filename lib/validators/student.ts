@@ -8,6 +8,14 @@ export const NIVEL_LABEL: Record<string, string> = {
   avanzado: "Avanzado",
 }
 
+export const ACCESS_OVERRIDE_VALUES = ["auto", "allowed", "blocked"] as const
+
+export const ACCESS_OVERRIDE_LABEL: Record<string, string> = {
+  auto: "Automático (según vencimiento)",
+  allowed: "Permitir siempre (Excepción manual)",
+  blocked: "Bloquear acceso (Suspendido)",
+}
+
 const emptyToUndefined = (v: unknown) =>
   typeof v === "string" && v.trim() === "" ? undefined : v
 
@@ -16,6 +24,7 @@ export const studentListQuerySchema = z.object({
   objetivoId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   nivel: z.preprocess(emptyToUndefined, z.enum(NIVEL_VALUES).optional()),
   modalidadId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  planId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   isActive: z
     .enum(["true", "false"])
     .optional()
@@ -46,6 +55,7 @@ export const createStudentSchema = z.object({
     z.coerce.date({ error: "La fecha de inicio de membresía es obligatoria" }),
   ),
   paymentExpiresAt: z.preprocess(emptyToUndefined, z.coerce.date().optional()),
+  accessOverride: z.preprocess(emptyToUndefined, z.enum(ACCESS_OVERRIDE_VALUES).optional()),
   healthNotes: z.preprocess(emptyToUndefined, z.string().trim().optional()),
 })
 

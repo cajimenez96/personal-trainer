@@ -1,8 +1,8 @@
-import Link from "next/link"
-import { Suspense } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Suspense } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,55 +10,63 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { FlashToast } from "@/components/admin/flash-toast"
-import { ClickableTableRow } from "@/components/admin/clickable-table-row"
-import { ActionsCell } from "@/components/admin/actions-cell"
-import { StudentRowActions } from "@/components/admin/student-row-actions"
-import { FilterSelect } from "@/components/admin/filter-select"
-import { studentService } from "@/lib/services/student.service"
-import { objetivoService } from "@/lib/services/objetivo.service"
-import { modalidadService } from "@/lib/services/modalidad.service"
-import { NIVEL_LABEL, NIVEL_VALUES, studentListQuerySchema } from "@/lib/validators/student"
+} from "@/components/ui/table";
+import { FlashToast } from "@/components/admin/flash-toast";
+import { ClickableTableRow } from "@/components/admin/clickable-table-row";
+import { ActionsCell } from "@/components/admin/actions-cell";
+import { StudentRowActions } from "@/components/admin/student-row-actions";
+import { FilterSelect } from "@/components/admin/filter-select";
+import { studentService } from "@/lib/services/student.service";
+import { objetivoService } from "@/lib/services/objetivo.service";
+import { modalidadService } from "@/lib/services/modalidad.service";
+import { planService } from "@/lib/services/plan.service";
+import {
+  NIVEL_LABEL,
+  NIVEL_VALUES,
+  studentListQuerySchema,
+} from "@/lib/validators/student";
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 20;
 
 function isExpired(date: Date | null) {
-  if (!date) return false
-  return date.getTime() < Date.now()
+  if (!date) return false;
+  return date.getTime() < Date.now();
 }
 
 function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("es-AR").format(date)
+  return new Intl.DateTimeFormat("es-AR").format(date);
 }
 
 export default async function AlumnosPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | undefined>>
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const raw = await searchParams
-  const parsed = studentListQuerySchema.safeParse(raw)
-  const query = parsed.success ? parsed.data : { isActive: true as const }
+  const raw = await searchParams;
+  const parsed = studentListQuerySchema.safeParse(raw);
+  const query = parsed.success ? parsed.data : { isActive: true as const };
 
-  const [{ items, nextCursor }, objetivos, modalidades] = await Promise.all([
-    studentService.list({ ...query, limit: PAGE_SIZE }),
-    objetivoService.list(),
-    modalidadService.list(),
-  ])
+  const [{ items, nextCursor }, objetivos, modalidades, plans] =
+    await Promise.all([
+      studentService.list({ ...query, limit: PAGE_SIZE }),
+      objetivoService.list(),
+      modalidadService.list(),
+      planService.list(true),
+    ]);
 
-  const baseParams = new URLSearchParams()
-  if (query.search) baseParams.set("search", query.search)
-  if (query.objetivoId) baseParams.set("objetivoId", query.objetivoId)
-  if (query.nivel) baseParams.set("nivel", query.nivel)
-  if (query.modalidadId) baseParams.set("modalidadId", query.modalidadId)
-  baseParams.set("isActive", String(query.isActive))
+  const baseParams = new URLSearchParams();
+  if (query.search) baseParams.set("search", query.search);
+  if (query.objetivoId) baseParams.set("objetivoId", query.objetivoId);
+  if (query.nivel) baseParams.set("nivel", query.nivel);
+  if (query.modalidadId) baseParams.set("modalidadId", query.modalidadId);
+  if (query.planId) baseParams.set("planId", query.planId);
+  baseParams.set("isActive", String(query.isActive));
 
   const nextHref = (() => {
-    const params = new URLSearchParams(baseParams)
-    if (nextCursor) params.set("cursor", nextCursor)
-    return `/alumnos?${params.toString()}`
-  })()
+    const params = new URLSearchParams(baseParams);
+    if (nextCursor) params.set("cursor", nextCursor);
+    return `/alumnos?${params.toString()}`;
+  })();
 
   return (
     <div className="flex flex-col gap-6">
@@ -95,6 +103,12 @@ export default async function AlumnosPage({
           />
         </div>
 
+        <FilterSelect
+          name="planId"
+          label="Plan"
+          value={query.planId}
+          items={plans.map((p) => ({ value: p.id, label: p.name }))}
+        />
         <FilterSelect
           name="objetivoId"
           label="Objetivo"
@@ -134,6 +148,7 @@ export default async function AlumnosPage({
             <TableRow>
               <TableHead>Nombre</TableHead>
               <TableHead>DNI</TableHead>
+              <TableHead>Plan</TableHead>
               <TableHead>Objetivo</TableHead>
               <TableHead>Nivel</TableHead>
               <TableHead>Cuota</TableHead>
@@ -143,39 +158,68 @@ export default async function AlumnosPage({
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="text-center text-muted-foreground"
+                >
                   No se encontraron alumnos.
                 </TableCell>
               </TableRow>
             )}
-            {items.map((student) => (
-              <ClickableTableRow key={student.id} href={`/alumnos/${student.id}`}>
-                <TableCell>
-                  <Link href={`/alumnos/${student.id}`} className="hover:underline">
-                    {student.lastName}, {student.firstName}
-                  </Link>
-                </TableCell>
-                <TableCell>{student.dni}</TableCell>
-                <TableCell>{student.objetivoRef?.label ?? "—"}</TableCell>
-                <TableCell>{student.nivel ? NIVEL_LABEL[student.nivel] : "—"}</TableCell>
-                <TableCell>
-                  {student.paymentExpiresAt ? (
-                    <Badge variant={isExpired(student.paymentExpiresAt) ? "destructive" : "success"}>
-                      {formatDate(student.paymentExpiresAt)}
-                    </Badge>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <ActionsCell>
-                  <StudentRowActions
-                    studentId={student.id}
-                    studentName={`${student.firstName} ${student.lastName}`}
-                    isActive={student.isActive}
-                  />
-                </ActionsCell>
-              </ClickableTableRow>
-            ))}
+            {items.map((student) => {
+              const latestPlan = student.subscriptions?.[0]?.plan;
+              return (
+                <ClickableTableRow
+                  key={student.id}
+                  href={`/alumnos/${student.id}`}
+                >
+                  <TableCell>
+                    <Link
+                      href={`/alumnos/${student.id}`}
+                      className="hover:underline font-medium"
+                    >
+                      {student.lastName}, {student.firstName}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{student.dni}</TableCell>
+                  <TableCell>
+                    {latestPlan ? (
+                      <Badge variant="outline" className="font-normal text-xs">
+                        {latestPlan.name}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{student.objetivoRef?.label ?? "—"}</TableCell>
+                  <TableCell>
+                    {student.nivel ? NIVEL_LABEL[student.nivel] : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {student.paymentExpiresAt ? (
+                      <Badge
+                        variant={
+                          isExpired(student.paymentExpiresAt)
+                            ? "destructive"
+                            : "success"
+                        }
+                      >
+                        {formatDate(student.paymentExpiresAt)}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <ActionsCell>
+                    <StudentRowActions
+                      studentId={student.id}
+                      studentName={`${student.firstName} ${student.lastName}`}
+                      isActive={student.isActive}
+                    />
+                  </ActionsCell>
+                </ClickableTableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
@@ -188,5 +232,5 @@ export default async function AlumnosPage({
         </div>
       )}
     </div>
-  )
+  );
 }

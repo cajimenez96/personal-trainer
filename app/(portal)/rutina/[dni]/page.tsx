@@ -4,6 +4,8 @@ import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 import { progressLogService } from "@/lib/services/progress-log.service"
 import { bodyWeightService } from "@/lib/services/body-weight.service"
+import { evaluateStudentAccess } from "@/lib/utils/student-access"
+import { StudentAccessBlocked } from "@/components/portal/student-access-blocked"
 import { BodyWeightInput } from "@/components/portal/body-weight-input"
 import { DayWeightsDialogs } from "@/components/portal/day-weights-dialog"
 import { ExerciseProgress } from "@/components/portal/exercise-progress"
@@ -26,7 +28,18 @@ export default async function RutinaPage({
   if (!parsed.success) redirect("/?error=invalid")
 
   const student = await studentService.getByDni(parsed.data)
-  if (!student || !student.isActive) redirect("/?error=not-found")
+  if (!student) redirect("/?error=not-found")
+
+  const access = evaluateStudentAccess(student)
+  if (!access.allowed) {
+    return (
+      <StudentAccessBlocked
+        studentName={`${student.firstName} ${student.lastName}`}
+        reason={access.reason}
+        expiresAt={access.expiresAt}
+      />
+    )
+  }
 
   const activeRoutine = await assignedRoutineService.getActiveByStudentId(student.id)
 

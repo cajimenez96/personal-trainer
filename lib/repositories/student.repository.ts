@@ -15,15 +15,41 @@ export class PrismaStudentRepository implements IStudentRepository {
     objetivoId,
     nivel,
     modalidadId,
+    planId,
     isActive,
     cursor,
     limit,
   }: StudentListParams): Promise<StudentListResult> {
+    let studentIdsForPlan: string[] | null = null
+    if (planId) {
+      const students = await db.student.findMany({
+        where: {
+          subscriptions: { some: {} },
+        },
+        select: {
+          id: true,
+          subscriptions: {
+            orderBy: { startDate: "desc" },
+            take: 1,
+            select: {
+              planId: true,
+            },
+          },
+        },
+      })
+      studentIdsForPlan = students
+        .filter((s) => s.subscriptions[0]?.planId === planId)
+        .map((s) => s.id)
+    }
+
     const where: Prisma.StudentWhereInput = {
       isActive,
       objetivoId,
       nivel,
       modalidadId,
+      ...(studentIdsForPlan !== null && {
+        id: { in: studentIdsForPlan },
+      }),
       ...(search && {
         OR: [
           { firstName: { contains: search, mode: "insensitive" } },
@@ -35,7 +61,24 @@ export class PrismaStudentRepository implements IStudentRepository {
 
     const items = await db.student.findMany({
       where,
-      include: { objetivoRef: true, modalidadRef: true },
+      include: {
+        objetivoRef: true,
+        modalidadRef: true,
+        subscriptions: {
+          take: 1,
+          orderBy: { startDate: "desc" },
+          select: {
+            id: true,
+            planId: true,
+            plan: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       take: limit + 1,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
@@ -74,13 +117,37 @@ export class PrismaStudentRepository implements IStudentRepository {
     return db.student.update({ where: { id }, data: { isActive: true } })
   }
 
-  findAllActive({ objetivoId, nivel, modalidadId, paymentExpired }: StudentFilters) {
+  async findAllActive({ objetivoId, nivel, modalidadId, planId, paymentExpired }: StudentFilters) {
+    let studentIdsForPlan: string[] | null = null
+    if (planId) {
+      const students = await db.student.findMany({
+        where: {
+          isActive: true,
+          subscriptions: { some: {} },
+        },
+        select: {
+          id: true,
+          subscriptions: {
+            orderBy: { startDate: "desc" },
+            take: 1,
+            select: {
+              planId: true,
+            },
+          },
+        },
+      })
+      studentIdsForPlan = students
+        .filter((s) => s.subscriptions[0]?.planId === planId)
+        .map((s) => s.id)
+    }
+
     return db.student.findMany({
       where: {
         isActive: true,
         objetivoId,
         nivel,
         modalidadId,
+        ...(studentIdsForPlan !== null && { id: { in: studentIdsForPlan } }),
         ...(paymentExpired && { paymentExpiresAt: { not: null, lt: new Date() } }),
       },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],

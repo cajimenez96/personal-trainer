@@ -39,6 +39,12 @@ enum NoteType {
   discomfort
 }
 
+enum AccessOverride {
+  auto
+  allowed
+  blocked
+}
+
 // ─────────────────────────────────────────────
 // TRAINER (Admin — single user for MVP)
 // ─────────────────────────────────────────────
@@ -58,22 +64,23 @@ model Trainer {
 // ─────────────────────────────────────────────
 
 model Student {
-  id                 String    @id @default(uuid())
-  dni                String    @unique                   // public identifier — RN-03
-  firstName          String    @map("first_name")
-  lastName           String    @map("last_name")
+  id                 String          @id @default(uuid())
+  dni                String          @unique                   // public identifier — RN-03
+  firstName          String          @map("first_name")
+  lastName           String          @map("last_name")
   email              String?
   phone              String?
-  objetivoId         String?   @map("objetivo_id") // objetivo principal — lista cerrada y administrable, no texto libre
-  secondaryGoals     String?   @map("secondary_goals") // texto libre: objetivos secundarios/prioridades (HU-34)
+  objetivoId         String?         @map("objetivo_id") // objetivo principal — lista cerrada y administrable, no texto libre
+  secondaryGoals     String?         @map("secondary_goals") // texto libre: objetivos secundarios/prioridades (HU-34)
   nivel              Nivel?
-  modalidadId        String?   @map("modalidad_id")
-  membershipStartsAt DateTime? @map("membership_starts_at") @db.Date
-  paymentExpiresAt   DateTime? @map("payment_expires_at") @db.Date
-  healthNotes        String?   @map("health_notes")
-  isActive           Boolean   @default(true) @map("is_active") // soft delete
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
+  modalidadId        String?         @map("modalidad_id")
+  membershipStartsAt DateTime?       @map("membership_starts_at") @db.Date
+  paymentExpiresAt   DateTime?       @map("payment_expires_at") @db.Date
+  accessOverride     AccessOverride  @default(auto) @map("access_override")
+  healthNotes        String?         @map("health_notes")
+  isActive           Boolean         @default(true) @map("is_active") // soft delete
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
 
   // Sin onDelete override — RESTRICT por defecto, igual que Exercise: no se
   // puede borrar un objetivo/modalidad mientras algún alumno lo tenga
@@ -83,6 +90,8 @@ model Student {
   assignedRoutines AssignedRoutine[]
   progressLogs     ProgressLog[]
   bodyWeightLogs   BodyWeightLog[]
+  subscriptions    StudentSubscription[]
+  payments         Payment[]
 
   @@index([dni], name: "idx_students_dni")
   @@map("students")
@@ -302,4 +311,60 @@ model BodyWeightLog {
   @@unique([studentId, loggedDate], name: "unique_body_weight_per_day")
   @@index([studentId, loggedDate], name: "idx_body_weight_student_date")
   @@map("body_weight_logs")
+}
+
+// ─────────────────────────────────────────────
+// PLANS & SUBSCRIPTIONS
+// ─────────────────────────────────────────────
+
+model Plan {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  description  String?
+  price        Decimal  @db.Decimal(10, 2)
+  durationDays Int      @default(30) @map("duration_days")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  subscriptions StudentSubscription[]
+
+  @@map("plans")
+}
+
+model StudentSubscription {
+  id            String   @id @default(uuid())
+  studentId     String   @map("student_id")
+  planId        String   @map("plan_id")
+  priceSnapshot Decimal  @map("price_snapshot") @db.Decimal(10, 2)
+  startDate     DateTime @map("start_date") @db.Date
+  expiresAt     DateTime @map("expires_at") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  student  Student   @relation(fields: [studentId], references: [id])
+  plan     Plan      @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@index([studentId], name: "idx_student_subscriptions_student")
+  @@map("student_subscriptions")
+}
+
+// ─────────────────────────────────────────────
+// PAYMENTS & LEDGER
+// ─────────────────────────────────────────────
+
+model Payment {
+  id             String   @id @default(uuid())
+  studentId      String   @map("student_id")
+  subscriptionId String?  @map("subscription_id")
+  amount         Decimal  @db.Decimal(10, 2)
+  paidAt         DateTime @map("paid_at") @db.Date
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  student      Student              @relation(fields: [studentId], references: [id])
+  subscription StudentSubscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([studentId], name: "idx_payments_student")
+  @@map("payments")
 }

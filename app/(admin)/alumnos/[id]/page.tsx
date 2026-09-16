@@ -11,10 +11,15 @@ import { WhatsAppActions } from "@/components/admin/whatsapp-actions"
 import { FlashToast } from "@/components/admin/flash-toast"
 import { updateStudentAction } from "@/lib/actions/student.actions"
 import { studentService } from "@/lib/services/student.service"
+import { evaluateStudentAccess } from "@/lib/utils/student-access"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 import { bodyWeightService } from "@/lib/services/body-weight.service"
 import { objetivoService } from "@/lib/services/objetivo.service"
 import { modalidadService } from "@/lib/services/modalidad.service"
+import { planService } from "@/lib/services/plan.service"
+import { subscriptionService } from "@/lib/services/subscription.service"
+import { paymentService } from "@/lib/services/payment.service"
+import { StudentSubscriptionLedgerCard } from "@/components/admin/student-subscription-ledger-card"
 
 // DB-backed detail (student + active routine) — must be fresh on every visit.
 export const dynamic = "force-dynamic"
@@ -34,14 +39,27 @@ export default async function AlumnoDetallePage({
 
   if (!student) notFound()
 
-  const [activeRoutine, routineHistory, bodyWeightHistory, objetivos, modalidades] =
-    await Promise.all([
-      assignedRoutineService.getActiveByStudentId(id),
-      assignedRoutineService.getHistoryByStudentId(id),
-      bodyWeightService.history(id),
-      objetivoService.list(),
-      modalidadService.list(),
-    ])
+  const access = evaluateStudentAccess(student)
+
+  const [
+    activeRoutine,
+    routineHistory,
+    bodyWeightHistory,
+    objetivos,
+    modalidades,
+    availablePlans,
+    currentSubscription,
+    statement,
+  ] = await Promise.all([
+    assignedRoutineService.getActiveByStudentId(id),
+    assignedRoutineService.getHistoryByStudentId(id),
+    bodyWeightService.history(id),
+    objetivoService.list(),
+    modalidadService.list(),
+    planService.list(false),
+    subscriptionService.getLatestByStudentId(id),
+    paymentService.getAccountStatement(id),
+  ])
 
   const defaultValues = {
     firstName: student.firstName,
@@ -55,6 +73,7 @@ export default async function AlumnoDetallePage({
     modalidadId: student.modalidadId ?? "",
     membershipStartsAt: toDateInputValue(student.membershipStartsAt),
     paymentExpiresAt: toDateInputValue(student.paymentExpiresAt),
+    accessOverride: student.accessOverride ?? "auto",
     healthNotes: student.healthNotes ?? "",
   }
 
@@ -68,6 +87,14 @@ export default async function AlumnoDetallePage({
           }}
         />
       </Suspense>
+
+      <StudentSubscriptionLedgerCard
+        studentId={student.id}
+        studentName={`${student.firstName} ${student.lastName}`}
+        availablePlans={availablePlans}
+        currentSubscription={currentSubscription}
+        statement={statement}
+      />
 
       <Card className="mb-6">
         <CardHeader>
@@ -155,11 +182,31 @@ export default async function AlumnoDetallePage({
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <CardTitle>
                 {student.firstName} {student.lastName}
               </CardTitle>
-              {!student.isActive && <Badge variant="destructive">Inactivo</Badge>}
+              {!student.isActive ? (
+                <Badge variant="destructive">Inactivo</Badge>
+              ) : access.allowed ? (
+                access.reason === "manual_allowed" ? (
+                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 font-medium">
+                    Acceso Permitido (Excepción)
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 font-medium">
+                    Acceso Habilitado
+                  </Badge>
+                )
+              ) : access.reason === "expired" ? (
+                <Badge variant="destructive">
+                  Acceso Bloqueado (Cuota Vencida)
+                </Badge>
+              ) : (
+                <Badge variant="destructive">
+                  Acceso Suspendido
+                </Badge>
+              )}
             </div>
             <WhatsAppActions
               phone={student.phone}

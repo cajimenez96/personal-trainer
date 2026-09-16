@@ -1,6 +1,8 @@
 import { Prisma } from "@/app/generated/prisma/client"
+import { db } from "@/lib/db"
 import type {
   CreateStudentData,
+  ExpiringStudentDTO,
   IStudentRepository,
   StudentFilters,
   StudentListParams,
@@ -65,6 +67,89 @@ export class StudentService {
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() + withinDays)
     return this.studentRepo.countExpiringSoon(cutoff)
+  }
+
+  async getExpiringStudents(withinDays = 14): Promise<ExpiringStudentDTO[]> {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() + withinDays)
+    cutoff.setHours(23, 59, 59, 999)
+
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+
+    const students = await db.student.findMany({
+      where: {
+        isActive: true,
+        paymentExpiresAt: {
+          lte: cutoff,
+        },
+      },
+      include: {
+        subscriptions: {
+          orderBy: { startDate: "desc" },
+          take: 1,
+          include: {
+            plan: true,
+          },
+        },
+        payments: {
+          select: {
+            amount: true,
+          },
+        },
+      },
+      orderBy: {
+        paymentExpiresAt: "asc",
+      },
+    })
+
+    const studentIds = students.map((s) => s.id)
+    const allSubs = await db.studentSubscription.findMany({
+      where: { studentId: { in: studentIds } },
+      select: { studentId: true, priceSnapshot: true },
+    })
+
+    const totalChargesMap = new Map<string, number>()
+    for (const sub of allSubs) {
+      totalChargesMap.set(
+        sub.studentId,
+        (totalChargesMap.get(sub.studentId) ?? 0) + Number(sub.priceSnapshot),
+      )
+    }
+
+    return students.map((s) => {
+      const latestSub = s.subscriptions[0]
+      const totalCharges = totalChargesMap.get(s.id) ?? 0
+      const totalPaid = s.payments.reduce((acc, p) => acc + Number(p.amount), 0)
+      const pendingBalance = totalCharges - totalPaid
+
+      let daysRemaining: number | null = null
+      let isOverdue = false
+
+      if (s.paymentExpiresAt) {
+        const exp = new Date(s.paymentExpiresAt)
+        exp.setHours(0, 0, 0, 0)
+        const diffMs = exp.getTime() - now.getTime()
+        daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24))
+        isOverdue = daysRemaining < 0
+      }
+
+      return {
+        id: s.id,
+        firstName: s.firstName,
+        lastName: s.lastName,
+        dni: s.dni,
+        phone: s.phone,
+        paymentExpiresAt: s.paymentExpiresAt,
+        daysRemaining,
+        isOverdue,
+        planName: latestSub?.plan.name ?? null,
+        planPrice: latestSub ? Number(latestSub.priceSnapshot) : null,
+        pendingBalance,
+        accessOverride: s.accessOverride as "auto" | "allowed" | "blocked",
+        isActive: s.isActive,
+      }
+    })
   }
 
   async create(data: CreateStudentData) {

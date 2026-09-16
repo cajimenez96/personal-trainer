@@ -1,8 +1,8 @@
 import Image from "next/image";
-import logoHome from "@/app/assets/home.png";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
+import { siteConfig } from "@/lib/config/site";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,51 +47,57 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row items-center justify-center gap-24 bg-background p-4">
-      <Image
-        src={logoHome}
-        alt="Santiago Ramón Logo"
-        className="w-2xs md:w-auto object-contain"
-        priority
-      />
-      <Card className="w-full max-w-sm">
-        <CardHeader className="flex flex-col items-center text-center">
-          <CardTitle>Iniciar sesión</CardTitle>
-          <CardDescription>Panel de administración del trainer</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={login} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </div>
-            {error && (
-              <p role="alert" className="text-sm text-destructive">
-                Email o contraseña incorrectos.
-              </p>
-            )}
-            <Button type="submit" size="lg" className="w-full">
-              Ingresar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="h-screen flex justify-center items-center px-2">
+      <div>
+        <Card className="w-xs md:w-md">
+          <CardHeader className="flex flex-col items-center text-center">
+            <Image
+              src={siteConfig.branding.logoHome}
+              alt={`${siteConfig.name} Logo`}
+              width={520}
+              height={480}
+              className=""
+              priority
+            />
+            <CardTitle>Bienvenido!</CardTitle>
+            <CardDescription>
+              Panel de administración del trainer
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form action={login} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  Email o contraseña incorrectos.
+                </p>
+              )}
+              <Button type="submit" size="lg" className="w-full">
+                Ingresar
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

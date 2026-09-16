@@ -3,19 +3,25 @@
 import { useActionState, useState } from "react"
 import Link from "next/link"
 import { reactivateStudentAction, type CreateStudentState } from "@/lib/actions/student.actions"
-import { NIVEL_VALUES, createStudentSchema, updateStudentSchema } from "@/lib/validators/student"
+import {
+  NIVEL_VALUES,
+  NIVEL_LABEL,
+  ACCESS_OVERRIDE_VALUES,
+  ACCESS_OVERRIDE_LABEL,
+  createStudentSchema,
+  updateStudentSchema,
+} from "@/lib/validators/student"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 
-const NIVEL_LABEL: Record<string, string> = {
-  principiante: "Principiante",
-  intermedio: "Intermedio",
-  avanzado: "Avanzado",
-}
 const NIVEL_ITEMS = NIVEL_VALUES.map((value) => ({ value, label: NIVEL_LABEL[value] }))
+const ACCESS_OVERRIDE_ITEMS = ACCESS_OVERRIDE_VALUES.map((value) => ({
+  value,
+  label: ACCESS_OVERRIDE_LABEL[value],
+}))
 
 const initialState: CreateStudentState = {}
 
@@ -224,6 +230,14 @@ export function StudentForm({
           value={getValue("modalidadId")}
           onChange={handleChange}
           error={errors.modalidadId}
+        />
+        <SelectField
+          label="Control de Acceso al Portal"
+          name="accessOverride"
+          items={ACCESS_OVERRIDE_ITEMS}
+          value={getValue("accessOverride", "auto")}
+          onChange={handleChange}
+          error={errors.accessOverride}
         />
       </div>
 
