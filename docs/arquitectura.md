@@ -1,8 +1,8 @@
 # Arquitectura — Personal Trainer Platform
 
-**Versión:** 1.0  
-**Fecha:** Agosto 2026  
-**Estado:** Aprobado
+**Versión:** 2.0  
+**Fecha:** Septiembre 2026  
+**Estado:** Evolución Multi-tenant Aprobada
 
 ---
 
@@ -10,194 +10,221 @@
 
 | Capa | Tecnología | Versión | Justificación |
 |---|---|---|---|
-| Frontend + API | **Next.js** (App Router) | **16.3.1** ✅ | Un solo repo, un solo deploy. Server Components para lectura, Client Components para interactividad. |
-| Base de datos | **PostgreSQL** (Neon) | latest | Modelo de datos relacional. Integridad referencial nativa, JOINs eficientes, FK constraints reales. |
-| ORM | **Prisma** | **7.9.1** ✅ | Type-safety en queries, migraciones controladas, schema como fuente de verdad. Requiere driver adapter (`@prisma/adapter-pg`) desde v7. |
-| Autenticación | **Auth.js v5** (NextAuth) | 5.0.0-beta.32 ⚠️ | Solo para el trainer (admin). Alumnos acceden por DNI sin sesión formal. **Riesgo:** todavía en beta — vigilar el lanzamiento de una versión estable antes de un release de producción. |
-| Validación | **Zod** | 4.x | Validación de inputs en API Routes y formularios. Single source of truth para los schemas. |
-| Estilos | **Tailwind CSS v4** | 4.x | CSS nativo con variables. Sin `tailwind.config.js` — la config vive en `globals.css`. |
-| Componentes UI | **shadcn/ui** | latest | Componentes accesibles sobre Radix UI, 100% customizables, tokens mapeados a DESIGN.md. |
-| Hosting | **Vercel** | — | Zero-ops, preview deployments automáticos, integración nativa con Next.js y Neon. |
+| Frontend + API | **Next.js** (App Router) | **16.3.1** ✅ | Un solo repo, un solo deploy. Server Components para lectura, Client Components para interactividad. Soporte de dynamic routes `/[coachSlug]`. |
+| Base de datos | **PostgreSQL** (Neon) | latest | Modelo relacional multi-tenant con esquema compartido e índices compuestos para aislamiento eficiente por tenant. |
+| ORM | **Prisma** | **7.9.1** ✅ | Type-safety en queries, migraciones controladas, schema como fuente de verdad. Driver adapter `@prisma/adapter-pg`. |
+| Autenticación | **Auth.js v5** (NextAuth) | 5.0.0-beta.32 ⚠️ | Sesión JWT extendida con `trainerId`, `role` (`SUPERADMIN` / `COACH`) y `slug`. Guards de ruta por rol. Alumnos acceden vía slug y DNI sin sesión formal. |
+| Validación | **Zod** | 4.x | Validación de inputs, Server Actions y blacklist de slugs reservados. |
+| Estilos | **Tailwind CSS v4** | 4.x | CSS nativo con variables en `globals.css`. |
+| Componentes UI | **shadcn/ui** | latest | Componentes accesibles sobre Radix UI con diálogos custom (`ConfirmDialog`). |
+| Hosting | **Vercel** | — | Despliegue único para todos los tenants sin requerir gestión de DNS wildcard. |
 
 ---
 
-## 2. Estructura de Carpetas
+## 2. Estrategia de Multi-tenancy (Slug-in-Path)
+
+Se adopta la estrategia **Shared Database, Shared Schema con columna discriminadora (`trainer_id`)** y ruteo **Slug-in-Path**:
+
+1. **Aislamiento de Infraestructura Cero Costo:** No requiere configuración de dominios wildcard ni servidores adicionales; corre en un único build/deploy de Next.js.
+2. **Identificación por URL:**
+   - Portal del Alumno: `tuapp.com/[coachSlug]` (ej. `tuapp.com/santiago-ramon`).
+   - Rutina del Alumno: `tuapp.com/[coachSlug]/rutina/[dni]`.
+   - Panel del Coach: `tuapp.com/dashboard`, `tuapp.com/alumnos`, etc. (identificado transparentemente por la sesión JWT de Auth.js).
+   - Panel del SuperAdmin: `tuapp.com/superadmin` (protegido por rol `SUPERADMIN`).
+   - Login unificado: `tuapp.com/login`.
+
+### Estructura de Carpetas en App Router
 
 ```
 /
 ├── app/
-│   ├── (admin)/              # Grupo: panel del trainer (requiere auth)
-│   │   ├── dashboard/
-│   │   ├── alumnos/
-│   │   ├── ejercicios/
-│   │   ├── plantillas/
-│   │   └── layout.tsx        # Layout con guard de autenticación
-│   ├── (portal)/             # Grupo: portal del alumno (acceso por DNI)
-│   │   ├── page.tsx          # Pantalla de ingreso por DNI
+│   ├── (auth)/
+│   │   └── login/page.tsx               # Login unificado para Coach y SuperAdmin
+│   │
+│   ├── (admin)/                         # Panel privado del Coach autenticado
+│   │   ├── dashboard/page.tsx           # KPIs financieros y deportivos del coach
+│   │   ├── alumnos/page.tsx             # Gestión de alumnos del coach (filtro por planes)
+│   │   ├── planes/page.tsx              # Gestión de planes de suscripción
+│   │   ├── ejercicios/page.tsx          # Biblioteca de ejercicios
+│   │   ├── plantillas/page.tsx          # Plantillas de rutinas del coach
+│   │   ├── configuracion/page.tsx       # Marca blanca: logo, portada, WhatsApp, Instagram
+│   │   └── layout.tsx                   # Guard de autenticación de Coach
+│   │
+│   ├── (superadmin)/                    # Panel exclusivo del dueño de la plataforma
+│   │   ├── superadmin/
+│   │   │   ├── coaches/page.tsx         # Altas, bajas, suspensión y edición de slugs
+│   │   │   └── metrics/page.tsx         # Métricas de negocio del SaaS
+│   │   └── layout.tsx                   # Guard de rol SUPERADMIN
+│   │
+│   ├── [coachSlug]/                     # Portal público del alumno por entrenador
+│   │   ├── layout.tsx                   # Inyección dinámica de metadatos, SEO y branding
+│   │   ├── page.tsx                     # Ingreso por DNI del alumno para este coach
 │   │   └── rutina/
-│   │       └── [dni]/
-│   └── api/                  # Route Handlers (serverless)
-│       ├── auth/
-│       ├── alumnos/
-│       ├── ejercicios/
-│       ├── plantillas/
-│       ├── rutinas/
-│       └── progreso/
+│   │       ├── [dni]/page.tsx           # Rutina activa y registro de progreso
+│   │       └── generico/[level]/page.tsx
+│   │
+│   └── api/                             # Route Handlers serverless
 ├── components/
-│   ├── ui/                   # Componentes shadcn/ui (generados por CLI)
-│   ├── admin/                # Componentes de negocio del panel trainer
-│   ├── portal/                # Componentes de negocio del portal alumno
-│   └── shared/                # Componentes usados por admin Y portal (ej. VideoDialog)
+│   ├── ui/                              # shadcn/ui + ConfirmDialog
+│   ├── admin/                           # Componentes del panel del coach
+│   ├── superadmin/                      # Componentes de administración SaaS
+│   ├── portal/                          # Componentes del portal del alumno
+│   └── shared/                          # Componentes comunes (VideoDialog, etc.)
 ├── lib/
-│   ├── db/                   # Cliente Prisma (singleton)
-│   ├── services/             # Lógica de negocio (capa de dominio)
-│   ├── repositories/         # Acceso a datos (abstracciones sobre Prisma)
-│   └── validators/           # Schemas Zod compartidos
+│   ├── auth.ts                          # Configuración Auth.js con JWT + Trainer Claims
+│   ├── db.ts                            # Cliente Prisma singleton
+│   ├── services/                        # Servicios de negocio (exigen trainerId)
+│   ├── repositories/                    # Repositorios Prisma (aislados por trainerId)
+│   ├── validators/                      # Schemas Zod y blacklist de slugs
+│   └── config/                          # Configuración base del sistema
 ├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-├── app/globals.css            # Design tokens Tailwind v4 + variables shadcn/ui
-└── proxy.ts                   # Protección de rutas admin (Next 16 renombró middleware.ts → proxy.ts)
+│   ├── schema.prisma                    # Esquema multi-tenant
+│   └── migrations/                      # Historial de migraciones SQL
 ```
 
 ---
 
-## 3. Modelo de Base de Datos
+## 3. Modelo de Base de Datos Multi-tenant
 
-### Decisiones de diseño
+### Decisiones de Diseño
+- **Discriminador `trainer_id` obligatorio:** Toda entidad operativa (`Student`, `Plan`, `StudentSubscription`, `Payment`, `RoutineTemplate`, `GenericProfile`) pertenece a un `Trainer`.
+- **Unicidad Compuesta de DNI:** `@@unique([trainerId, dni])` permite que distintos profesores tengan alumnos con el mismo DNI sin conflicto.
+- **Unicidad Compuesta de Planes:** `@@unique([trainerId, name])` aísla los nombres de planes por profesor.
+- **Marca Blanca en la Base de Datos:** Los campos de identidad visual y contacto residen directamente en la tabla `trainers`, eliminando la dependencia de un JSON estático para soportar múltiples clientes.
 
-- **UUIDs** como primary keys (portable, sin colisiones en imports masivos).
-- **Soft delete** en alumnos (`is_active`): nunca se borra un alumno, solo se desactiva.
-- **Overrides** en rutinas asignadas: la personalización individual vive separada de la plantilla base, garantizando RN-02.
-- **Índices** explícitos en las columnas de búsqueda frecuente.
-
-### Tablas
+### Diagrama de Tablas Multi-tenant
 
 ```
-trainers
+trainers (Tenants + Admins)
 ────────────────────────────────────────────────────────────
-id              UUID        PK
-email           TEXT        UNIQUE NOT NULL
-password_hash   TEXT        NOT NULL
-name            TEXT        NOT NULL
-created_at      TIMESTAMP   DEFAULT now()
+id                UUID          PK
+email             TEXT          UNIQUE NOT NULL
+password_hash     TEXT          NOT NULL
+name              TEXT          NOT NULL
+role              ENUM          (SUPERADMIN, COACH) DEFAULT 'COACH'
+slug              TEXT          UNIQUE NOT NULL   ← ej: "santiago-ramon"
+business_name     TEXT
+headline          TEXT
+tagline           TEXT
+logo_url          TEXT
+hero_image_url    TEXT
+whatsapp_number   TEXT
+instagram_url     TEXT
+is_active         BOOLEAN       DEFAULT true      ← suspensión SaaS
+created_at        TIMESTAMP     DEFAULT now()
+updated_at        TIMESTAMP
 
 
-students
+students (Aislado por Trainer)
 ────────────────────────────────────────────────────────────
-id                    UUID        PK
-dni                   TEXT        UNIQUE NOT NULL   ← identificador público
-first_name            TEXT        NOT NULL
-last_name             TEXT        NOT NULL
+id                    UUID          PK
+trainer_id            UUID          FK → trainers(id) ON DELETE CASCADE
+dni                   TEXT          NOT NULL
+first_name            TEXT          NOT NULL
+last_name             TEXT          NOT NULL
 email                 TEXT
 phone                 TEXT
-objetivo              ENUM        (hipertrofia, fuerza, descenso)
-nivel                 ENUM        (principiante, intermedio, avanzado)
-modalidad             ENUM        (gimnasio, casa)
+objetivo_id           UUID          FK → objetivos(id)
+secondary_goals       TEXT
+nivel                 ENUM          (principiante, intermedio, avanzado)
+modalidad_id          UUID          FK → modalidades(id)
 membership_starts_at  DATE
 payment_expires_at    DATE
+access_override       ENUM          (auto, allowed, blocked) DEFAULT 'auto'
 health_notes          TEXT
-is_active             BOOLEAN     DEFAULT true      ← soft delete
-created_at            TIMESTAMP   DEFAULT now()
+is_active             BOOLEAN       DEFAULT true
+created_at            TIMESTAMP     DEFAULT now()
 updated_at            TIMESTAMP
 
-  INDEX: idx_students_dni
+  UNIQUE: (trainer_id, dni)
+  INDEX:  (trainer_id, dni)
 
 
-exercises
+plans (Aislado por Trainer)
 ────────────────────────────────────────────────────────────
-id                    UUID        PK
-name                  TEXT        NOT NULL
-primary_muscle        TEXT        NOT NULL
-secondary_muscle      TEXT
-video_url             TEXT
-created_at            TIMESTAMP   DEFAULT now()
-updated_at            TIMESTAMP
-
-
-routine_templates
-────────────────────────────────────────────────────────────
-id              UUID        PK
-name            TEXT        NOT NULL
+id              UUID          PK
+trainer_id      UUID          FK → trainers(id) ON DELETE CASCADE
+name            TEXT          NOT NULL
 description     TEXT
-duration_weeks  INT         NOT NULL DEFAULT 4
-created_at      TIMESTAMP   DEFAULT now()
+price           DECIMAL(10,2) NOT NULL
+duration_days   INT           DEFAULT 30
+is_active       BOOLEAN       DEFAULT true
+created_at      TIMESTAMP     DEFAULT now()
 updated_at      TIMESTAMP
 
+  UNIQUE: (trainer_id, name)
 
-training_days
+
+student_subscriptions & payments
 ────────────────────────────────────────────────────────────
-id           UUID    PK
-template_id  UUID    FK → routine_templates(id)  ON DELETE CASCADE
-label        TEXT    NOT NULL   ← "Día 1 – Tren Superior"
-day_order    INT     NOT NULL
+(Heredan la pertenencia del alumno y registran el historial de cuotas)
 
 
-exercise_blocks
+routine_templates (Aislado por Trainer)
 ────────────────────────────────────────────────────────────
-id               UUID    PK
-training_day_id  UUID    FK → training_days(id)   ON DELETE CASCADE
-exercise_id      UUID    FK → exercises(id)
-sets             INT     NOT NULL
-reps             INT                   ← nullable si es por tiempo
-duration_secs    INT                   ← nullable si es por reps
-rest_secs        INT
-trainer_notes    TEXT
-block_order      INT     NOT NULL
-
-
-assigned_routines
-────────────────────────────────────────────────────────────
-id           UUID        PK
-student_id   UUID        FK → students(id)
-template_id  UUID        FK → routine_templates(id)   ← plantilla de origen
-status       ENUM        (active, historic)  DEFAULT 'active'
-assigned_at  TIMESTAMP   DEFAULT now()
-expires_at   TIMESTAMP                        ← calculado desde duration_weeks
-
-  INDEX: idx_assigned_routines_student_status
-  PARTIAL UNIQUE INDEX: idx_one_active_per_student
-    ON assigned_routines (student_id) WHERE status = 'active'
-
-
-routine_overrides                    ← personalizaciones individuales (RN-02)
-────────────────────────────────────────────────────────────
-id                   UUID    PK
-assigned_routine_id  UUID    FK → assigned_routines(id)  ON DELETE CASCADE
-exercise_block_id    UUID    FK → exercise_blocks(id)
-sets                 INT                   ← null = usa el valor de la plantilla
-reps                 INT
-duration_secs        INT
-rest_secs            INT
-trainer_notes        TEXT
-
-
-progress_logs
-────────────────────────────────────────────────────────────
-id                   UUID          PK
-student_id           UUID          FK → students(id)
-assigned_routine_id  UUID          FK → assigned_routines(id)
-exercise_block_id    UUID          FK → exercise_blocks(id)
-logged_date          DATE          NOT NULL
-weight_kg            DECIMAL(6,2)  ← nullable
-completed            BOOLEAN       DEFAULT false
-student_notes        TEXT
-created_at           TIMESTAMP     DEFAULT now()
-updated_at           TIMESTAMP
-
-  INDEX: idx_progress_student_date
-  UNIQUE: (student_id, exercise_block_id, logged_date)
+id              UUID          PK
+trainer_id      UUID          FK → trainers(id) ON DELETE CASCADE
+name            TEXT          NOT NULL
+description     TEXT
+duration_weeks  INT           DEFAULT 4
+created_at      TIMESTAMP     DEFAULT now()
+updated_at      TIMESTAMP
 ```
 
 ---
 
-## 4. Capas de la Aplicación
+## 4. Capas de la Aplicación y Aislamiento de Datos
 
-El sistema sigue una **arquitectura en capas** para separar responsabilidades y mantener el código testeable.
+El sistema sigue una estricta política de **Aislamiento por Capa**:
 
 ```
-┌─────────────────────────────────────┐
-│        Presentation Layer           │
+┌─────────────────────────────────────────────────────────┐
+│                     Presentation Layer                  │
+│   - Next.js Server Components & Route Guards            │
+│   - Obtiene session.trainerId / params.coachSlug        │
+└────────────────────────────┬────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────┐
+│                      Service Layer                      │
+│   - Valida pertenencia del recurso al trainerId         │
+│   - Aplica reglas de negocio y transacciones            │
+└────────────────────────────┬────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────┐
+│                    Repository Layer                     │
+│   - Cláusulas WHERE obligatorias con { trainerId }      │
+│   - Evita consultas globales o filtrados en memoria     │
+└────────────────────────────┬────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────┐
+│                   Infrastructure Layer                  │
+│   - Prisma Client + PostgreSQL (Neon)                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Seguridad y Blacklist de Slugs Reservados
+
+Para evitar conflictos entre las rutas del sistema y los portales de los entrenadores, Zod valida la asignación de slugs contra una lista negra estricta:
+
+```typescript
+export const RESERVED_SLUGS = [
+  "admin",
+  "superadmin",
+  "login",
+  "api",
+  "dashboard",
+  "alumnos",
+  "planes",
+  "ejercicios",
+  "plantillas",
+  "configuracion",
+  "rutina",
+  "assets",
+  "favicon.ico",
+  "robots.txt",
+  "sitemap.xml",
+] as const;
+```
 │  Next.js Pages + React Components   │
 └─────────────────┬───────────────────┘
                   │ HTTP

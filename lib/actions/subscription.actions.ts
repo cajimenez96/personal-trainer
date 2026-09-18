@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { requireCoachAuth } from "@/lib/auth"
 import { subscriptionService } from "@/lib/services/subscription.service"
 import { assignPlanSchema, type AssignPlanInput } from "@/lib/validators/subscription"
 
@@ -10,6 +11,7 @@ export type SubscriptionActionResult = {
 }
 
 export async function assignPlanAction(input: AssignPlanInput): Promise<SubscriptionActionResult> {
+  await requireCoachAuth()
   const parsed = assignPlanSchema.safeParse(input)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message }
@@ -29,3 +31,4 @@ export async function assignPlanAction(input: AssignPlanInput): Promise<Subscrip
   revalidatePath(`/alumnos/${parsed.data.studentId}`)
   return { ok: true }
 }
+

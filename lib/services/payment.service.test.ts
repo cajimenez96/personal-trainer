@@ -60,6 +60,7 @@ class FakeSubscriptionRepository implements ISubscriptionRepository {
       createdAt: new Date(),
       plan: {
         id: data.planId,
+        trainerId: "test-trainer-id",
         name: "Plan Mensual",
         description: null,
         price: data.priceSnapshot,

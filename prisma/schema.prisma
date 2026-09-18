@@ -45,16 +45,41 @@ enum AccessOverride {
   blocked
 }
 
+enum Role {
+  SUPERADMIN
+  COACH
+}
+
 // ─────────────────────────────────────────────
-// TRAINER (Admin — single user for MVP)
+// TRAINER (Tenant Admin & Platform SuperAdmin)
 // ─────────────────────────────────────────────
 
 model Trainer {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  name         String
-  createdAt    DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  email          String   @unique
+  passwordHash   String   @map("password_hash")
+  name           String
+  role           Role     @default(COACH)
+  slug           String   @unique
+  businessName   String?  @map("business_name")
+  headline       String?
+  tagline        String?
+  logoUrl        String?  @map("logo_url")
+  heroImageUrl   String?  @map("hero_image_url")
+  whatsappNumber      String?   @map("whatsapp_number")
+  instagramUrl        String?   @map("instagram_url")
+  maxPlans            Int       @default(1) @map("max_plans")
+  maxStudents         Int       @default(10) @map("max_students")
+  membershipExpiresAt DateTime? @map("membership_expires_at") @db.Date
+  isActive            Boolean   @default(true) @map("is_active")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  students         Student[]
+  plans            Plan[]
+  routineTemplates RoutineTemplate[]
+  genericProfiles  GenericProfile[]
+  exercises        Exercise[]
 
   @@map("trainers")
 }
@@ -65,7 +90,8 @@ model Trainer {
 
 model Student {
   id                 String          @id @default(uuid())
-  dni                String          @unique                   // public identifier — RN-03
+  trainerId          String          @map("trainer_id")
+  dni                String                            // public identifier per coach — RN-03
   firstName          String          @map("first_name")
   lastName           String          @map("last_name")
   email              String?
@@ -85,6 +111,7 @@ model Student {
   // Sin onDelete override — RESTRICT por defecto, igual que Exercise: no se
   // puede borrar un objetivo/modalidad mientras algún alumno lo tenga
   // asignado (bloqueo explícito en el service, ver ObjetivoInUseError).
+  trainer          Trainer           @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   objetivoRef      Objetivo?         @relation(fields: [objetivoId], references: [id])
   modalidadRef     Modalidad?        @relation(fields: [modalidadId], references: [id])
   assignedRoutines AssignedRoutine[]
@@ -93,7 +120,8 @@ model Student {
   subscriptions    StudentSubscription[]
   payments         Payment[]
 
-  @@index([dni], name: "idx_students_dni")
+  @@unique([trainerId, dni], name: "unique_student_per_trainer")
+  @@index([trainerId, dni], name: "idx_students_trainer_dni")
   @@map("students")
 }
 
@@ -127,15 +155,18 @@ model Modalidad {
 
 model Exercise {
   id              String   @id @default(uuid())
-  name            String   @unique
+  trainerId       String?  @map("trainer_id")
+  name            String
   primaryMuscle   String   @map("primary_muscle")
   secondaryMuscle String?  @map("secondary_muscle")
   videoUrl        String?  @map("video_url")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  trainer        Trainer?        @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   exerciseBlocks ExerciseBlock[]
 
+  @@index([trainerId], name: "idx_exercises_trainer")
   @@map("exercises")
 }
 
@@ -145,16 +176,19 @@ model Exercise {
 
 model RoutineTemplate {
   id            String   @id @default(uuid())
+  trainerId     String   @map("trainer_id")
   name          String
   description   String?
   durationWeeks Int      @default(4) @map("duration_weeks")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
+  trainer          Trainer           @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   trainingDays     TrainingDay[]
   assignedRoutines AssignedRoutine[]
   genericProfiles  GenericProfile[]
 
+  @@index([trainerId], name: "idx_routine_templates_trainer")
   @@map("routine_templates")
 }
 
@@ -256,13 +290,16 @@ model RoutineOverride {
 
 model GenericProfile {
   id                 String       @id @default(uuid())
-  level              GenericLevel @unique
+  trainerId          String       @map("trainer_id")
+  level              GenericLevel
   passwordHash       String       @map("password_hash")
   assignedTemplateId String?      @map("assigned_template_id")
   updatedAt          DateTime     @updatedAt @map("updated_at")
 
+  trainer          Trainer          @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   assignedTemplate RoutineTemplate? @relation(fields: [assignedTemplateId], references: [id], onDelete: SetNull)
 
+  @@unique([trainerId, level], name: "unique_generic_level_per_trainer")
   @@map("generic_profiles")
 }
 
@@ -319,7 +356,8 @@ model BodyWeightLog {
 
 model Plan {
   id           String   @id @default(uuid())
-  name         String   @unique
+  trainerId    String   @map("trainer_id")
+  name         String
   description  String?
   price        Decimal  @db.Decimal(10, 2)
   durationDays Int      @default(30) @map("duration_days")
@@ -327,8 +365,11 @@ model Plan {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  trainer       Trainer               @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   subscriptions StudentSubscription[]
 
+  @@unique([trainerId, name], name: "unique_plan_per_trainer")
+  @@index([trainerId], name: "idx_plans_trainer")
   @@map("plans")
 }
 
@@ -368,3 +409,4 @@ model Payment {
   @@index([studentId], name: "idx_payments_student")
   @@map("payments")
 }
+

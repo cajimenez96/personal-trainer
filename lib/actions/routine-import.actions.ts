@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { db } from "@/lib/db"
+import { requireCoachAuth } from "@/lib/auth"
 import { exerciseService } from "@/lib/services/exercise.service"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
@@ -18,12 +19,11 @@ export type RoutineImportRefs = {
 }
 
 // One round-trip to know which exercise names already exist in the catalog
-// (so the client can require primaryMuscle only for genuinely new ones) and
-// which referenced DNIs don't correspond to an active student (RF-3.5:
-// "DNI no registrados" is a hard validation error, not a warning).
+// and which referenced DNIs correspond to an active student of this trainer.
 export async function checkRoutineImportRefsAction(
   input: z.infer<typeof refsSchema>,
 ): Promise<RoutineImportRefs> {
+  const user = await requireCoachAuth()
   const { exerciseNames, studentDnis } = refsSchema.parse(input)
 
   const [existingExercises, existingStudents] = await Promise.all([
@@ -32,7 +32,7 @@ export async function checkRoutineImportRefsAction(
       : Promise.resolve([]),
     studentDnis.length
       ? db.student.findMany({
-          where: { dni: { in: studentDnis }, isActive: true },
+          where: { trainerId: user.id, dni: { in: studentDnis }, isActive: true },
           select: { dni: true },
         })
       : Promise.resolve([]),
@@ -81,6 +81,7 @@ export type ImportRoutinesChunkResult = {
 export async function importRoutineTemplatesChunkAction(
   templates: TemplateImportUnit[],
 ): Promise<ImportRoutinesChunkResult> {
+  const user = await requireCoachAuth()
   if (templates.length === 0 || templates.length > 50) {
     throw new Error("Chunk inválido: debe tener entre 1 y 50 plantillas")
   }
@@ -106,6 +107,7 @@ export async function importRoutineTemplatesChunkAction(
       }
 
       const template = await routineTemplateService.create({
+        trainerId: user.id,
         name: unit.name,
         description: unit.description,
         durationWeeks: unit.durationWeeks,
@@ -132,7 +134,7 @@ export async function importRoutineTemplatesChunkAction(
 
       for (const dni of unit.studentDnis) {
         try {
-          const student = await studentService.getByDni(dni)
+          const student = await studentService.getByDni(dni, user.id)
           if (!student) throw new Error(`DNI ${dni} no encontrado`)
           await assignedRoutineService.assign({
             studentId: student.id,
@@ -157,3 +159,4 @@ export async function importRoutineTemplatesChunkAction(
 
   return { succeeded, failed, assignmentWarnings }
 }
+

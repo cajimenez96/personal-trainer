@@ -1,6 +1,7 @@
 "use server"
 
 import { z } from "zod"
+import { requireCoachAuth } from "@/lib/auth"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 
 const chunkSchema = z.object({
@@ -16,6 +17,7 @@ export type BulkAssignChunkResult = {
 export async function assignRoutineChunkAction(
   input: z.infer<typeof chunkSchema>,
 ): Promise<BulkAssignChunkResult> {
+  await requireCoachAuth()
   const { templateId, studentIds } = chunkSchema.parse(input)
 
   const succeeded: string[] = []
@@ -35,3 +37,4 @@ export async function assignRoutineChunkAction(
 
   return { succeeded, failed }
 }
+

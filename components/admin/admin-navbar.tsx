@@ -14,6 +14,7 @@ import {
   LogOut,
   UserCog,
   CreditCard,
+  Settings,
 } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const NAV_LINKS = [
   { href: "/alumnos-genericos", label: "Genéricos", icon: UserCog },
   { href: "/ejercicios", label: "Ejercicios", icon: Dumbbell },
   { href: "/plantillas", label: "Plantillas", icon: Layers },
+  { href: "/configuracion", label: "Configuración", icon: Settings },
 ];
 
 export function AdminNavbar({

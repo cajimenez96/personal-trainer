@@ -40,6 +40,7 @@ import type { PlanDTO } from "@/lib/repositories/interfaces";
 
 interface PlanManagerProps {
   plans: PlanDTO[];
+  maxPlans?: number;
 }
 
 const currencyFormatter = new Intl.NumberFormat("es-AR", {
@@ -48,7 +49,7 @@ const currencyFormatter = new Intl.NumberFormat("es-AR", {
   maximumFractionDigits: 0,
 });
 
-export function PlanManager({ plans }: PlanManagerProps) {
+export function PlanManager({ plans, maxPlans = 1 }: PlanManagerProps) {
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<PlanDTO | null>(null);
@@ -62,7 +63,7 @@ export function PlanManager({ plans }: PlanManagerProps) {
   const [isActive, setIsActive] = useState(true);
 
   const activePlans = plans.filter((p) => p.isActive);
-  const isLimitReached = activePlans.length >= 3;
+  const isLimitReached = activePlans.length >= maxPlans;
 
   function openCreateDialog() {
     setEditingPlan(null);
@@ -167,7 +168,7 @@ export function PlanManager({ plans }: PlanManagerProps) {
             variant={isLimitReached ? "secondary" : "default"}
             className="px-3 py-1 text-sm font-semibold"
           >
-            {activePlans.length} / 3 Planes Activos
+            {activePlans.length} / {maxPlans} {maxPlans === 1 ? "Plan Activo" : "Planes Activos"}
           </Badge>
           <Button
             onClick={openCreateDialog}
@@ -184,8 +185,8 @@ export function PlanManager({ plans }: PlanManagerProps) {
         <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-500">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>
-            Alcanzaste el límite de 3 planes activos. Podés editar uno existente
-            o pausarlo para crear otro.
+            Alcanzaste el límite de {maxPlans} {maxPlans === 1 ? "plan activo" : "planes activos"}. Podés editar uno existente
+            o solicitar al administrador una ampliación de cupo.
           </span>
         </div>
       )}

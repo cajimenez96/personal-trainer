@@ -19,6 +19,7 @@ import { ExerciseRowActions } from "@/components/admin/exercise-row-actions"
 import { VideoDialog } from "@/components/shared/video-dialog"
 import { exerciseService } from "@/lib/services/exercise.service"
 import { exerciseListQuerySchema } from "@/lib/validators/exercise"
+import { requireCoachAuth } from "@/lib/auth"
 
 export default async function EjerciciosPage({
   searchParams,
@@ -29,9 +30,10 @@ export default async function EjerciciosPage({
   const parsed = exerciseListQuerySchema.safeParse(raw)
   const query = parsed.success ? parsed.data : {}
 
+  const user = await requireCoachAuth()
   const [exercises, muscleGroups] = await Promise.all([
-    exerciseService.list(query),
-    exerciseService.muscleGroups(),
+    exerciseService.list({ ...query, trainerId: user.id }),
+    exerciseService.muscleGroups(user.id),
   ])
 
   return (

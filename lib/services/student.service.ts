@@ -1,5 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/client"
 import { db } from "@/lib/db"
+import { getDefaultTrainerId } from "@/lib/tenant"
 import type {
   CreateStudentData,
   ExpiringStudentDTO,
@@ -25,10 +26,45 @@ export class DniAlreadyExistsError extends Error {
   }
 }
 
+export const DEFAULT_MAX_STUDENTS = 10
+
+export class StudentLimitReachedError extends Error {
+  constructor(max = DEFAULT_MAX_STUDENTS) {
+    super(
+      `Límite de alumnos alcanzado: tu plan actual permite hasta ${max} alumnos activos. Contactá al administrador para ampliar tu cupo.`,
+    )
+    this.name = "StudentLimitReachedError"
+  }
+}
+
+export type TrainerLimitsLookup = (
+  trainerId: string,
+) => Promise<{ maxStudents: number } | null>
+
 const PRISMA_UNIQUE_CONSTRAINT = "P2002"
 
 export class StudentService {
-  constructor(private readonly studentRepo: IStudentRepository) {}
+  constructor(
+    private readonly studentRepo: IStudentRepository,
+    private readonly limitsLookup?: TrainerLimitsLookup,
+  ) {}
+
+  private async getMaxStudents(trainerId?: string): Promise<number> {
+    if (!trainerId) return DEFAULT_MAX_STUDENTS
+    if (this.limitsLookup) {
+      const res = await this.limitsLookup(trainerId)
+      return res?.maxStudents ?? DEFAULT_MAX_STUDENTS
+    }
+    try {
+      const trainer = await db.trainer.findUnique({
+        where: { id: trainerId },
+        select: { maxStudents: true },
+      })
+      return trainer?.maxStudents ?? DEFAULT_MAX_STUDENTS
+    } catch {
+      return DEFAULT_MAX_STUDENTS
+    }
+  }
 
   list(params: StudentListParams) {
     return this.studentRepo.findMany(params)
@@ -38,8 +74,8 @@ export class StudentService {
     return this.studentRepo.findById(id)
   }
 
-  getByDni(dni: string) {
-    return this.studentRepo.findByDni(dni)
+  getByDni(dni: string, trainerId?: string) {
+    return this.studentRepo.findByDni(dni, trainerId)
   }
 
   update(id: string, data: UpdateStudentData) {
@@ -50,7 +86,15 @@ export class StudentService {
     return this.studentRepo.deactivate(id)
   }
 
-  reactivate(id: string) {
+  async reactivate(id: string) {
+    const student = await this.studentRepo.findById(id)
+    if (student && student.trainerId) {
+      const maxStudents = await this.getMaxStudents(student.trainerId)
+      const activeCount = await this.studentRepo.countActive(student.trainerId)
+      if (activeCount >= maxStudents) {
+        throw new StudentLimitReachedError(maxStudents)
+      }
+    }
     return this.studentRepo.reactivate(id)
   }
 
@@ -58,18 +102,19 @@ export class StudentService {
     return this.studentRepo.findAllActive(filters)
   }
 
-  countActive() {
-    return this.studentRepo.countActive()
+  countActive(trainerId?: string) {
+    return this.studentRepo.countActive(trainerId)
   }
 
   // "Expiring soon" includes already-overdue students — both need the trainer's attention.
-  countExpiringSoon(withinDays: number) {
+  async countExpiringSoon(withinDays: number, trainerId?: string) {
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() + withinDays)
-    return this.studentRepo.countExpiringSoon(cutoff)
+    return this.studentRepo.countExpiringSoon(cutoff, trainerId)
   }
 
-  async getExpiringStudents(withinDays = 14): Promise<ExpiringStudentDTO[]> {
+  async getExpiringStudents(withinDays = 14, trainerId?: string): Promise<ExpiringStudentDTO[]> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() + withinDays)
     cutoff.setHours(23, 59, 59, 999)
@@ -79,6 +124,7 @@ export class StudentService {
 
     const students = await db.student.findMany({
       where: {
+        trainerId: effectiveTrainerId,
         isActive: true,
         paymentExpiresAt: {
           lte: cutoff,
@@ -153,7 +199,15 @@ export class StudentService {
   }
 
   async create(data: CreateStudentData) {
-    const existing = await this.studentRepo.findByDni(data.dni)
+    if (data.trainerId) {
+      const maxStudents = await this.getMaxStudents(data.trainerId)
+      const activeCount = await this.studentRepo.countActive(data.trainerId)
+      if (activeCount >= maxStudents) {
+        throw new StudentLimitReachedError(maxStudents)
+      }
+    }
+
+    const existing = await this.studentRepo.findByDni(data.dni, data.trainerId)
     if (existing) {
       throw new DniAlreadyExistsError(data.dni, {
         id: existing.id,
@@ -170,7 +224,7 @@ export class StudentService {
         err instanceof Prisma.PrismaClientKnownRequestError &&
         err.code === PRISMA_UNIQUE_CONSTRAINT
       ) {
-        const found = await this.studentRepo.findByDni(data.dni)
+        const found = await this.studentRepo.findByDni(data.dni, data.trainerId)
         throw new DniAlreadyExistsError(
           data.dni,
           found
@@ -189,3 +243,4 @@ export class StudentService {
 }
 
 export const studentService = new StudentService(new PrismaStudentRepository())
+

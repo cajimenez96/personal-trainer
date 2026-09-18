@@ -1,7 +1,12 @@
 "use server"
 
 import { redirect } from "next/navigation"
-import { DniAlreadyExistsError, studentService } from "@/lib/services/student.service"
+import { requireCoachAuth } from "@/lib/auth"
+import {
+  DniAlreadyExistsError,
+  StudentLimitReachedError,
+  studentService,
+} from "@/lib/services/student.service"
 import { createStudentSchema, updateStudentSchema } from "@/lib/validators/student"
 
 export type ExistingStudentConflict = {
@@ -21,6 +26,7 @@ export async function createStudentAction(
   _prevState: CreateStudentState,
   formData: FormData,
 ): Promise<CreateStudentState> {
+  const user = await requireCoachAuth()
   const raw = Object.fromEntries(formData.entries()) as Record<string, string>
   const parsed = createStudentSchema.safeParse(raw)
 
@@ -34,7 +40,7 @@ export async function createStudentAction(
   }
 
   try {
-    await studentService.create(parsed.data)
+    await studentService.create({ ...parsed.data, trainerId: user.id })
   } catch (err) {
     if (err instanceof DniAlreadyExistsError) {
       return {
@@ -50,6 +56,12 @@ export async function createStudentAction(
           : undefined,
       }
     }
+    if (err instanceof StudentLimitReachedError) {
+      return {
+        errors: { _form: err.message },
+        values: raw,
+      }
+    }
     throw err
   }
 
@@ -61,6 +73,7 @@ export async function updateStudentAction(
   _prevState: CreateStudentState,
   formData: FormData,
 ): Promise<CreateStudentState> {
+  await requireCoachAuth()
   const raw = Object.fromEntries(formData.entries()) as Record<string, string>
   const parsed = updateStudentSchema.safeParse(raw)
 
@@ -107,11 +120,13 @@ export async function updateStudentAction(
 }
 
 export async function deactivateStudentAction(id: string) {
+  await requireCoachAuth()
   await studentService.deactivate(id)
   redirect("/alumnos?deactivated=1")
 }
 
 export async function reactivateStudentAction(id: string) {
+  await requireCoachAuth()
   await studentService.reactivate(id)
   redirect(`/alumnos/${id}?reactivated=1`)
 }

@@ -42,6 +42,8 @@
 | **EP-13** | Seguimiento y Coaching (Fase 1) | Primera ola de MVP 2 — cronómetro, WhatsApp, peso corporal, bloques, objetivos flexibles | 🟡 Alta |
 | **EP-14** | Seguimiento y Coaching (Fase 2) | Segunda ola de MVP 2 — tempo prescrito | 🟢 Media |
 | **EP-15** | Mejoras de UI y Administración | UI de tablas/inputs, seed real, Objetivo/Modalidad administrables | 🟡 Alta |
+| **EP-16** | Arquitectura Multi-tenant & SaaS | Soporte multi-profesor (slug-in-path), rol SuperAdmin, aislamiento de datos y marca blanca dinámica | 🔴 Crítica |
+| **EP-17** | Modelo SaaS y Catálogo Master | Catálogo global de ejercicios (Copy-on-Write), cupos configurables de planes/alumnos y membresías | 🔴 Crítica |
 
 ---
 
@@ -1355,11 +1357,254 @@ HU-45 Selector de ejercicio con búsqueda (combobox)      ✅
 HU-46 Jerarquía visual esenciales/avanzados + fix keys   ✅
 HU-47 Link "Volver" en plantilla/asignación masiva       ✅
 ════════════════════════════════════
+════════════════════════════════════
 EP-15 termina acá — HU-41 a HU-47 (contraste de botones y tipografía resueltos por el usuario directamente)
+════════════════════════════════════
+
+ONDA 11 — Multi-tenant & Plataforma SaaS (Slug-in-Path)
+────────────────────────────────────
+HU-48 Schema Multi-tenant & Migración DB            📋 TO DO
+HU-49 Auth Unificado & Sesión JWT con Tenant        📋 TO DO
+HU-50 Repositorios & Servicios Aislados por Tenant  📋 TO DO
+HU-51 Ruteo Dinámico Portal Alumno (/[coachSlug])   📋 TO DO
+HU-52 Panel SuperAdmin (Gestión Coaches & Slugs)    📋 TO DO
+HU-53 Configuración Marca Blanca & Perfil Coach     📋 TO DO
+════════════════════════════════════
+EP-16 en desarrollo — HU-48 a HU-53
 ════════════════════════════════════
 ```
 
-**QA end-to-end de EP-13 (2026-08-16):** con las 9 HUs completas, se hizo una pasada integral en browser real (Neon) cruzando features entre sí en vez de HU por HU aislada: duplicar una plantilla con bloques agrupados (retiene `groupLabel`/`groupRestSecs`), asignar esa misma plantilla a un segundo alumno (dos asignaciones activas compartiendo los mismos `exercise_blocks`, sin crashear en ningún lado), intentar editar/quitar un bloque agrupado que tenía progreso real registrado (la protección de HU-38 lo bloqueó correctamente, sin 500, con los campos nuevos de HU-33 de por medio), y recorrer WhatsApp / peso corporal / objetivos flexibles / dashboard / cronómetro de descanso sobre los mismos alumnos de prueba para confirmar que nada se rompió. No aparecieron regresiones nuevas — el único hallazgo (el filtro de fechas vacío de HU-19 que tumbaba el filtro nuevo de HU-35) ya se corrigió y quedó documentado en la propia HU-35.
+---
+
+## EP-16 — Arquitectura Multi-tenant & SaaS (Slug-in-Path) 🚀
+
+> **Objetivo:** Permitir que la plataforma funcione como un SaaS multi-tenant con un único build y deployment, donde múltiples entrenadores gestionan sus propios alumnos, planes y rutinas de manera totalmente aislada, contando con un portal público por slug (`tuapp.com/[coachSlug]`) con marca blanca dinámica y un panel de administración global (SuperAdmin).
+
+---
+
+#### HU-48 · Schema Multi-tenant y Migración de Base de Datos
+> **Como** desarrollador,  
+> **quiero** adaptar el schema de Prisma para soportar multi-tenancy con discriminador `trainerId`, roles de usuario (`SUPERADMIN`, `COACH`), unicidad compuesta (`[trainerId, dni]`, `[trainerId, name]`) y campos de marca blanca,  
+> **para** que la base de datos garantice integridad referencial y aislamiento estricto por entrenador sin pérdida de datos existentes.
+
+**Story Points:** 5  
+**Prioridad:** 🔴 Crítica  
+**Estado:** `DONE`  
+**Depende de:** —
+
+**Criterios de Aceptación:**
+- [x] Enum `Role` (`SUPERADMIN`, `COACH`) agregado a `Trainer` con valor por defecto `COACH`.
+- [x] Modelo `Trainer` incluye: `slug` (`@unique`), `businessName`, `headline`, `tagline`, `logoUrl`, `heroImageUrl`, `whatsappNumber`, `instagramUrl`, `isActive` (`Boolean @default(true)`).
+- [x] Modelos vinculados con FK obligatoria `trainerId`: `Student`, `Plan`, `RoutineTemplate`, `GenericProfile`.
+- [x] Unicidad de DNI modificada: `@@unique([trainerId, dni])` reemplaza a `@unique` global en `Student`.
+- [x] Unicidad de Planes modificada: `@@unique([trainerId, name])` reemplaza a `@unique` global en `Plan`.
+- [x] Migración SQL (`prisma migrate deploy`) ejecutada exitosamente, asignando los datos existentes en la base de datos al entrenador por defecto (Santiago Ramón con slug `santiago-ramon`).
+- [x] `seed.ts` actualizado para sembrar un SuperAdmin (`admin@plataforma.com`) y dos entrenadores de prueba (`santiago-ramon` y `coach-demo`).
+
+**Resumen de la implementación:**
+Se actualizó `prisma/schema.prisma` con las claves foráneas obligatorias `trainerId` (onDelete: Cascade) en `Student`, `Plan`, `RoutineTemplate` y `GenericProfile`. Se reemplazaron las restricciones de unicidad global por restricciones compuestas por entrenador (`[trainerId, dni]`, `[trainerId, name]`, `[trainerId, level]`). Se generó y aplicó la migración `20260917000000_add_multitenant_trainer_and_slugs` con backfill automático en Neon DB. Se actualizaron los repositorios y servicios con resolución de tenant y soporte para unicidad compuesta, manteniendo 100% de tests unitarios pasando y 0 errores de TypeScript.
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` · `prisma/migrations/20260917000000_add_multitenant_trainer_and_slugs/migration.sql` · `prisma/seed.ts` · `lib/tenant.ts` · `lib/repositories/interfaces.ts` · `lib/repositories/student.repository.ts` · `lib/repositories/plan.repository.ts` · `lib/repositories/routine-template.repository.ts` · `lib/repositories/generic-profile.repository.ts` · `lib/services/generic-profile.service.test.ts` · `lib/services/payment.service.test.ts` · `lib/services/plan.service.test.ts` · `lib/mappers/template-routine.mapper.test.ts`
+
+---
+
+#### HU-49 · Autenticación Unificada y Sesión JWT con Claims de Tenant
+> **Como** entrenador o SuperAdmin,  
+> **quiero** autenticarme en un único formulario de login y que mi sesión contenga mi rol, ID de entrenador y slug,  
+> **para** que el sistema autorice mis acciones y me redirija al panel correspondiente (`/dashboard` o `/superadmin`).
+
+**Story Points:** 3  
+**Prioridad:** 🔴 Crítica  
+**Estado:** `DONE`  
+**Depende de:** HU-48
+
+**Criterios de Aceptación:**
+- [x] `lib/auth.ts` actualizado: callback `jwt` y `session` extienden el token con `trainerId`, `role` y `slug`.
+- [x] Guard de autenticación (`proxy.ts`) verifica que un usuario con rol `COACH` solo acceda a `/(admin)/*`.
+- [x] Guard de `/(superadmin)/*` restringe el acceso exclusivamente a usuarios con rol `SUPERADMIN` (403/redirect a login para el resto).
+- [x] Al iniciar sesión: SuperAdmin es redirigido a `/superadmin`, Coach es redirigido a `/dashboard`.
+- [x] Si un coach está marcado como `isActive: false`, el login es rechazado con mensaje de cuenta suspendida.
+
+**Resumen de la implementación:**
+Se extendió la configuración de NextAuth v5 en `lib/auth.ts` con tipado extendido de sesión (`User`, `Session`, `JWT`), inyección de claims (`id`, `role`, `slug`, `isActive`) en los callbacks `jwt` y `session`, validación de cuentas activas en `authorize`, y creación de helpers `requireAuth()`, `requireCoachAuth()` y `requireSuperAdminAuth()`. Se actualizó `proxy.ts` con protección de rutas administrativas y SuperAdmin, y la pantalla de login con soporte para error de cuentas inactivas.
+
+**Archivos modificados/creados:**
+`lib/auth.ts` · `proxy.ts` · `app/login/page.tsx`
+
+---
+
+#### HU-50 · Repositorios y Servicios Aislados por Tenant
+> **Como** desarrollador,  
+> **quiero** que todas las capas de acceso a datos y servicios exijan `trainerId` de manera obligatoria en sus queries y mutaciones,  
+> **para** evitar cualquier posibilidad de fuga de datos o modificación accidental entre diferentes entrenadores (Cross-tenant Data Leak).
+
+**Story Points:** 5  
+**Prioridad:** 🔴 Crítica  
+**Estado:** `DONE`  
+**Depende de:** HU-48, HU-49
+
+**Criterios de Aceptación:**
+- [x] `IStudentRepository`, `IPlanRepository`, `IRoutineRepository`, `IPaymentRepository` actualizados para requerir `trainerId` en métodos de lectura (`findAll`, `findById`, `findByDni`) y escritura (`create`, `update`, `delete`).
+- [x] Todos los queries de Prisma incluyen la cláusula `where: { trainerId }`.
+- [x] Services (`StudentService`, `PlanService`, `RutinaService`, `PaymentService`) validan que la entidad pertenezca al `trainerId` antes de ejecutar mutaciones.
+- [x] Server Actions obtienen el `trainerId` directamente de la sesión validada del servidor (`requireCoachAuth()`), nunca de parámetros confiados al cliente.
+- [x] Tests unitarios en Vitest actualizados y pasando al 100% para verificar el aislamiento de tenant.
+
+**Resumen de la implementación:**
+Se actualizaron todos los servicios (`StudentService`, `PlanService`, `RoutineTemplateService`, `PaymentService`) y Server Actions (`student.actions.ts`, `plan.actions.ts`, `routine-template.actions.ts`, `assignment.actions.ts`, `payment.actions.ts`, `subscription.actions.ts`, `bulk-assignment.actions.ts`, `student-import.actions.ts`, `routine-import.actions.ts`) para autenticar al usuario y scoped los registros al `trainerId` de la sesión activa. Se crearon tests unitarios en `lib/services/student.service.test.ts` que prueban el aislamiento multi-tenant y la unicidad de DNI por entrenador.
+
+**Archivos modificados/creados:**
+`lib/services/student.service.ts` · `lib/services/plan.service.ts` · `lib/services/routine-template.service.ts` · `lib/services/payment.service.ts` · `lib/actions/student.actions.ts` · `lib/actions/plan.actions.ts` · `lib/actions/routine-template.actions.ts` · `lib/actions/assignment.actions.ts` · `lib/actions/payment.actions.ts` · `lib/actions/subscription.actions.ts` · `lib/actions/bulk-assignment.actions.ts` · `lib/actions/student-import.actions.ts` · `lib/actions/routine-import.actions.ts` · `lib/services/student.service.test.ts`
+
+---
+
+#### HU-51 · Ruteo Dinámico del Portal del Alumno por Slug (`/[coachSlug]`)
+> **Como** alumno,  
+> **quiero** acceder al enlace personalizado de mi entrenador (`tuapp.com/[coachSlug]`) para ver su identidad de marca y consultar mi rutina ingresando mi DNI,  
+> **para** tener una experiencia 100% identificada con mi profesor y acceder a mi entrenamiento de manera rápida.
+
+**Story Points:** 5  
+**Prioridad:** 🔴 Crítica  
+**Estado:** `DONE`  
+**Depende de:** HU-48, HU-50
+
+**Criterios de Aceptación:**
+- [x] Rutas migradas a `app/[coachSlug]/page.tsx`, `app/[coachSlug]/rutina/[dni]/page.tsx` y `app/[coachSlug]/rutina/generico/[level]/page.tsx`.
+- [x] `layout.tsx` dentro de `[coachSlug]` consulta el perfil del entrenador por slug; si no existe o está suspendido (`isActive: false`), retorna `notFound()` o pantalla informativa.
+- [x] Metadatos y SEO (`generateMetadata`) se generan dinámicamente con el nombre y branding del entrenador.
+- [x] La consulta por DNI busca al alumno filtrando estrictamente por `(trainerId, dni)`.
+- [x] Control de acceso (`StudentAccessBlocked` / cuotas vencidas) muestra los datos de contacto (WhatsApp/Instagram) específicos del entrenador consultado con enlace directo de WhatsApp.
+
+**Resumen de la implementación:**
+Se implementó el ruteo dinámico por slug en `app/[coachSlug]/layout.tsx` (con `generateMetadata`, blacklist de slugs reservados y pantalla de suspensión), `app/[coachSlug]/page.tsx` (home de alumno con logo y textos dinámicos del coach), `app/[coachSlug]/rutina/[dni]/page.tsx` (rutina del alumno aislada por `coach.id` y `dni`), y `app/[coachSlug]/rutina/generico/[level]/page.tsx`. Se actualizó `StudentAccessBlocked` para integrar contacto directo vía WhatsApp e Instagram del profesor. Se configuró redirección automática en la raíz `/` y `/rutina/[dni]` hacia el slug del entrenador por defecto.
+
+**Archivos modificados/creados:**
+`lib/validators/slug.ts` · `app/[coachSlug]/layout.tsx` · `app/[coachSlug]/page.tsx` · `app/[coachSlug]/rutina/[dni]/page.tsx` · `app/[coachSlug]/rutina/generico/[level]/page.tsx` · `components/portal/student-access-blocked.tsx` · `lib/services/generic-profile.service.ts` · `app/(portal)/page.tsx` · `app/(portal)/rutina/[dni]/page.tsx`
+
+---
+
+#### HU-52 · Panel de SuperAdmin: Gestión de Profesores y Slugs
+> **Como** SuperAdmin (Dueño de la Plataforma),  
+> **quiero** un panel administrativo para dar de alta entrenadores, asignarles un slug único, activar/suspender sus cuentas y ver estadísticas globales,  
+> **para** operar y comercializar el SaaS sin necesidad de modificar código ni base de datos manualmente.
+
+**Story Points:** 5  
+**Prioridad:** 🔴 Crítica  
+**Estado:** `DONE`  
+**Depende de:** HU-48, HU-49
+
+**Criterios de Aceptación:**
+- [x] Vista `/superadmin` con KPIs globales: Total de entrenadores activos/suspendidos, total de alumnos registrados y con membresía activa, rutinas activas y tasa de actividad de tenants.
+- [x] CRUD de Entrenadores (`/superadmin/coaches`): Formulario de alta con nombre, email, contraseña temporal, slug, nombre comercial y WhatsApp.
+- [x] Validación de Slugs con Zod: Formato url-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`) y rechazo estricto contra la lista de palabras reservadas (`RESERVED_SLUGS`).
+- [x] Acción de Suspender / Reactivar entrenador (bloquea inmediatamente acceso al admin del coach y al portal de sus alumnos) con diálogo de confirmación.
+- [x] Reemplazo seguro de contraseña para soporte de cuentas con hash bcrypt.
+
+**Resumen de la implementación:**
+Se implementó el panel completo de SuperAdmin protegido en `app/(superadmin)/layout.tsx` (exige rol `SUPERADMIN`), `app/(superadmin)/superadmin/page.tsx` (dashboard con KPIs globales) y `app/(superadmin)/superadmin/coaches/page.tsx` (tabla de profesores con estado, slug con enlace al portal y conteos de alumnos y plantillas). Se desarrollaron las Server Actions en `lib/actions/superadmin.actions.ts` (`createCoachAction`, `toggleCoachStatusAction`, `resetCoachPasswordAction`) y componentes reactivos (`SuperAdminNavbar`, `CreateCoachDialog`, `CoachStatusToggle`, `ResetPasswordDialog`).
+
+**Archivos modificados/creados:**
+`lib/validators/superadmin.ts` · `lib/validators/superadmin.test.ts` · `lib/actions/superadmin.actions.ts` · `components/superadmin/superadmin-navbar.tsx` · `components/superadmin/create-coach-dialog.tsx` · `components/superadmin/coach-status-toggle.tsx` · `components/superadmin/reset-password-dialog.tsx` · `app/(superadmin)/layout.tsx` · `app/(superadmin)/superadmin/page.tsx` · `app/(superadmin)/superadmin/coaches/page.tsx` · `proxy.ts`
+
+---
+
+#### HU-53 · Configuración de Marca Blanca y Perfil del Coach
+> **Como** entrenador,  
+> **quiero** una sección de Configuración en mi panel para personalizar mi nombre comercial, logotipo, imagen de portada, titular, número de WhatsApp y usuario de Instagram,  
+> **para** que mi portal de alumnos refleje mi marca personal sin depender del equipo técnico.
+
+**Story Points:** 3  
+**Prioridad:** 🟡 Alta  
+**Estado:** `DONE`  
+**Depende de:** HU-48, HU-50
+
+**Criterios de Aceptación:**
+- [x] Nueva pantalla `/configuracion` en el panel del coach con formulario reactivo.
+- [x] Campos editables: Nombre comercial (`businessName`), Titular (`headline`), Bajada (`tagline`), URL de Logo (`logoUrl`), URL de Portada (`heroImageUrl`), Teléfono WhatsApp (`whatsappNumber`) e Instagram (`instagramUrl`).
+- [x] Previsualización en vivo de cómo se verá la tarjeta de bienvenida en el portal del alumno en un mockup mobile.
+- [x] Persistencia directa en el registro `Trainer` del usuario autenticado con feedback de guardado exitoso y enlace directo al portal.
+
+**Resumen de la implementación:**
+Se creó la vista `app/(admin)/configuracion/page.tsx` y el componente `CoachProfileForm` (`components/admin/coach-profile-form.tsx`) que incluye formulario completo con previsualización en vivo estilo mockup móvil del portal del alumno con actualización instantánea de logo, titular, bajada y contacto. Se implementó la Server Action `updateCoachProfileAction` en `lib/actions/coach-profile.actions.ts` y se agregó el enlace de Configuración a la barra de navegación del panel (`components/admin/admin-navbar.tsx`).
+
+**Archivos modificados/creados:**
+`lib/validators/coach-profile.ts` · `lib/validators/coach-profile.test.ts` · `lib/actions/coach-profile.actions.ts` · `components/admin/coach-profile-form.tsx` · `app/(admin)/configuracion/page.tsx` · `components/admin/admin-navbar.tsx`
+
+---
+
+### 🏢 EP-17 — Modelo SaaS, Límites de Planes y Catálogo Master de Ejercicios
+
+---
+
+#### HU-54 · Catálogo Master de Ejercicios y Copy-on-Write para Entrenadores
+> **Como** SuperAdmin y como Entrenador,  
+> **quiero** contar con una biblioteca global de ejercicios gestionada por la plataforma y que los entrenadores puedan personalizar ejercicios sin alterar la base compartida,  
+> **para** que cada profesor tenga una biblioteca completa de arranque y libertad de adaptación con aislamiento estricto.
+
+**Story Points:** 5  
+**Prioridad:** 🔴 Crítica  
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Modelo `Exercise` actualizado con `trainerId String?` (`null` para ejercicios master).
+- [x] Sección de SuperAdmin en `/superadmin/ejercicios` para crear, editar y eliminar ejercicios del catálogo global.
+- [x] Diálogos accesibles con soporte para grupos musculares, nombre y enlace a video de YouTube.
+- [x] Lógica de Copy-on-Write en `ExerciseService`: si un entrenador edita un ejercicio master (`trainerId === null`), se clona automáticamente una versión privada para su cuenta (`trainerId = coachId`) y se reasignan las rutinas del coach sin alterar el catálogo global.
+- [x] Prevención de eliminación de ejercicios master por parte de los entrenadores (solo pueden eliminar sus propios ejercicios creados o copiados).
+
+**Resumen de la implementación:**
+Se agregaron índices y relación opcional con `Trainer` en el esquema de Prisma. Se implementó la migración `20260918162936_add_saas_tier_limits_and_master_exercises`. Se actualizaron `ExerciseRepository` y `ExerciseService` con lógica Copy-on-Write y filtrado de catálogo unificado con prioridad de sobrescritura local. Se crearon la página `/superadmin/ejercicios` y los componentes `MasterExerciseDialog` y `DeleteMasterExerciseButton`.
+
+**Archivos modificados/creados:**
+`prisma/schema.prisma` · `lib/repositories/exercise.repository.ts` · `lib/services/exercise.service.ts` · `lib/actions/exercise.actions.ts` · `components/superadmin/exercise-dialog.tsx` · `components/superadmin/delete-master-exercise-button.tsx` · `app/(superadmin)/superadmin/ejercicios/page.tsx` · `components/superadmin/superadmin-navbar.tsx`
+
+---
+
+#### HU-55 · Límites Configurables de Planes y Alumnos por Coach
+> **Como** SuperAdmin,  
+> **quiero** definir límites máximos de planes activos (`maxPlans`) y alumnos activos (`maxStudents`) para cada entrenador,  
+> **para** poder vender la plataforma bajo diferentes tiers/niveles comerciales (Base, Avanzado, Pro).
+
+**Story Points:** 5  
+**Prioridad:** 🔴 Crítica  
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Modelo `Trainer` con campos `maxPlans Int @default(1)` y `maxStudents Int @default(10)`.
+- [x] `PlanService` valida el límite dinámico del coach al crear o reactivar planes (`activeCount >= trainer.maxPlans`), bloqueando la creación si se superó el cupo.
+- [x] `StudentService` valida el límite dinámico del coach al crear, reactivar o importar masivamente alumnos por CSV (`activeCount >= trainer.maxStudents`).
+- [x] Interfaz de administración de planes (`PlanManager`) muestra el cupo actual dinámicamente (`{activePlans.length} / {maxPlans}`) y bloquea el botón si se alcanzó el límite.
+- [x] Mensajes descriptivos al alcanzar los cupos indicando contactar al administrador para ampliar el plan.
+
+**Resumen de la implementación:**
+Se implementaron `PlanLimitReachedError` y `StudentLimitReachedError` con soporte para inyección de dependencias (`limitsLookup`) para pruebas unitarias limpias. Se actualizaron las acciones de servidor de alumnos y planes para capturar las excepciones y renderizar feedback visual claro en los formularios. Se agregaron tests unitarios verificando la aplicación estricta de cupos.
+
+**Archivos modificados/creados:**
+`lib/services/plan.service.ts` · `lib/services/plan.service.test.ts` · `lib/services/student.service.ts` · `lib/services/student.service.test.ts` · `components/admin/plan-manager.tsx` · `app/(admin)/planes/page.tsx` · `lib/actions/student.actions.ts` · `components/admin/student-form.tsx`
+
+---
+
+#### HU-56 · Trazabilidad de Membresías y Gestión Comercial en SuperAdmin
+> **Como** SuperAdmin,  
+> **quiero** visualizar la fecha de alta (`createdAt`), última actualización (`updatedAt`), vencimiento de membresía (`membershipExpiresAt`) y cupos de cada profesor,  
+> **para** auditar el ciclo de vida del cliente y ajustar sus parámetros contractuales de manera manual.
+
+**Story Points:** 3  
+**Prioridad:** 🟡 Alta  
+**Estado:** `DONE`
+
+**Criterios de Aceptación:**
+- [x] Diálogos `CreateCoachDialog` y `EditCoachDialog` permiten ingresar o actualizar `Cupo Alumnos`, `Cupo Planes` y `Vencimiento Membresía`.
+- [x] Esquemas de validación Zod (`createCoachSchema`, `updateCoachBySuperAdminSchema`) validan tipos y mínimos enteros.
+- [x] Tabla de entrenadores `/superadmin/coaches` presenta columnas para `Cupo Alumnos` (consumidos / contratados), `Cupo Planes`, fecha de `Alta` formateada y `Vencimiento`.
+- [x] Indicador para profesores sin fecha límite de membresía explícita ("Sin límite").
+
+**Resumen de la implementación:**
+Se agregaron campos y validaciones numéricas y de fecha en `lib/validators/superadmin.ts` y persistencia en `lib/actions/superadmin.actions.ts`. Se actualizaron los modales de creación y edición en `components/superadmin` y la tabla resumen en `app/(superadmin)/superadmin/coaches/page.tsx`.
+
+**Archivos modificados/creados:**
+`lib/validators/superadmin.ts` · `lib/actions/superadmin.actions.ts` · `components/superadmin/create-coach-dialog.tsx` · `components/superadmin/edit-coach-dialog.tsx` · `app/(superadmin)/superadmin/coaches/page.tsx`
 
 ---
 
@@ -1390,11 +1635,13 @@ EP-15 termina acá — HU-41 a HU-47 (contraste de botones y tipografía resuelt
 | EP-13 Seguimiento y Coaching (Fase 1) — cerrada ✅ | 9 | 45 |
 | EP-14 Seguimiento y Coaching (Fase 2) — cerrada ✅ | 1 | 2 |
 | EP-15 Mejoras de UI y Administración — cerrada ✅ | 7 | 21 |
-| **Subtotal MVP 2** | **17 HUs** | **68 pts** |
+| EP-16 Multi-tenant & SaaS (Slug-in-Path) — cerrada ✅ | 6 | 26 |
+| EP-17 Modelo SaaS y Catálogo Master — cerrada ✅ | 3 | 13 |
+| **Subtotal MVP 2** | **26 HUs** | **107 pts** |
 
 | | |
 |---|---|
-| **TOTAL GENERAL** | **46 HUs · 174 pts** |
+| **TOTAL GENERAL** | **55 HUs · 213 pts** |
 
 ---
 

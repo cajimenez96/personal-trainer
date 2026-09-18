@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
+import { requireCoachAuth } from "@/lib/auth"
 import {
   RoutineTemplateInUseError,
   routineTemplateService,
@@ -20,6 +21,7 @@ export type CreateTemplateState = {
 export async function createTemplateAction(
   input: CreateTemplatePayload,
 ): Promise<CreateTemplateState> {
+  const user = await requireCoachAuth()
   const parsed = createTemplateSchema.safeParse(input)
 
   if (!parsed.success) {
@@ -31,7 +33,7 @@ export async function createTemplateAction(
     return { ok: false, errors }
   }
 
-  await routineTemplateService.create(parsed.data)
+  await routineTemplateService.create({ ...parsed.data, trainerId: user.id })
 
   redirect("/plantillas?created=1")
 }
@@ -40,6 +42,7 @@ export async function updateTemplateAction(
   id: string,
   input: CreateTemplatePayload,
 ): Promise<CreateTemplateState> {
+  await requireCoachAuth()
   const parsed = createTemplateSchema.safeParse(input)
 
   if (!parsed.success) {
@@ -64,6 +67,7 @@ export async function updateTemplateAction(
 }
 
 export async function duplicateTemplateAction(id: string) {
+  const user = await requireCoachAuth()
   const copy = await routineTemplateService.duplicate(id)
   redirect(`/plantillas/${copy.id}?duplicated=1`)
 }
@@ -71,6 +75,7 @@ export async function duplicateTemplateAction(id: string) {
 export type DeleteTemplateState = { ok: boolean; error?: string }
 
 export async function deleteTemplateAction(id: string): Promise<DeleteTemplateState> {
+  await requireCoachAuth()
   try {
     await routineTemplateService.delete(id)
   } catch (err) {
@@ -81,3 +86,4 @@ export async function deleteTemplateAction(id: string): Promise<DeleteTemplateSt
   revalidatePath("/plantillas")
   return { ok: true }
 }
+

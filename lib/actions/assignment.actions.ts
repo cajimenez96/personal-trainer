@@ -1,6 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { requireCoachAuth } from "@/lib/auth"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 import { assignRoutineSchema, type AssignRoutinePayload } from "@/lib/validators/assignment"
 
@@ -12,6 +13,7 @@ export type AssignRoutineState = {
 export async function assignRoutineAction(
   input: AssignRoutinePayload,
 ): Promise<AssignRoutineState> {
+  await requireCoachAuth()
   const parsed = assignRoutineSchema.safeParse(input)
 
   if (!parsed.success) {

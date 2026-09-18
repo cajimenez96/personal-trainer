@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getDefaultTrainerId } from "@/lib/tenant"
 import type { Plan as PrismaPlan } from "@/app/generated/prisma/client"
 import type {
   CreatePlanData,
@@ -10,6 +11,7 @@ import type {
 export function toPlanDTO(plan: PrismaPlan): PlanDTO {
   return {
     id: plan.id,
+    trainerId: plan.trainerId,
     name: plan.name,
     description: plan.description,
     price: Number(plan.price),
@@ -21,9 +23,13 @@ export function toPlanDTO(plan: PrismaPlan): PlanDTO {
 }
 
 export class PrismaPlanRepository implements IPlanRepository {
-  async findAll(includeInactive = false): Promise<PlanDTO[]> {
+  async findAll(includeInactive = false, trainerId?: string): Promise<PlanDTO[]> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     const plans = await db.plan.findMany({
-      where: includeInactive ? undefined : { isActive: true },
+      where: {
+        trainerId: effectiveTrainerId,
+        ...(includeInactive ? {} : { isActive: true }),
+      },
       orderBy: { createdAt: "asc" },
     })
     return plans.map(toPlanDTO)
@@ -36,16 +42,24 @@ export class PrismaPlanRepository implements IPlanRepository {
     return plan ? toPlanDTO(plan) : null
   }
 
-  async findByName(name: string): Promise<PlanDTO | null> {
+  async findByName(name: string, trainerId?: string): Promise<PlanDTO | null> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     const plan = await db.plan.findUnique({
-      where: { name },
+      where: {
+        unique_plan_per_trainer: {
+          trainerId: effectiveTrainerId,
+          name,
+        },
+      },
     })
     return plan ? toPlanDTO(plan) : null
   }
 
   async create(data: CreatePlanData): Promise<PlanDTO> {
+    const effectiveTrainerId = data.trainerId ?? (await getDefaultTrainerId())
     const plan = await db.plan.create({
       data: {
+        trainerId: effectiveTrainerId,
         name: data.name,
         description: data.description,
         price: data.price,
@@ -75,9 +89,10 @@ export class PrismaPlanRepository implements IPlanRepository {
     })
   }
 
-  async countActive(): Promise<number> {
+  async countActive(trainerId?: string): Promise<number> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     return db.plan.count({
-      where: { isActive: true },
+      where: { trainerId: effectiveTrainerId, isActive: true },
     })
   }
 

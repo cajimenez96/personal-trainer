@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getDefaultTrainerId } from "@/lib/tenant"
 import type {
   AccountStatement,
   FinancialSummaryDTO,
@@ -88,7 +89,8 @@ export class PaymentService {
     }
   }
 
-  async getFinancialSummary(): Promise<FinancialSummaryDTO> {
+  async getFinancialSummary(trainerId?: string): Promise<FinancialSummaryDTO> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
@@ -97,6 +99,7 @@ export class PaymentService {
       db.payment.aggregate({
         _sum: { amount: true },
         where: {
+          student: { trainerId: effectiveTrainerId },
           paidAt: {
             gte: startOfMonth,
             lte: endOfMonth,
@@ -105,9 +108,12 @@ export class PaymentService {
       }),
       db.payment.aggregate({
         _sum: { amount: true },
+        where: {
+          student: { trainerId: effectiveTrainerId },
+        },
       }),
       db.student.findMany({
-        where: { isActive: true },
+        where: { trainerId: effectiveTrainerId, isActive: true },
         select: { id: true },
       }),
     ])

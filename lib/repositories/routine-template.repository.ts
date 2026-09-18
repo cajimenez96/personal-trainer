@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getDefaultTrainerId } from "@/lib/tenant"
 import type {
   CreateExerciseBlockData,
   CreateRoutineTemplateData,
@@ -64,9 +65,11 @@ function toNestedDaysCreate(days: CreateTrainingDayData[]) {
 }
 
 export class PrismaRoutineTemplateRepository implements IRoutineTemplateRepository {
-  create(data: CreateRoutineTemplateData) {
+  async create(data: CreateRoutineTemplateData) {
+    const effectiveTrainerId = data.trainerId ?? (await getDefaultTrainerId())
     return db.routineTemplate.create({
       data: {
+        trainerId: effectiveTrainerId,
         name: data.name,
         description: data.description,
         durationWeeks: data.durationWeeks,
@@ -76,8 +79,10 @@ export class PrismaRoutineTemplateRepository implements IRoutineTemplateReposito
     })
   }
 
-  findMany() {
+  async findMany(trainerId?: string) {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     return db.routineTemplate.findMany({
+      where: { trainerId: effectiveTrainerId },
       orderBy: { createdAt: "desc" },
       include: listInclude,
     })
@@ -185,11 +190,13 @@ export class PrismaRoutineTemplateRepository implements IRoutineTemplateReposito
     })
   }
 
-  async duplicate(id: string) {
+  async duplicate(id: string, targetTrainerId?: string) {
     const source = await db.routineTemplate.findUniqueOrThrow({
       where: { id },
       include: fullInclude,
     })
+
+    const effectiveTrainerId = targetTrainerId ?? source.trainerId
 
     const days: CreateTrainingDayData[] = source.trainingDays.map((day) => ({
       label: day.label,
@@ -211,6 +218,7 @@ export class PrismaRoutineTemplateRepository implements IRoutineTemplateReposito
 
     return db.routineTemplate.create({
       data: {
+        trainerId: effectiveTrainerId,
         name: `Copia de ${source.name}`,
         description: source.description,
         durationWeeks: source.durationWeeks,
@@ -228,3 +236,4 @@ export class PrismaRoutineTemplateRepository implements IRoutineTemplateReposito
     await db.routineTemplate.delete({ where: { id } })
   }
 }
+

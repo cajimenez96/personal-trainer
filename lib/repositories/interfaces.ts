@@ -13,6 +13,7 @@ import type {
 } from "@/app/generated/prisma/client"
 
 export interface CreateStudentData {
+  trainerId?: string
   firstName: string
   lastName: string
   dni: string
@@ -44,6 +45,7 @@ export interface UpdateStudentData {
 }
 
 export interface StudentFilters {
+  trainerId?: string
   search?: string
   objetivoId?: string
   nivel?: Nivel
@@ -103,26 +105,29 @@ export interface StudentListResult {
 export interface IStudentRepository {
   findMany(params: StudentListParams): Promise<StudentListResult>
   findById(id: string): Promise<Student | null>
-  findByDni(dni: string): Promise<Student | null>
+  findByDni(dni: string, trainerId?: string): Promise<Student | null>
   create(data: CreateStudentData): Promise<Student>
   update(id: string, data: UpdateStudentData): Promise<Student>
   deactivate(id: string): Promise<Student>
   reactivate(id: string): Promise<Student>
   findAllActive(filters: StudentFilters): Promise<Student[]>
-  countActive(): Promise<number>
-  countExpiringSoon(before: Date): Promise<number>
+  countActive(trainerId?: string): Promise<number>
+  countExpiringSoon(before: Date, trainerId?: string): Promise<number>
 }
 
 export interface ExerciseFilters {
   search?: string
   muscleGroup?: string
+  trainerId?: string | null
+  globalOnly?: boolean
 }
 
 export interface CreateExerciseData {
+  trainerId?: string | null
   name: string
   primaryMuscle: string
-  secondaryMuscle?: string
-  videoUrl?: string
+  secondaryMuscle?: string | null
+  videoUrl?: string | null
 }
 
 export interface UpdateExerciseData {
@@ -135,8 +140,8 @@ export interface UpdateExerciseData {
 export interface IExerciseRepository {
   findMany(filters: ExerciseFilters): Promise<Exercise[]>
   findById(id: string): Promise<Exercise | null>
-  findByName(name: string): Promise<Exercise | null>
-  listMuscleGroups(): Promise<string[]>
+  findByName(name: string, trainerId?: string | null): Promise<Exercise | null>
+  listMuscleGroups(trainerId?: string | null): Promise<string[]>
   create(data: CreateExerciseData): Promise<Exercise>
   update(id: string, data: UpdateExerciseData): Promise<Exercise>
   delete(id: string): Promise<void>
@@ -169,6 +174,7 @@ export interface CreateTrainingDayData {
 }
 
 export interface CreateRoutineTemplateData {
+  trainerId?: string
   name: string
   description?: string
   durationWeeks: number
@@ -210,10 +216,10 @@ export type RoutineTemplateWithFullDays = RoutineTemplate & {
 
 export interface IRoutineTemplateRepository {
   create(data: CreateRoutineTemplateData): Promise<RoutineTemplateWithDays>
-  findMany(): Promise<RoutineTemplateWithDays[]>
+  findMany(trainerId?: string): Promise<RoutineTemplateWithDays[]>
   findById(id: string): Promise<RoutineTemplateWithFullDays | null>
   update(id: string, data: CreateRoutineTemplateData): Promise<RoutineTemplateWithDays>
-  duplicate(id: string): Promise<RoutineTemplateWithDays>
+  duplicate(id: string, targetTrainerId?: string): Promise<RoutineTemplateWithDays>
   delete(id: string): Promise<void>
   countAssignments(id: string): Promise<number>
 }
@@ -361,6 +367,7 @@ export interface IProgressLogRepository {
 
 export type GenericProfileWithTemplate = {
   id: string
+  trainerId: string
   level: GenericLevel
   passwordHash: string
   assignedTemplateId: string | null
@@ -369,10 +376,10 @@ export type GenericProfileWithTemplate = {
 }
 
 export interface IGenericProfileRepository {
-  findAll(): Promise<GenericProfileWithTemplate[]>
-  findByLevel(level: GenericLevel): Promise<GenericProfileWithTemplate | null>
-  assignTemplate(level: GenericLevel, templateId: string | null): Promise<GenericProfileWithTemplate>
-  updatePasswordHash(level: GenericLevel, passwordHash: string): Promise<void>
+  findAll(trainerId?: string): Promise<GenericProfileWithTemplate[]>
+  findByLevel(level: GenericLevel, trainerId?: string): Promise<GenericProfileWithTemplate | null>
+  assignTemplate(level: GenericLevel, templateId: string | null, trainerId?: string): Promise<GenericProfileWithTemplate>
+  updatePasswordHash(level: GenericLevel, passwordHash: string, trainerId?: string): Promise<void>
 }
 
 // ─────────────────────────────────────────────
@@ -381,6 +388,7 @@ export interface IGenericProfileRepository {
 
 export interface PlanDTO {
   id: string
+  trainerId: string
   name: string
   description: string | null
   price: number
@@ -391,6 +399,7 @@ export interface PlanDTO {
 }
 
 export interface CreatePlanData {
+  trainerId?: string
   name: string
   description?: string | null
   price: number
@@ -406,13 +415,13 @@ export interface UpdatePlanData {
 }
 
 export interface IPlanRepository {
-  findAll(includeInactive?: boolean): Promise<PlanDTO[]>
+  findAll(includeInactive?: boolean, trainerId?: string): Promise<PlanDTO[]>
   findById(id: string): Promise<PlanDTO | null>
-  findByName(name: string): Promise<PlanDTO | null>
+  findByName(name: string, trainerId?: string): Promise<PlanDTO | null>
   create(data: CreatePlanData): Promise<PlanDTO>
   update(id: string, data: UpdatePlanData): Promise<PlanDTO>
   delete(id: string): Promise<void>
-  countActive(): Promise<number>
+  countActive(trainerId?: string): Promise<number>
   countSubscriptions(planId: string): Promise<number>
 }
 

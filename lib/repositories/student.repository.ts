@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getDefaultTrainerId } from "@/lib/tenant"
 import type { Prisma } from "@/app/generated/prisma/client"
 import type {
   CreateStudentData,
@@ -11,6 +12,7 @@ import type {
 
 export class PrismaStudentRepository implements IStudentRepository {
   async findMany({
+    trainerId,
     search,
     objetivoId,
     nivel,
@@ -20,10 +22,12 @@ export class PrismaStudentRepository implements IStudentRepository {
     cursor,
     limit,
   }: StudentListParams): Promise<StudentListResult> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     let studentIdsForPlan: string[] | null = null
     if (planId) {
       const students = await db.student.findMany({
         where: {
+          trainerId: effectiveTrainerId,
           subscriptions: { some: {} },
         },
         select: {
@@ -43,6 +47,7 @@ export class PrismaStudentRepository implements IStudentRepository {
     }
 
     const where: Prisma.StudentWhereInput = {
+      trainerId: effectiveTrainerId,
       isActive,
       objetivoId,
       nivel,
@@ -97,12 +102,26 @@ export class PrismaStudentRepository implements IStudentRepository {
     return db.student.findUnique({ where: { id } })
   }
 
-  findByDni(dni: string) {
-    return db.student.findUnique({ where: { dni } })
+  async findByDni(dni: string, trainerId?: string) {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
+    return db.student.findUnique({
+      where: {
+        unique_student_per_trainer: {
+          trainerId: effectiveTrainerId,
+          dni,
+        },
+      },
+    })
   }
 
-  create(data: CreateStudentData) {
-    return db.student.create({ data })
+  async create(data: CreateStudentData) {
+    const effectiveTrainerId = data.trainerId ?? (await getDefaultTrainerId())
+    return db.student.create({
+      data: {
+        ...data,
+        trainerId: effectiveTrainerId,
+      },
+    })
   }
 
   update(id: string, data: UpdateStudentData) {
@@ -117,11 +136,13 @@ export class PrismaStudentRepository implements IStudentRepository {
     return db.student.update({ where: { id }, data: { isActive: true } })
   }
 
-  async findAllActive({ objetivoId, nivel, modalidadId, planId, paymentExpired }: StudentFilters) {
+  async findAllActive({ trainerId, objetivoId, nivel, modalidadId, planId, paymentExpired }: StudentFilters) {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     let studentIdsForPlan: string[] | null = null
     if (planId) {
       const students = await db.student.findMany({
         where: {
+          trainerId: effectiveTrainerId,
           isActive: true,
           subscriptions: { some: {} },
         },
@@ -143,6 +164,7 @@ export class PrismaStudentRepository implements IStudentRepository {
 
     return db.student.findMany({
       where: {
+        trainerId: effectiveTrainerId,
         isActive: true,
         objetivoId,
         nivel,
@@ -154,13 +176,15 @@ export class PrismaStudentRepository implements IStudentRepository {
     })
   }
 
-  countActive() {
-    return db.student.count({ where: { isActive: true } })
+  async countActive(trainerId?: string) {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
+    return db.student.count({ where: { trainerId: effectiveTrainerId, isActive: true } })
   }
 
-  countExpiringSoon(before: Date) {
+  async countExpiringSoon(before: Date, trainerId?: string) {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     return db.student.count({
-      where: { isActive: true, paymentExpiresAt: { not: null, lte: before } },
+      where: { trainerId: effectiveTrainerId, isActive: true, paymentExpiresAt: { not: null, lte: before } },
     })
   }
 }

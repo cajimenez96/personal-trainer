@@ -6,6 +6,7 @@ import type { GenericProfileWithTemplate, IGenericProfileRepository } from "@/li
 function makeProfile(level: "basico" | "intermedio" | "avanzado", passwordHash: string): GenericProfileWithTemplate {
   return {
     id: `id-${level}`,
+    trainerId: "test-trainer-id",
     level: level as GenericProfileWithTemplate["level"],
     passwordHash,
     assignedTemplateId: null,

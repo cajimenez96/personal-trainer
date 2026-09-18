@@ -32,6 +32,7 @@ class FakePlanRepository implements IPlanRepository {
   async create(data: CreatePlanData): Promise<PlanDTO> {
     const plan: PlanDTO = {
       id: `plan-${Date.now()}-${Math.random()}`,
+      trainerId: data.trainerId ?? "test-trainer-id",
       name: data.name,
       description: data.description ?? null,
       price: data.price,
@@ -107,5 +108,27 @@ describe("PlanService", () => {
     await expect(
       service.create({ name: "Pase Libre", price: 30000, durationDays: 30 }),
     ).rejects.toThrow(PlanNameAlreadyExistsError)
+  })
+
+  it("enforces custom maxPlans limit configured on the trainer", async () => {
+    const repo = new FakePlanRepository()
+    // Coach with maxPlans = 1
+    const service = new PlanService(repo, async () => ({ maxPlans: 1 }))
+
+    await service.create({
+      trainerId: "trainer-custom",
+      name: "Plan Unico",
+      price: 15000,
+      durationDays: 30,
+    })
+
+    await expect(
+      service.create({
+        trainerId: "trainer-custom",
+        name: "Plan Excedido",
+        price: 25000,
+        durationDays: 30,
+      }),
+    ).rejects.toThrow(PlanLimitReachedError)
   })
 })

@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { requireCoachAuth } from "@/lib/auth"
 import {
   PlanInUseError,
   PlanLimitReachedError,
@@ -20,13 +21,14 @@ export type PlanActionResult = {
 }
 
 export async function createPlanAction(input: CreatePlanInput): Promise<PlanActionResult> {
+  const user = await requireCoachAuth()
   const parsed = createPlanSchema.safeParse(input)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message }
   }
 
   try {
-    await planService.create(parsed.data)
+    await planService.create({ ...parsed.data, trainerId: user.id })
   } catch (err) {
     if (err instanceof PlanLimitReachedError || err instanceof PlanNameAlreadyExistsError) {
       return { ok: false, error: err.message }
@@ -43,6 +45,7 @@ export async function updatePlanAction(
   id: string,
   input: UpdatePlanInput,
 ): Promise<PlanActionResult> {
+  await requireCoachAuth()
   const parsed = updatePlanSchema.safeParse(input)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message }
@@ -63,6 +66,7 @@ export async function updatePlanAction(
 }
 
 export async function deletePlanAction(id: string): Promise<PlanActionResult> {
+  await requireCoachAuth()
   try {
     await planService.delete(id)
   } catch (err) {
@@ -75,3 +79,4 @@ export async function deletePlanAction(id: string): Promise<PlanActionResult> {
   revalidatePath("/planes")
   return { ok: true }
 }
+

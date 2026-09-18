@@ -1,4 +1,5 @@
 import { Prisma } from "@/app/generated/prisma/client"
+import { db } from "@/lib/db"
 import type {
   CreateExerciseData,
   ExerciseFilters,
@@ -36,13 +37,15 @@ export class ExerciseService {
     return this.exerciseRepo.findById(id)
   }
 
-  muscleGroups() {
-    return this.exerciseRepo.listMuscleGroups()
+  muscleGroups(trainerId?: string | null) {
+    return this.exerciseRepo.listMuscleGroups(trainerId)
   }
 
   async create(data: CreateExerciseData) {
-    const existing = await this.exerciseRepo.findByName(data.name)
-    if (existing) throw new ExerciseNameTakenError(data.name)
+    const existing = await this.exerciseRepo.findByName(data.name, data.trainerId)
+    if (existing && existing.trainerId === (data.trainerId || null)) {
+      throw new ExerciseNameTakenError(data.name)
+    }
 
     try {
       return await this.exerciseRepo.create(data)
@@ -57,17 +60,57 @@ export class ExerciseService {
     }
   }
 
-  // Idempotent find-or-create — used by the routine CSV importer, where the
-  // same exercise name can appear across many rows/templates in one file.
+  // Idempotent find-or-create — used by the routine CSV importer
   async findOrCreate(data: CreateExerciseData) {
-    const existing = await this.exerciseRepo.findByName(data.name)
+    const existing = await this.exerciseRepo.findByName(data.name, data.trainerId)
     if (existing) return existing
     return this.create(data)
   }
 
-  async update(id: string, data: UpdateExerciseData) {
-    const existing = await this.exerciseRepo.findByName(data.name)
-    if (existing && existing.id !== id) throw new ExerciseNameTakenError(data.name)
+  async update(
+    id: string,
+    data: UpdateExerciseData,
+    currentTrainerId?: string | null,
+  ) {
+    const current = await this.exerciseRepo.findById(id)
+    if (!current) {
+      throw new Error("Ejercicio no encontrado")
+    }
+
+    // COPY-ON-WRITE: Si un coach edita un ejercicio global (maestro del SuperAdmin),
+    // creamos una copia privada para el coach sin tocar el ejercicio maestro
+    if (current.trainerId === null && currentTrainerId) {
+      const cloned = await this.exerciseRepo.create({
+        trainerId: currentTrainerId,
+        name: data.name,
+        primaryMuscle: data.primaryMuscle,
+        secondaryMuscle: data.secondaryMuscle,
+        videoUrl: data.videoUrl,
+      })
+
+      // Actualizar los bloques de rutina del coach para que apunten a su copia
+      await db.exerciseBlock.updateMany({
+        where: {
+          exerciseId: id,
+          trainingDay: {
+            template: {
+              trainerId: currentTrainerId,
+            },
+          },
+        },
+        data: {
+          exerciseId: cloned.id,
+        },
+      })
+
+      return cloned
+    }
+
+    // Edición normal en su propio ejercicio
+    const existing = await this.exerciseRepo.findByName(data.name, current.trainerId)
+    if (existing && existing.id !== id && existing.trainerId === current.trainerId) {
+      throw new ExerciseNameTakenError(data.name)
+    }
 
     try {
       return await this.exerciseRepo.update(id, data)
@@ -82,7 +125,15 @@ export class ExerciseService {
     }
   }
 
-  async delete(id: string) {
+  async delete(id: string, currentTrainerId?: string | null) {
+    const current = await this.exerciseRepo.findById(id)
+    if (!current) return
+
+    // Un coach no puede borrar ejercicios globales del catálogo maestro
+    if (current.trainerId === null && currentTrainerId) {
+      throw new Error("No podés eliminar un ejercicio del catálogo maestro de la plataforma.")
+    }
+
     const referencedCount = await this.exerciseRepo.countBlocksUsing(id)
     if (referencedCount > 0) throw new ExerciseInUseError()
     await this.exerciseRepo.delete(id)

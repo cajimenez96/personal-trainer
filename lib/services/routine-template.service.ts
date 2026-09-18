@@ -22,8 +22,8 @@ export class RoutineTemplateService {
     return this.templateRepo.create(data)
   }
 
-  list() {
-    return this.templateRepo.findMany()
+  list(trainerId?: string) {
+    return this.templateRepo.findMany(trainerId)
   }
 
   getById(id: string) {

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getDefaultTrainerId } from "@/lib/tenant"
 import type {
   CreatePlanData,
   IPlanRepository,
@@ -32,28 +33,53 @@ export class PlanInUseError extends Error {
   }
 }
 
-export class PlanService {
-  constructor(private readonly repo: IPlanRepository) {}
+export type PlanLimitsLookup = (
+  trainerId: string,
+) => Promise<{ maxPlans: number } | null>
 
-  async list(includeInactive = false): Promise<PlanDTO[]> {
-    return this.repo.findAll(includeInactive)
+export class PlanService {
+  constructor(
+    private readonly repo: IPlanRepository,
+    private readonly limitsLookup?: PlanLimitsLookup,
+  ) {}
+
+  private async getMaxPlans(trainerId?: string): Promise<number> {
+    if (!trainerId) return MAX_ACTIVE_PLANS
+    if (this.limitsLookup) {
+      const res = await this.limitsLookup(trainerId)
+      return res?.maxPlans ?? MAX_ACTIVE_PLANS
+    }
+    try {
+      const trainer = await db.trainer.findUnique({
+        where: { id: trainerId },
+        select: { maxPlans: true },
+      })
+      return trainer?.maxPlans ?? MAX_ACTIVE_PLANS
+    } catch {
+      return MAX_ACTIVE_PLANS
+    }
+  }
+
+  async list(includeInactive = false, trainerId?: string): Promise<PlanDTO[]> {
+    return this.repo.findAll(includeInactive, trainerId)
   }
 
   async getById(id: string): Promise<PlanDTO | null> {
     return this.repo.findById(id)
   }
 
-  async countActive(): Promise<number> {
-    return this.repo.countActive()
+  async countActive(trainerId?: string): Promise<number> {
+    return this.repo.countActive(trainerId)
   }
 
   async create(data: CreatePlanData): Promise<PlanDTO> {
-    const activeCount = await this.repo.countActive()
-    if (activeCount >= MAX_ACTIVE_PLANS) {
-      throw new PlanLimitReachedError(MAX_ACTIVE_PLANS)
+    const maxPlans = await this.getMaxPlans(data.trainerId)
+    const activeCount = await this.repo.countActive(data.trainerId)
+    if (activeCount >= maxPlans) {
+      throw new PlanLimitReachedError(maxPlans)
     }
 
-    const existing = await this.repo.findByName(data.name.trim())
+    const existing = await this.repo.findByName(data.name.trim(), data.trainerId)
     if (existing) {
       throw new PlanNameAlreadyExistsError(data.name.trim())
     }
@@ -75,15 +101,16 @@ export class PlanService {
 
     // If reactivating, ensure limit is not exceeded
     if (data.isActive && !current.isActive) {
-      const activeCount = await this.repo.countActive()
-      if (activeCount >= MAX_ACTIVE_PLANS) {
-        throw new PlanLimitReachedError(MAX_ACTIVE_PLANS)
+      const maxPlans = await this.getMaxPlans(current.trainerId)
+      const activeCount = await this.repo.countActive(current.trainerId)
+      if (activeCount >= maxPlans) {
+        throw new PlanLimitReachedError(maxPlans)
       }
     }
 
     // Check unique name if renamed
     if (data.name && data.name.trim() !== current.name) {
-      const existing = await this.repo.findByName(data.name.trim())
+      const existing = await this.repo.findByName(data.name.trim(), current.trainerId)
       if (existing && existing.id !== id) {
         throw new PlanNameAlreadyExistsError(data.name.trim())
       }
@@ -106,13 +133,14 @@ export class PlanService {
     await this.repo.delete(id)
   }
 
-  async getPlanMetrics(): Promise<PlanMetricsDTO> {
-    const plans = await this.repo.findAll(false)
+  async getPlanMetrics(trainerId?: string): Promise<PlanMetricsDTO> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
+    const plans = await this.repo.findAll(false, effectiveTrainerId)
     const activePlansCount = plans.length
 
-    // Active students with their latest subscription
+    // Active students with their latest subscription for this trainer
     const activeStudents = await db.student.findMany({
-      where: { isActive: true },
+      where: { trainerId: effectiveTrainerId, isActive: true },
       select: {
         id: true,
         subscriptions: {
@@ -144,6 +172,7 @@ export class PlanService {
       const count = studentCountByPlan.get(p.id) ?? 0
       return {
         id: p.id,
+        trainerId: p.trainerId,
         name: p.name,
         price: p.price,
         durationDays: p.durationDays,
@@ -153,9 +182,11 @@ export class PlanService {
       }
     })
 
+    const maxActivePlans = await this.getMaxPlans(effectiveTrainerId)
+
     return {
       activePlansCount,
-      maxActivePlans: MAX_ACTIVE_PLANS,
+      maxActivePlans,
       plans: planItems,
       unassignedStudentsCount: unassignedCount,
     }
@@ -163,4 +194,5 @@ export class PlanService {
 }
 
 export const planService = new PlanService(planRepository)
+
 

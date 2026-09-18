@@ -8,29 +8,27 @@ const SALT_ROUNDS = 10
 export class GenericProfileService {
   constructor(private readonly repo: IGenericProfileRepository) {}
 
-  getAll() {
-    return this.repo.findAll()
+  getAll(trainerId?: string) {
+    return this.repo.findAll(trainerId)
   }
 
-  getByLevel(level: GenericLevel) {
-    return this.repo.findByLevel(level)
+  getByLevel(level: GenericLevel, trainerId?: string) {
+    return this.repo.findByLevel(level, trainerId)
   }
 
-  assignTemplate(level: GenericLevel, templateId: string | null) {
-    return this.repo.assignTemplate(level, templateId)
+  assignTemplate(level: GenericLevel, templateId: string | null, trainerId?: string) {
+    return this.repo.assignTemplate(level, templateId, trainerId)
   }
 
-  async updatePassword(level: GenericLevel, plainPassword: string) {
+  async updatePassword(level: GenericLevel, plainPassword: string, trainerId?: string) {
     const passwordHash = await bcrypt.hash(plainPassword, SALT_ROUNDS)
-    await this.repo.updatePasswordHash(level, passwordHash)
+    await this.repo.updatePasswordHash(level, passwordHash, trainerId)
   }
 
-  // Compares the entered value against all 3 profiles' hashes. Cheap at this
-  // scale (3 rows), and the only way to identify the level: the password is
-  // coach-configurable free text, not a fixed pattern we could branch on.
-  async verifyPassword(candidate: string): Promise<GenericLevel | null> {
+  // Compares the entered value against all 3 profiles' hashes for the given trainer.
+  async verifyPassword(candidate: string, trainerId?: string): Promise<GenericLevel | null> {
     if (!candidate) return null
-    const profiles = await this.repo.findAll()
+    const profiles = await this.repo.findAll(trainerId)
     for (const profile of profiles) {
       const isMatch = await bcrypt.compare(candidate, profile.passwordHash)
       if (isMatch) return profile.level
@@ -40,3 +38,4 @@ export class GenericProfileService {
 }
 
 export const genericProfileService = new GenericProfileService(new PrismaGenericProfileRepository())
+

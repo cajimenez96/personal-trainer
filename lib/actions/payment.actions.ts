@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { requireCoachAuth } from "@/lib/auth"
 import { paymentService } from "@/lib/services/payment.service"
 import { registerPaymentSchema, type RegisterPaymentInput } from "@/lib/validators/payment"
 
@@ -12,6 +13,7 @@ export type PaymentActionResult = {
 export async function registerPaymentAction(
   input: RegisterPaymentInput,
 ): Promise<PaymentActionResult> {
+  await requireCoachAuth()
   const parsed = registerPaymentSchema.safeParse(input)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message }
@@ -37,6 +39,7 @@ export async function deletePaymentAction(
   id: string,
   studentId: string,
 ): Promise<PaymentActionResult> {
+  await requireCoachAuth()
   try {
     await paymentService.deletePayment(id)
   } catch (err) {
@@ -46,3 +49,4 @@ export async function deletePaymentAction(
   revalidatePath(`/alumnos/${studentId}`)
   return { ok: true }
 }
+

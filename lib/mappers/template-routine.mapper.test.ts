@@ -5,6 +5,7 @@ import type { RoutineTemplateWithFullDays } from "@/lib/repositories/interfaces"
 function makeTemplate(): RoutineTemplateWithFullDays {
   return {
     id: "template-1",
+    trainerId: "trainer-1",
     name: "Plantilla Básico",
     description: null,
     durationWeeks: 4,

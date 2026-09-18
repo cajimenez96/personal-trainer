@@ -95,6 +95,11 @@ export function StudentForm({
 
   return (
     <form action={formAction} onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {errors._form && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+          {errors._form}
+        </div>
+      )}
       {state.existingStudent && (
         <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
           <div>

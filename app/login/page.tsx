@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { signIn } from "@/lib/auth";
+import { auth, signIn } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { siteConfig } from "@/lib/config/site";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,31 +15,58 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 }) {
+  const session = await auth();
+
+  // Si ya tiene sesión activa, redirigir según su rol
+  if (session?.user) {
+    if (session.user.role === "SUPERADMIN") {
+      redirect("/superadmin");
+    } else {
+      redirect("/dashboard");
+    }
+  }
+
   const { error, callbackUrl } = await searchParams;
-  const safeCallbackUrl =
-    callbackUrl && !callbackUrl.startsWith("/_next")
-      ? callbackUrl
-      : "/dashboard";
 
   async function login(formData: FormData) {
     "use server";
 
+    const email = String(formData.get("email") || "")
+      .toLowerCase()
+      .trim();
+
+    // Determinar destino según el rol del usuario si no hay un callbackUrl explícito
+    let targetUrl = "/dashboard";
+    if (callbackUrl && !callbackUrl.startsWith("/_next") && callbackUrl !== "/dashboard") {
+      targetUrl = callbackUrl;
+    } else {
+      const trainer = await db.trainer.findUnique({
+        where: { email },
+        select: { role: true },
+      });
+      if (trainer?.role === "SUPERADMIN") {
+        targetUrl = "/superadmin";
+      }
+    }
+
     try {
       await signIn("credentials", {
-        email: formData.get("email"),
+        email,
         password: formData.get("password"),
-        redirectTo: safeCallbackUrl,
+        redirectTo: targetUrl,
       });
     } catch (err) {
       if (err instanceof AuthError) {
         const params = new URLSearchParams({ error: "CredentialsSignin" });
-        if (safeCallbackUrl && safeCallbackUrl !== "/dashboard") {
-          params.set("callbackUrl", safeCallbackUrl);
+        if (callbackUrl && callbackUrl !== "/dashboard") {
+          params.set("callbackUrl", callbackUrl);
         }
         redirect(`/login?${params.toString()}`);
       }
@@ -47,21 +75,21 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="h-screen flex justify-center items-center px-2">
+    <div className="h-screen flex justify-center items-center px-2 bg-background">
       <div>
-        <Card className="w-xs md:w-md">
+        <Card className="w-xs md:w-md border-border">
           <CardHeader className="flex flex-col items-center text-center">
             <Image
               src={siteConfig.branding.logoHome}
               alt={`${siteConfig.name} Logo`}
-              width={520}
-              height={480}
-              className=""
+              width={320}
+              height={160}
+              className="max-h-24 w-auto object-contain mb-2"
               priority
             />
-            <CardTitle>Bienvenido!</CardTitle>
+            <CardTitle className="text-xl">Acceso a la Plataforma</CardTitle>
             <CardDescription>
-              Panel de administración del trainer
+              Iniciá sesión como Administrador o Entrenador
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -72,6 +100,7 @@ export default async function LoginPage({
                   id="email"
                   name="email"
                   type="email"
+                  placeholder="tu@email.com"
                   autoComplete="email"
                   required
                 />
@@ -82,15 +111,27 @@ export default async function LoginPage({
                   id="password"
                   name="password"
                   type="password"
+                  placeholder="••••••••"
                   autoComplete="current-password"
                   required
                 />
               </div>
-              {error && (
-                <p role="alert" className="text-sm text-destructive">
+              {error === "InactiveAccount" ? (
+                <p
+                  role="alert"
+                  className="text-sm text-destructive text-center"
+                >
+                  Tu cuenta se encuentra suspendida o inactiva. Contactá al
+                  administrador de la plataforma.
+                </p>
+              ) : error ? (
+                <p
+                  role="alert"
+                  className="text-sm text-destructive text-center"
+                >
                   Email o contraseña incorrectos.
                 </p>
-              )}
+              ) : null}
               <Button type="submit" size="lg" className="w-full">
                 Ingresar
               </Button>
