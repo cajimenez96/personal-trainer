@@ -101,12 +101,12 @@ export class AssignedRoutineService {
     return raw ? mergeRoutineDetail(raw) : null
   }
 
-  countActive() {
-    return this.assignedRoutineRepo.countActive()
+  countActive(trainerId?: string) {
+    return this.assignedRoutineRepo.countActive(trainerId)
   }
 
-  getAdherenceStats() {
-    return this.assignedRoutineRepo.findAdherenceStats()
+  getAdherenceStats(trainerId?: string) {
+    return this.assignedRoutineRepo.findAdherenceStats(trainerId)
   }
 }
 

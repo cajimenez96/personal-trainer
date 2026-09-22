@@ -9,6 +9,7 @@ import { DeactivateStudentButton } from "@/components/admin/deactivate-student-b
 import { ReactivateStudentButton } from "@/components/admin/reactivate-student-button"
 import { WhatsAppActions } from "@/components/admin/whatsapp-actions"
 import { FlashToast } from "@/components/admin/flash-toast"
+import { requireCoachAuth } from "@/lib/auth"
 import { updateStudentAction } from "@/lib/actions/student.actions"
 import { studentService } from "@/lib/services/student.service"
 import { evaluateStudentAccess } from "@/lib/utils/student-access"
@@ -34,10 +35,11 @@ export default async function AlumnoDetallePage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const user = await requireCoachAuth()
   const { id } = await params
   const student = await studentService.getById(id)
 
-  if (!student) notFound()
+  if (!student || student.trainerId !== user.id) notFound()
 
   const access = evaluateStudentAccess(student)
 
@@ -56,7 +58,7 @@ export default async function AlumnoDetallePage({
     bodyWeightService.history(id),
     objetivoService.list(),
     modalidadService.list(),
-    planService.list(false),
+    planService.list(false, user.id),
     subscriptionService.getLatestByStudentId(id),
     paymentService.getAccountStatement(id),
   ])

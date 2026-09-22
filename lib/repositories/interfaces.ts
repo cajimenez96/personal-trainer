@@ -299,8 +299,8 @@ export interface IAssignedRoutineRepository {
   findActiveByStudentId(studentId: string): Promise<AssignedRoutineWithTemplate | null>
   findHistoryByStudentId(studentId: string): Promise<AssignedRoutineWithTemplate[]>
   findByIdWithDetails(id: string): Promise<AssignedRoutineRaw | null>
-  countActive(): Promise<number>
-  findAdherenceStats(): Promise<AdherenceStat[]>
+  countActive(trainerId?: string): Promise<number>
+  findAdherenceStats(trainerId?: string): Promise<AdherenceStat[]>
 }
 
 export interface UpsertProgressLogData {

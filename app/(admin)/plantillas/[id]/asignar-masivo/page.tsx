@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FilterSelect } from "@/components/admin/filter-select"
 import { StudentSelectionTable } from "@/components/admin/student-selection-table"
+import { requireCoachAuth } from "@/lib/auth"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 import { studentService } from "@/lib/services/student.service"
 import { objetivoService } from "@/lib/services/objetivo.service"
@@ -35,6 +36,7 @@ export default async function AsignacionMasivaPage({
   params: Promise<{ id: string }>
   searchParams: Promise<Record<string, string | undefined>>
 }) {
+  const user = await requireCoachAuth()
   const { id } = await params
   const raw = await searchParams
   const parsed = filtersSchema.safeParse(raw)
@@ -45,10 +47,11 @@ export default async function AsignacionMasivaPage({
     objetivoService.list(),
     modalidadService.list(),
   ])
-  if (!template) notFound()
+  if (!template || template.trainerId !== user.id) notFound()
 
   const students = await studentService.listAllActive({
     ...filters,
+    trainerId: user.id,
     paymentExpired: filters.paymentExpired === "true",
   })
   const now = Date.now()

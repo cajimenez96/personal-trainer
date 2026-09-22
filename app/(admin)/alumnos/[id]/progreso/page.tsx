@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { requireCoachAuth } from "@/lib/auth"
 import { studentService } from "@/lib/services/student.service"
 import { progressLogService } from "@/lib/services/progress-log.service"
 import { progressHistoryQuerySchema } from "@/lib/validators/progress-history"
@@ -55,9 +56,10 @@ export default async function AlumnoProgresoPage({
   params: Promise<{ id: string }>
   searchParams: Promise<Record<string, string | undefined>>
 }) {
+  const user = await requireCoachAuth()
   const { id } = await params
   const student = await studentService.getById(id)
-  if (!student) notFound()
+  if (!student || student.trainerId !== user.id) notFound()
 
   const rawQuery = await searchParams
   const parsedQuery = progressHistoryQuerySchema.safeParse(rawQuery)

@@ -16,6 +16,7 @@ import { ClickableTableRow } from "@/components/admin/clickable-table-row";
 import { ActionsCell } from "@/components/admin/actions-cell";
 import { StudentRowActions } from "@/components/admin/student-row-actions";
 import { FilterSelect } from "@/components/admin/filter-select";
+import { requireCoachAuth } from "@/lib/auth";
 import { studentService } from "@/lib/services/student.service";
 import { objetivoService } from "@/lib/services/objetivo.service";
 import { modalidadService } from "@/lib/services/modalidad.service";
@@ -42,16 +43,17 @@ export default async function AlumnosPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
+  const user = await requireCoachAuth();
   const raw = await searchParams;
   const parsed = studentListQuerySchema.safeParse(raw);
   const query = parsed.success ? parsed.data : { isActive: true as const };
 
   const [{ items, nextCursor }, objetivos, modalidades, plans] =
     await Promise.all([
-      studentService.list({ ...query, limit: PAGE_SIZE }),
+      studentService.list({ ...query, limit: PAGE_SIZE, trainerId: user.id }),
       objetivoService.list(),
       modalidadService.list(),
-      planService.list(true),
+      planService.list(true, user.id),
     ]);
 
   const baseParams = new URLSearchParams();

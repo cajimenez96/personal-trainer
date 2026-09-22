@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { requireCoachAuth } from "@/lib/auth"
 import { studentService } from "@/lib/services/student.service"
 import { assignedRoutineService } from "@/lib/services/assigned-routine.service"
 
@@ -13,6 +14,7 @@ export default async function RutinaDetallePage({
 }: {
   params: Promise<{ id: string; routineId: string }>
 }) {
+  const user = await requireCoachAuth()
   const { id, routineId } = await params
 
   const [student, routine] = await Promise.all([
@@ -20,7 +22,7 @@ export default async function RutinaDetallePage({
     assignedRoutineService.getDetail(routineId),
   ])
 
-  if (!student || !routine || routine.studentId !== id) notFound()
+  if (!student || student.trainerId !== user.id || !routine || routine.studentId !== id) notFound()
 
   return (
     <div className="mx-auto max-w-3xl">

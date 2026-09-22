@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Users, Calendar, CreditCard, DollarSign } from "lucide-react"
-import { auth } from "@/lib/auth"
+import { requireCoachAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { studentService } from "@/lib/services/student.service"
@@ -36,8 +36,8 @@ function adherenceBadgeVariant(ratio: number): "success" | "secondary" | "destru
 }
 
 export default async function DashboardPage() {
+  const user = await requireCoachAuth()
   const [
-    session,
     activeStudents,
     expiringSoonCount,
     expiringStudents,
@@ -48,14 +48,13 @@ export default async function DashboardPage() {
     objetivos,
     modalidades,
   ] = await Promise.all([
-    auth(),
-    studentService.countActive(),
-    studentService.countExpiringSoon(CUOTA_WARNING_DAYS),
-    studentService.getExpiringStudents(CUOTA_WARNING_DAYS),
-    assignedRoutineService.countActive(),
-    assignedRoutineService.getAdherenceStats(),
-    paymentService.getFinancialSummary(),
-    planService.getPlanMetrics(),
+    studentService.countActive(user.id),
+    studentService.countExpiringSoon(CUOTA_WARNING_DAYS, user.id),
+    studentService.getExpiringStudents(CUOTA_WARNING_DAYS, user.id),
+    assignedRoutineService.countActive(user.id),
+    assignedRoutineService.getAdherenceStats(user.id),
+    paymentService.getFinancialSummary(user.id),
+    planService.getPlanMetrics(user.id),
     objetivoService.list(),
     modalidadService.list(),
   ])
@@ -67,7 +66,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Hola, {session?.user?.name}</h1>
+        <h1 className="text-2xl font-semibold">Hola, {user.name}</h1>
         <p className="text-muted-foreground text-sm">
           Panel de control, seguimiento de planes y finanzas de tu gimnasio.
         </p>

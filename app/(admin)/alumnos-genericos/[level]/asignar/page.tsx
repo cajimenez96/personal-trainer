@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TemplatePicker } from "@/components/admin/template-picker"
 import { ConfirmGenericAssignment } from "@/components/admin/confirm-generic-assignment"
+import { requireCoachAuth } from "@/lib/auth"
 import { genericProfileService } from "@/lib/services/generic-profile.service"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 import { GENERIC_LEVEL_LABEL, genericLevelSchema } from "@/lib/validators/generic-profile"
@@ -18,18 +19,19 @@ export default async function AsignarRutinaGenericaPage({
   params: Promise<{ level: string }>
   searchParams: Promise<{ template?: string }>
 }) {
+  const user = await requireCoachAuth()
   const { level: rawLevel } = await params
   const { template: templateId } = await searchParams
   const parsed = genericLevelSchema.safeParse(rawLevel)
   if (!parsed.success) notFound()
 
-  const profile = await genericProfileService.getByLevel(parsed.data)
+  const profile = await genericProfileService.getByLevel(parsed.data, user.id)
   if (!profile) notFound()
 
   const levelLabel = GENERIC_LEVEL_LABEL[parsed.data]
 
   if (!templateId) {
-    const templates = await routineTemplateService.list()
+    const templates = await routineTemplateService.list(user.id)
 
     return (
       <div className="mx-auto max-w-4xl">
@@ -52,7 +54,7 @@ export default async function AsignarRutinaGenericaPage({
   }
 
   const template = await routineTemplateService.getById(templateId)
-  if (!template) notFound()
+  if (!template || template.trainerId !== user.id) notFound()
 
   return (
     <div className="mx-auto max-w-md">

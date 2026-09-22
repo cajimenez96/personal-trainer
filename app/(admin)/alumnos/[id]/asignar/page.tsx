@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { TemplatePicker } from "@/components/admin/template-picker"
 import { AssignmentForm } from "@/components/admin/assignment-form"
+import { requireCoachAuth } from "@/lib/auth"
 import { studentService } from "@/lib/services/student.service"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 import { exerciseService } from "@/lib/services/exercise.service"
@@ -15,14 +16,15 @@ export default async function AsignarRutinaPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ template?: string }>
 }) {
+  const user = await requireCoachAuth()
   const { id } = await params
   const { template: templateId } = await searchParams
 
   const student = await studentService.getById(id)
-  if (!student) notFound()
+  if (!student || student.trainerId !== user.id) notFound()
 
   if (!templateId) {
-    const templates = await routineTemplateService.list()
+    const templates = await routineTemplateService.list(user.id)
 
     return (
       <div className="mx-auto max-w-4xl">
@@ -36,10 +38,10 @@ export default async function AsignarRutinaPage({
 
   const [template, exercises] = await Promise.all([
     routineTemplateService.getById(templateId),
-    exerciseService.list({}),
+    exerciseService.list({ trainerId: user.id }),
   ])
 
-  if (!template) notFound()
+  if (!template || template.trainerId !== user.id) notFound()
 
   const exerciseNames = Object.fromEntries(exercises.map((e) => [e.id, e.name]))
 

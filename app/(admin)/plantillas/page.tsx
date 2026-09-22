@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FlashToast } from "@/components/admin/flash-toast"
 import { DeleteTemplateButton } from "@/components/admin/delete-template-button"
+import { requireCoachAuth } from "@/lib/auth"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 
 // DB-backed listing — must reflect newly created templates on every request.
 export const dynamic = "force-dynamic"
 
 export default async function PlantillasPage() {
-  const templates = await routineTemplateService.list()
+  const user = await requireCoachAuth()
+  const templates = await routineTemplateService.list(user.id)
 
   return (
     <div className="flex flex-col gap-6">

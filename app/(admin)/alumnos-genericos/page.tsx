@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { GenericPasswordForm } from "@/components/admin/generic-password-form"
+import { requireCoachAuth } from "@/lib/auth"
 import { genericProfileService } from "@/lib/services/generic-profile.service"
 import { GENERIC_LEVEL_LABEL, GENERIC_LEVEL_VALUES } from "@/lib/validators/generic-profile"
 
@@ -9,7 +10,8 @@ import { GENERIC_LEVEL_LABEL, GENERIC_LEVEL_VALUES } from "@/lib/validators/gene
 export const dynamic = "force-dynamic"
 
 export default async function AlumnosGenericosPage() {
-  const profiles = await genericProfileService.getAll()
+  const user = await requireCoachAuth()
+  const profiles = await genericProfileService.getAll(user.id)
   const profileByLevel = new Map(profiles.map((p) => [p.level, p]))
 
   return (

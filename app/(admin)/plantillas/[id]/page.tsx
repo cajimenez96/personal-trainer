@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { TemplateBuilder, type TemplateInitialValues } from "@/components/admin/template-builder"
 import { DuplicateTemplateButton } from "@/components/admin/duplicate-template-button"
 import { FlashToast } from "@/components/admin/flash-toast"
+import { requireCoachAuth } from "@/lib/auth"
 import { exerciseService } from "@/lib/services/exercise.service"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 
@@ -17,15 +18,16 @@ export default async function PlantillaDetallePage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const user = await requireCoachAuth()
   const { id } = await params
 
   const [template, exercises, assignmentCount] = await Promise.all([
     routineTemplateService.getById(id),
-    exerciseService.list({}),
+    exerciseService.list({ trainerId: user.id }),
     routineTemplateService.countAssignments(id),
   ])
 
-  if (!template) notFound()
+  if (!template || template.trainerId !== user.id) notFound()
 
   const initial: TemplateInitialValues = {
     name: template.name,

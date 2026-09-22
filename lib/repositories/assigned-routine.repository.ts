@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getDefaultTrainerId } from "@/lib/tenant"
 import type {
   AdherenceStat,
   AssignedRoutineRaw,
@@ -108,16 +109,26 @@ export class PrismaAssignedRoutineRepository implements IAssignedRoutineReposito
     }
   }
 
-  countActive() {
-    return db.assignedRoutine.count({ where: { status: "active" } })
+  async countActive(trainerId?: string) {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
+    return db.assignedRoutine.count({
+      where: {
+        status: "active",
+        student: { trainerId: effectiveTrainerId },
+      },
+    })
   }
 
   // Aproximación por volumen, no por calendario: no sabemos qué día de la
   // semana corresponde a qué día de la plantilla, así que "esperadas" es
   // (días de la plantilla) × (semanas transcurridas desde la asignación).
-  async findAdherenceStats(): Promise<AdherenceStat[]> {
+  async findAdherenceStats(trainerId?: string): Promise<AdherenceStat[]> {
+    const effectiveTrainerId = trainerId ?? (await getDefaultTrainerId())
     const activeRoutines = await db.assignedRoutine.findMany({
-      where: { status: "active", student: { isActive: true } },
+      where: {
+        status: "active",
+        student: { isActive: true, trainerId: effectiveTrainerId },
+      },
       include: {
         student: { select: { id: true, firstName: true, lastName: true } },
         template: { select: { trainingDays: { select: { id: true } } } },
