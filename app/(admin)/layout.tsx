@@ -1,5 +1,5 @@
 import { signOut } from "@/lib/auth";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import {
   SidebarInset,
   SidebarProvider,
@@ -20,7 +20,7 @@ export default function AdminLayout({
 
   return (
     <SidebarProvider>
-      <AdminSidebar signOutAction={handleSignOut} />
+      <AppSidebar role="COACH" signOutAction={handleSignOut} />
       <SidebarInset className="bg-background flex flex-col min-h-screen">
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:backdrop-blur-xs">
           <SidebarTrigger className="-ml-1 text-foreground" />

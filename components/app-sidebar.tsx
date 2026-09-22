@@ -7,8 +7,13 @@ import {
   LayoutDashboard,
   Users,
   Dumbbell,
+  Layers,
   LogOut,
+  UserCog,
+  CreditCard,
+  Settings,
   ShieldAlert,
+  type LucideIcon,
 } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import {
@@ -25,7 +30,25 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-const SUPERADMIN_NAV_LINKS = [
+export type SidebarRole = "COACH" | "SUPERADMIN";
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+const COACH_NAV_LINKS: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/alumnos", label: "Alumnos", icon: Users },
+  { href: "/planes", label: "Planes", icon: CreditCard },
+  { href: "/alumnos-genericos", label: "Genéricos", icon: UserCog },
+  { href: "/ejercicios", label: "Ejercicios", icon: Dumbbell },
+  { href: "/plantillas", label: "Plantillas", icon: Layers },
+  { href: "/configuracion", label: "Configuración", icon: Settings },
+];
+
+const SUPERADMIN_NAV_LINKS: NavItem[] = [
   { href: "/superadmin", label: "Dashboard SaaS", icon: LayoutDashboard },
   { href: "/superadmin/coaches", label: "Profesores / Tenants", icon: Users },
   {
@@ -35,43 +58,64 @@ const SUPERADMIN_NAV_LINKS = [
   },
 ];
 
-export function SuperAdminSidebar({
-  signOutAction,
-}: {
+interface AppSidebarProps {
+  role: SidebarRole;
   signOutAction: () => Promise<void>;
-}) {
+}
+
+export function AppSidebar({ role, signOutAction }: AppSidebarProps) {
   const pathname = usePathname();
+
+  const isSuperAdmin = role === "SUPERADMIN";
+  const links = isSuperAdmin ? SUPERADMIN_NAV_LINKS : COACH_NAV_LINKS;
+  const homeHref = isSuperAdmin ? "/superadmin" : "/dashboard";
+  const groupLabel = isSuperAdmin
+    ? "Gestión Plataforma SaaS"
+    : "Gestión Coach";
 
   return (
     <Sidebar
       collapsible="icon"
       className="border-r border-sidebar-border bg-sidebar"
     >
-      {/* Header with Brand Logo and Superadmin Badge */}
+      {/* Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <Link
-          href="/superadmin"
-          className="flex flex-col gap-2 overflow-hidden group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"
+          href={homeHref}
+          className={`flex overflow-hidden group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center ${
+            isSuperAdmin ? "flex-col gap-2" : "items-center gap-3"
+          }`}
         >
+          {/* Collapsed Icon */}
           <div className="flex shrink-0 items-center justify-center group-data-[collapsible=icon]:block hidden">
-            <ShieldAlert className="size-5 text-primary" />
+            {isSuperAdmin ? (
+              <ShieldAlert className="size-5 text-primary" />
+            ) : (
+              <Dumbbell className="size-6 text-primary" />
+            )}
           </div>
+
+          {/* Expanded Logo */}
           <div className="group-data-[collapsible=icon]:hidden">
             <Image
               src={siteConfig.branding.logoNavbar}
-              alt={`${siteConfig.name} — SuperAdmin`}
-              width={180}
+              alt={`${siteConfig.name} — ${isSuperAdmin ? "SuperAdmin" : "Panel"}`}
+              width={isSuperAdmin ? 180 : 190}
               height={70}
               priority
               className="h-8 w-auto object-contain"
             />
           </div>
-          <div className="group-data-[collapsible=icon]:hidden md:mx-auto">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/40">
-              <ShieldAlert className="size-3" />
-              SUPERADMIN PANEL
-            </span>
-          </div>
+
+          {/* Superadmin Badge */}
+          {isSuperAdmin && (
+            <div className="group-data-[collapsible=icon]:hidden md:mx-auto">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/40">
+                <ShieldAlert className="size-3" />
+                SUPERADMIN PANEL
+              </span>
+            </div>
+          )}
         </Link>
       </SidebarHeader>
 
@@ -79,17 +123,17 @@ export function SuperAdminSidebar({
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70 group-data-[collapsible=icon]:hidden">
-            Gestión Plataforma SaaS
+            {groupLabel}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
-              {SUPERADMIN_NAV_LINKS.map((link) => {
+              {links.map((link) => {
                 const Icon = link.icon;
                 const isActive =
                   pathname === link.href ||
-                  (link.href !== "/superadmin" &&
+                  (link.href !== homeHref &&
                     pathname.startsWith(`${link.href}/`)) ||
-                  (link.href === "/superadmin" && pathname === "/superadmin");
+                  (link.href === homeHref && pathname === homeHref);
 
                 return (
                   <SidebarMenuItem key={link.href}>
@@ -104,7 +148,9 @@ export function SuperAdminSidebar({
                       }`}
                     >
                       <Icon
-                        className={`size-4.5 shrink-0 ${isActive ? "text-primary" : ""}`}
+                        className={`size-4.5 shrink-0 ${
+                          isActive ? "text-primary" : ""
+                        }`}
                       />
                       <span>{link.label}</span>
                     </SidebarMenuButton>

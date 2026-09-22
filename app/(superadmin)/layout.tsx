@@ -1,5 +1,5 @@
 import { signOut, requireSuperAdminAuth } from "@/lib/auth";
-import { SuperAdminSidebar } from "@/components/superadmin/superadmin-sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import {
   SidebarInset,
   SidebarProvider,
@@ -24,7 +24,7 @@ export default async function SuperAdminLayout({
 
   return (
     <SidebarProvider>
-      <SuperAdminSidebar signOutAction={handleSignOut} />
+      <AppSidebar role="SUPERADMIN" signOutAction={handleSignOut} />
       <SidebarInset className="bg-background flex flex-col min-h-screen">
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:backdrop-blur-xs">
           <SidebarTrigger className="-ml-1 text-foreground" />
