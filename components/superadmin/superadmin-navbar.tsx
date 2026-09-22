@@ -52,10 +52,6 @@ export function SuperAdminNavbar({
               priority
             />
           </Link>
-          {/* <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/40">
-            <ShieldAlert className="size-3.5" />
-            SUPERADMIN
-          </span> */}
         </div>
 
         {/* Desktop Navigation */}
@@ -103,8 +99,8 @@ export function SuperAdminNavbar({
       {/* Mobile Drawer */}
       {isOpen && (
         <div className="mt-3 border-t border-white/10 pb-4 pt-3 md:hidden">
-          <div className="mb-2 px-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/40">
+          <div className="mx-auto">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/40 ">
               <ShieldAlert className="size-3.5" />
               SUPERADMIN PANEL
             </span>

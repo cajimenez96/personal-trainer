@@ -43,7 +43,10 @@ export function SuperAdminSidebar({
   const pathname = usePathname();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-sidebar-border bg-sidebar"
+    >
       {/* Header with Brand Logo and Superadmin Badge */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <Link
@@ -51,7 +54,7 @@ export function SuperAdminSidebar({
           className="flex flex-col gap-2 overflow-hidden group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"
         >
           <div className="flex shrink-0 items-center justify-center group-data-[collapsible=icon]:block hidden">
-            <ShieldAlert className="size-6 text-primary" />
+            <ShieldAlert className="size-5 text-primary" />
           </div>
           <div className="group-data-[collapsible=icon]:hidden">
             <Image
@@ -63,7 +66,7 @@ export function SuperAdminSidebar({
               className="h-8 w-auto object-contain"
             />
           </div>
-          <div className="group-data-[collapsible=icon]:hidden">
+          <div className="group-data-[collapsible=icon]:hidden md:mx-auto">
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/40">
               <ShieldAlert className="size-3" />
               SUPERADMIN PANEL
@@ -73,7 +76,7 @@ export function SuperAdminSidebar({
       </SidebarHeader>
 
       {/* Main Navigation Links */}
-      <SidebarContent className="p-2">
+      <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70 group-data-[collapsible=icon]:hidden">
             Gestión Plataforma SaaS
@@ -84,7 +87,8 @@ export function SuperAdminSidebar({
                 const Icon = link.icon;
                 const isActive =
                   pathname === link.href ||
-                  (link.href !== "/superadmin" && pathname.startsWith(`${link.href}/`)) ||
+                  (link.href !== "/superadmin" &&
+                    pathname.startsWith(`${link.href}/`)) ||
                   (link.href === "/superadmin" && pathname === "/superadmin");
 
                 return (
@@ -99,7 +103,9 @@ export function SuperAdminSidebar({
                           : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                       }`}
                     >
-                      <Icon className={`size-4.5 shrink-0 ${isActive ? "text-primary" : ""}`} />
+                      <Icon
+                        className={`size-4.5 shrink-0 ${isActive ? "text-primary" : ""}`}
+                      />
                       <span>{link.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

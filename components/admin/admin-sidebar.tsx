@@ -46,7 +46,10 @@ export function AdminSidebar({
   const pathname = usePathname();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-sidebar-border bg-sidebar"
+    >
       {/* Header with Brand Logo */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <Link
@@ -70,7 +73,7 @@ export function AdminSidebar({
       </SidebarHeader>
 
       {/* Main Navigation Links */}
-      <SidebarContent className="p-2">
+      <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70 group-data-[collapsible=icon]:hidden">
             Gestión Coach
@@ -81,7 +84,8 @@ export function AdminSidebar({
                 const Icon = link.icon;
                 const isActive =
                   pathname === link.href ||
-                  (link.href !== "/dashboard" && pathname.startsWith(`${link.href}/`)) ||
+                  (link.href !== "/dashboard" &&
+                    pathname.startsWith(`${link.href}/`)) ||
                   (link.href === "/dashboard" && pathname === "/dashboard");
 
                 return (
@@ -96,7 +100,9 @@ export function AdminSidebar({
                           : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                       }`}
                     >
-                      <Icon className={`size-4.5 shrink-0 ${isActive ? "text-primary" : ""}`} />
+                      <Icon
+                        className={`size-4.5 shrink-0 ${isActive ? "text-primary" : ""}`}
+                      />
                       <span>{link.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
