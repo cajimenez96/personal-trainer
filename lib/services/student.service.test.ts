@@ -51,6 +51,8 @@ class FakeStudentRepository implements IStudentRepository {
       membershipStartsAt: data.membershipStartsAt ?? null,
       paymentExpiresAt: data.paymentExpiresAt ?? null,
       accessOverride: data.accessOverride ?? "auto",
+      height: data.height ?? null,
+      age: data.age ?? null,
       healthNotes: data.healthNotes ?? null,
       isActive: true,
       createdAt: new Date(),
@@ -198,5 +200,22 @@ describe("StudentService Multi-tenant Isolation", () => {
 
     // Reactivating s1 should now exceed maxStudents (2)
     await expect(service.reactivate(s1.id)).rejects.toThrow(StudentLimitReachedError)
+  })
+
+  it("creates student with optional height and age", async () => {
+    const repo = new FakeStudentRepository()
+    const service = new StudentService(repo, async () => ({ maxStudents: 10 }))
+
+    const created = await service.create({
+      trainerId: "trainer-1",
+      firstName: "Luciano",
+      lastName: "Castro",
+      dni: "30111222",
+      height: 180,
+      age: 32,
+    })
+
+    expect(created.height).toBe(180)
+    expect(created.age).toBe(32)
   })
 })

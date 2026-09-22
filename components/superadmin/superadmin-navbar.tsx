@@ -78,12 +78,6 @@ export function SuperAdminNavbar({
               </Link>
             );
           })}
-          <Link
-            href="/dashboard"
-            className="text-xs uppercase tracking-wider text-white/50 hover:text-white transition-colors border-l border-white/20 pl-4"
-          >
-            Ir a Panel Coach &rarr;
-          </Link>
         </nav>
 
         {/* Desktop Logout Button */}
@@ -136,12 +130,6 @@ export function SuperAdminNavbar({
                 </Link>
               );
             })}
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/60 hover:bg-white/5 hover:text-white"
-            >
-              Ir a Panel Coach &rarr;
-            </Link>
           </nav>
 
           <div className="mt-4 border-t border-white/10 pt-3">

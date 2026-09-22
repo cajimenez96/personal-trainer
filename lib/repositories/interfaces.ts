@@ -26,6 +26,9 @@ export interface CreateStudentData {
   membershipStartsAt?: Date
   paymentExpiresAt?: Date
   accessOverride?: AccessOverride
+  height?: number | null
+  age?: number | null
+  initialWeightKg?: number | null
   healthNotes?: string
 }
 
@@ -41,6 +44,8 @@ export interface UpdateStudentData {
   membershipStartsAt: Date | null
   paymentExpiresAt: Date | null
   accessOverride?: AccessOverride
+  height?: number | null
+  age?: number | null
   healthNotes: string | null
 }
 

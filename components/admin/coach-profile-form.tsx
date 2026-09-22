@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Save,
   Loader2,
@@ -9,38 +9,38 @@ import {
   Eye,
   Sparkles,
   MessageCircle,
-} from "lucide-react"
-import Link from "next/link"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+} from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   updateCoachProfileSchema,
   type UpdateCoachProfileInput,
-} from "@/lib/validators/coach-profile"
-import { updateCoachProfileAction } from "@/lib/actions/coach-profile.actions"
-import { siteConfig } from "@/lib/config/site"
+} from "@/lib/validators/coach-profile";
+import { updateCoachProfileAction } from "@/lib/actions/coach-profile.actions";
+import { siteConfig } from "@/lib/config/site";
 
 interface CoachProfileFormProps {
   initialData: {
-    name: string
-    email: string
-    slug: string
-    businessName: string | null
-    headline: string | null
-    tagline: string | null
-    logoUrl: string | null
-    heroImageUrl: string | null
-    whatsappNumber: string | null
-    instagramUrl: string | null
-  }
+    name: string;
+    email: string;
+    slug: string;
+    businessName: string | null;
+    headline: string | null;
+    tagline: string | null;
+    logoUrl: string | null;
+    heroImageUrl: string | null;
+    whatsappNumber: string | null;
+    instagramUrl: string | null;
+  };
 }
 
 export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [values, setValues] = useState<UpdateCoachProfileInput>({
     name: initialData.name || "",
     businessName: initialData.businessName || "",
@@ -50,71 +50,69 @@ export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
     heroImageUrl: initialData.heroImageUrl || "",
     whatsappNumber: initialData.whatsappNumber || "",
     instagramUrl: initialData.instagramUrl || "",
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value } = e.target
-    setValues((prev) => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setValues((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
-        const next = { ...prev }
-        delete next[name]
-        return next
-      })
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
     }
-  }
+  };
 
   const previewDisplayName =
-    values.businessName?.trim() || values.name?.trim() || siteConfig.name
+    values.businessName?.trim() || values.name?.trim() || siteConfig.name;
   const previewHeadline =
-    values.headline?.trim() || siteConfig.trainer.headline
-  const previewTagline =
-    values.tagline?.trim() || siteConfig.trainer.tagline
-  const previewLogo =
-    values.logoUrl?.trim() || siteConfig.branding.logoHome
+    values.headline?.trim() || siteConfig.trainer.headline;
+  const previewTagline = values.tagline?.trim() || siteConfig.trainer.tagline;
+  const previewLogo = values.logoUrl?.trim() || siteConfig.branding.logoHome;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const parsed = updateCoachProfileSchema.safeParse(values)
+    const parsed = updateCoachProfileSchema.safeParse(values);
     if (!parsed.success) {
-      const nextErrors: Record<string, string> = {}
+      const nextErrors: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
-        const key = issue.path[0]
+        const key = issue.path[0];
         if (typeof key === "string" && !nextErrors[key]) {
-          nextErrors[key] = issue.message
+          nextErrors[key] = issue.message;
         }
       }
-      setErrors(nextErrors)
-      return
+      setErrors(nextErrors);
+      return;
     }
 
-    setErrors({})
-    setIsSubmitting(true)
+    setErrors({});
+    setIsSubmitting(true);
 
     try {
-      const res = await updateCoachProfileAction(parsed.data)
+      const res = await updateCoachProfileAction(parsed.data);
       if (res.success) {
-        toast.success("Configuración de marca guardada con éxito")
+        toast.success("Configuración de marca guardada con éxito");
       } else {
-        toast.error(res.error || "Error al guardar configuración")
+        toast.error(res.error || "Error al guardar configuración");
         if (res.fieldErrors) {
-          const mapped: Record<string, string> = {}
+          const mapped: Record<string, string> = {};
           for (const [k, v] of Object.entries(res.fieldErrors)) {
-            if (v && v.length > 0) mapped[k] = v[0]
+            if (v && v.length > 0) mapped[k] = v[0];
           }
-          setErrors(mapped)
+          setErrors(mapped);
         }
       }
     } catch {
-      toast.error("Ocurrió un error inesperado al guardar")
+      toast.error("Ocurrió un error inesperado al guardar");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -162,7 +160,6 @@ export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
                     name="name"
                     value={values.name}
                     onChange={handleChange}
-                    placeholder="Ej: Santiago Ramón"
                     disabled={isSubmitting}
                   />
                   {errors.name && (
@@ -298,13 +295,14 @@ export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="instagramUrl">Usuario o Link de Instagram</Label>
+                  <Label htmlFor="instagramUrl">
+                    Usuario o Link de Instagram
+                  </Label>
                   <Input
                     id="instagramUrl"
                     name="instagramUrl"
                     value={values.instagramUrl ?? ""}
                     onChange={handleChange}
-                    placeholder="Ej: santiago.ramon"
                     disabled={isSubmitting}
                   />
                   {errors.instagramUrl && (
@@ -368,7 +366,7 @@ export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
                 className="max-h-14 max-w-full object-contain"
                 onError={(e) => {
                   // Fallback if custom URL fails
-                  e.currentTarget.src = siteConfig.branding.logoHome
+                  e.currentTarget.src = siteConfig.branding.logoHome;
                 }}
               />
             </div>
@@ -416,5 +414,5 @@ export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
         </p>
       </div>
     </div>
-  )
+  );
 }

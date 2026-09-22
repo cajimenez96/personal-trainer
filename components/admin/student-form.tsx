@@ -203,6 +203,36 @@ export function StudentForm({
           value={getValue("paymentExpiresAt")}
           onChange={handleChange}
         />
+        <Field
+          label="Altura (cm, opcional)"
+          name="height"
+          type="number"
+          error={errors.height}
+          value={getValue("height")}
+          onChange={handleChange}
+          placeholder="Ej: 175"
+        />
+        <Field
+          label="Edad (opcional)"
+          name="age"
+          type="number"
+          error={errors.age}
+          value={getValue("age")}
+          onChange={handleChange}
+          placeholder="Ej: 28"
+        />
+        {mode === "create" && (
+          <Field
+            label="Peso inicial (kg, opcional)"
+            name="initialWeightKg"
+            type="number"
+            step="0.1"
+            error={errors.initialWeightKg}
+            value={getValue("initialWeightKg")}
+            onChange={handleChange}
+            placeholder="Ej: 75.5"
+          />
+        )}
 
         <SelectField
           label="Objetivo"
@@ -279,6 +309,7 @@ function Field({
   onChange,
   required,
   type = "text",
+  step,
   inputMode,
   placeholder,
 }: {
@@ -289,6 +320,7 @@ function Field({
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   required?: boolean
   type?: string
+  step?: string
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]
   placeholder?: string
 }) {
@@ -302,6 +334,7 @@ function Field({
         id={name}
         name={name}
         type={type}
+        step={step}
         required={required}
         value={value ?? ""}
         onChange={onChange}

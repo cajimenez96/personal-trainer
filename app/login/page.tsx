@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { auth, signIn } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { siteConfig } from "@/lib/config/site";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,8 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { LoginForm } from "@/components/login/login-form";
 
 export const dynamic = "force-dynamic";
 
@@ -93,49 +91,7 @@ export default async function LoginPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={login} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  autoComplete="email"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
-              {error === "InactiveAccount" ? (
-                <p
-                  role="alert"
-                  className="text-sm text-destructive text-center"
-                >
-                  Tu cuenta se encuentra suspendida o inactiva. Contactá al
-                  administrador de la plataforma.
-                </p>
-              ) : error ? (
-                <p
-                  role="alert"
-                  className="text-sm text-destructive text-center"
-                >
-                  Email o contraseña incorrectos.
-                </p>
-              ) : null}
-              <Button type="submit" size="lg" className="w-full">
-                Ingresar
-              </Button>
-            </form>
+            <LoginForm action={login} error={error} />
           </CardContent>
         </Card>
       </div>

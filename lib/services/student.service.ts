@@ -1,6 +1,8 @@
 import { Prisma } from "@/app/generated/prisma/client"
 import { db } from "@/lib/db"
 import { getDefaultTrainerId } from "@/lib/tenant"
+import { bodyWeightService } from "@/lib/services/body-weight.service"
+import { todayUTC } from "@/lib/services/progress-log.service"
 import type {
   CreateStudentData,
   ExpiringStudentDTO,
@@ -218,7 +220,15 @@ export class StudentService {
     }
 
     try {
-      return await this.studentRepo.create(data)
+      const created = await this.studentRepo.create(data)
+      if (data.initialWeightKg && data.initialWeightKg > 0) {
+        await bodyWeightService.log({
+          studentId: created.id,
+          loggedDate: todayUTC(),
+          weightKg: data.initialWeightKg,
+        })
+      }
+      return created
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&

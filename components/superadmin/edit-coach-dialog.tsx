@@ -311,7 +311,6 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
                 name="instagramUrl"
                 value={values.instagramUrl ?? ""}
                 onChange={handleChange}
-                placeholder="Ej: santiagocoach"
                 disabled={isSubmitting}
               />
               {errors.instagramUrl && (

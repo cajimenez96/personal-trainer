@@ -116,9 +116,10 @@ export class PrismaStudentRepository implements IStudentRepository {
 
   async create(data: CreateStudentData) {
     const effectiveTrainerId = data.trainerId ?? (await getDefaultTrainerId())
+    const { initialWeightKg: _, ...studentData } = data
     return db.student.create({
       data: {
-        ...data,
+        ...studentData,
         trainerId: effectiveTrainerId,
       },
     })

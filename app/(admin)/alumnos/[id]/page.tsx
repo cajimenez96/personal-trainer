@@ -76,6 +76,8 @@ export default async function AlumnoDetallePage({
     membershipStartsAt: toDateInputValue(student.membershipStartsAt),
     paymentExpiresAt: toDateInputValue(student.paymentExpiresAt),
     accessOverride: student.accessOverride ?? "auto",
+    height: student.height ? String(student.height) : "",
+    age: student.age ? String(student.age) : "",
     healthNotes: student.healthNotes ?? "",
   }
 

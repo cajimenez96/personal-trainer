@@ -98,6 +98,8 @@ export async function updateStudentAction(
     membershipStartsAt,
     paymentExpiresAt,
     accessOverride,
+    height,
+    age,
     healthNotes,
   } = parsed.data
 
@@ -113,6 +115,8 @@ export async function updateStudentAction(
     membershipStartsAt: membershipStartsAt ?? null,
     paymentExpiresAt: paymentExpiresAt ?? null,
     accessOverride: accessOverride ?? undefined,
+    height: height ?? null,
+    age: age ?? null,
     healthNotes: healthNotes ?? null,
   })
 

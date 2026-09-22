@@ -13,6 +13,7 @@ import { ExerciseProgress } from "@/components/portal/exercise-progress"
 import { RoutinePortalHeader } from "@/components/portal/routine-portal-header"
 import { RoutineDayAccordion } from "@/components/portal/routine-day-accordion"
 import { NoRoutineAssignedMessage } from "@/components/portal/no-routine-assigned-message"
+import { StudentProfileDialog } from "@/components/portal/student-profile-dialog"
 
 export const dynamic = "force-dynamic"
 
@@ -66,11 +67,13 @@ export default async function CoachStudentRoutinePage({
   const routine = await assignedRoutineService.getDetail(activeRoutine.id)
   if (!routine) redirect(`/${coachSlug}?error=not-found`)
 
-  const [todayProgress, todayBodyWeight] = await Promise.all([
+  const [todayProgress, todayBodyWeight, weightHistory] = await Promise.all([
     progressLogService.getForToday(student.id),
     bodyWeightService.getForToday(student.id),
+    bodyWeightService.history(student.id),
   ])
   const progressByBlock = new Map(todayProgress.map((p) => [p.exerciseBlockId, p]))
+  const latestWeight = weightHistory[0] ?? null
 
   return (
     <div className="min-h-screen bg-[#efefef] pb-12 dark:bg-background">
@@ -78,6 +81,17 @@ export default async function CoachStudentRoutinePage({
         greetingLabel="Hola,"
         title={`${student.firstName} ${student.lastName}`}
         subtitle={routine.templateName}
+        titleActionSlot={
+          <StudentProfileDialog
+            dni={parsed.data}
+            coachSlug={coachSlug}
+            studentName={student.firstName}
+            initialHeight={student.height}
+            initialAge={student.age}
+            latestWeightKg={latestWeight?.weightKg ?? todayBodyWeight?.weightKg ?? null}
+            latestWeightDate={latestWeight?.loggedDate ?? null}
+          />
+        }
         trailingSlot={
           <BodyWeightInput dni={parsed.data} initialWeightKg={todayBodyWeight?.weightKg ?? null} />
         }

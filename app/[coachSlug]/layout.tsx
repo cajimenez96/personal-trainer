@@ -33,6 +33,8 @@ export async function generateMetadata({
   }
 }
 
+import { Toaster } from "@/components/ui/sonner"
+
 export default async function CoachPortalLayout({
   children,
   params,
@@ -63,5 +65,10 @@ export default async function CoachPortalLayout({
     )
   }
 
-  return <>{children}</>
+  return (
+    <>
+      {children}
+      <Toaster />
+    </>
+  )
 }

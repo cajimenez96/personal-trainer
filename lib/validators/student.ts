@@ -56,12 +56,24 @@ export const createStudentSchema = z.object({
   ),
   paymentExpiresAt: z.preprocess(emptyToUndefined, z.coerce.date().optional()),
   accessOverride: z.preprocess(emptyToUndefined, z.enum(ACCESS_OVERRIDE_VALUES).optional()),
+  height: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().min(50, "Altura mínima 50 cm").max(260, "Altura máxima 260 cm").optional(),
+  ),
+  age: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().min(5, "Edad mínima 5 años").max(120, "Edad máxima 120 años").optional(),
+  ),
+  initialWeightKg: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().positive("El peso debe ser mayor a 0").max(500, "Peso máximo 500 kg").optional(),
+  ),
   healthNotes: z.preprocess(emptyToUndefined, z.string().trim().optional()),
 })
 
 export type CreateStudentInput = z.infer<typeof createStudentSchema>
 
 // DNI is the public unique identifier — never editable once the student exists.
-export const updateStudentSchema = createStudentSchema.omit({ dni: true })
+export const updateStudentSchema = createStudentSchema.omit({ dni: true, initialWeightKg: true })
 
 export type UpdateStudentInput = z.infer<typeof updateStudentSchema>
