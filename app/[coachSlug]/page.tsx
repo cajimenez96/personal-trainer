@@ -61,9 +61,9 @@ export default async function CoachPortalHomePage({
         redirect(`/${coachSlug}/rutina/${dniParsed.data}`)
       }
     } else {
-      const matchedLevel = await genericProfileService.verifyPassword(value, coachId)
-      if (matchedLevel) {
-        redirect(`/${coachSlug}/rutina/generico/${matchedLevel}`)
+      const matchedProfile = await genericProfileService.verifyPassword(value, coachId)
+      if (matchedProfile) {
+        redirect(`/${coachSlug}/rutina/generico/${matchedProfile.id}`)
       }
     }
 
@@ -80,6 +80,7 @@ export default async function CoachPortalHomePage({
           height={210}
           className="w-3xl h-auto object-cover"
           priority
+          unoptimized={logoSrc.startsWith("http")}
         />
         <div className="w-full">
           <p className="mb-2 text-center text-xl font-bold tracking-tight">

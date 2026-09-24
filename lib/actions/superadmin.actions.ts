@@ -46,6 +46,7 @@ export async function createCoachAction(
       whatsappNumber,
       maxPlans,
       maxStudents,
+      maxGenericProfiles,
       membershipExpiresAt,
     } = parsed.data
 
@@ -85,6 +86,7 @@ export async function createCoachAction(
         whatsappNumber: whatsappNumber?.trim() || null,
         maxPlans: maxPlans ?? 1,
         maxStudents: maxStudents ?? 10,
+        maxGenericProfiles: maxGenericProfiles ?? 3,
         membershipExpiresAt: membershipExpiresAt ? new Date(membershipExpiresAt) : null,
         role: "COACH",
         isActive: true,
@@ -141,6 +143,7 @@ export async function updateCoachBySuperAdminAction(
       instagramUrl,
       maxPlans,
       maxStudents,
+      maxGenericProfiles,
       membershipExpiresAt,
     } = parsed.data
 
@@ -189,6 +192,7 @@ export async function updateCoachBySuperAdminAction(
         instagramUrl: instagramUrl?.trim() || null,
         maxPlans: maxPlans ?? 1,
         maxStudents: maxStudents ?? 10,
+        maxGenericProfiles: maxGenericProfiles ?? 3,
         membershipExpiresAt: membershipExpiresAt ? new Date(membershipExpiresAt) : null,
       },
       select: {

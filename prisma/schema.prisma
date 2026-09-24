@@ -70,6 +70,7 @@ model Trainer {
   instagramUrl        String?   @map("instagram_url")
   maxPlans            Int       @default(1) @map("max_plans")
   maxStudents         Int       @default(10) @map("max_students")
+  maxGenericProfiles  Int       @default(3) @map("max_generic_profiles")
   membershipExpiresAt DateTime? @map("membership_expires_at") @db.Date
   isActive            Boolean   @default(true) @map("is_active")
   createdAt           DateTime  @default(now()) @map("created_at")
@@ -291,17 +292,20 @@ model RoutineOverride {
 // ─────────────────────────────────────────────
 
 model GenericProfile {
-  id                 String       @id @default(uuid())
-  trainerId          String       @map("trainer_id")
-  level              GenericLevel
-  passwordHash       String       @map("password_hash")
-  assignedTemplateId String?      @map("assigned_template_id")
-  updatedAt          DateTime     @updatedAt @map("updated_at")
+  id                 String           @id @default(uuid())
+  trainerId          String           @map("trainer_id")
+  name               String
+  level              GenericLevel?
+  passwordHash       String           @map("password_hash")
+  assignedTemplateId String?          @map("assigned_template_id")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
 
   trainer          Trainer          @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   assignedTemplate RoutineTemplate? @relation(fields: [assignedTemplateId], references: [id], onDelete: SetNull)
 
-  @@unique([trainerId, level], name: "unique_generic_level_per_trainer")
+  @@unique([trainerId, name], name: "unique_generic_profile_name_per_trainer")
+  @@index([trainerId], name: "idx_generic_profiles_trainer")
   @@map("generic_profiles")
 }
 

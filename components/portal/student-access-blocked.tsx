@@ -54,6 +54,7 @@ export function StudentAccessBlocked({
           height={180}
           className="w-2xs h-auto object-contain"
           priority
+          unoptimized={displayLogo.startsWith("http")}
         />
 
         <div className="flex w-full flex-col items-center rounded-2xl border border-destructive/20 bg-destructive/5 p-6 shadow-sm">

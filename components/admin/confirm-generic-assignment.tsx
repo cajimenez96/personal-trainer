@@ -4,14 +4,15 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { assignGenericTemplateAction } from "@/lib/actions/generic-profile.actions"
-import type { GenericLevelValue } from "@/lib/validators/generic-profile"
 
 export function ConfirmGenericAssignment({
-  level,
+  profileId,
+  profileName,
   templateId,
   templateName,
 }: {
-  level: GenericLevelValue
+  profileId: string
+  profileName: string
   templateId: string
   templateName: string
 }) {
@@ -22,7 +23,7 @@ export function ConfirmGenericAssignment({
   async function handleConfirm() {
     setPending(true)
     setError(null)
-    const result = await assignGenericTemplateAction({ level, templateId })
+    const result = await assignGenericTemplateAction({ profileId, templateId })
     if (!result.ok) {
       setError(result.error ?? "No se pudo asignar la rutina.")
       setPending(false)
@@ -34,7 +35,7 @@ export function ConfirmGenericAssignment({
   return (
     <div className="flex flex-col gap-3">
       <p>
-        Vas a asignar <strong>{templateName}</strong> a este nivel.
+        Vas a asignar <strong>{templateName}</strong> a <strong>{profileName}</strong>.
       </p>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button onClick={handleConfirm} disabled={pending}>

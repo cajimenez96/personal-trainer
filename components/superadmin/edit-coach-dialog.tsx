@@ -37,6 +37,7 @@ interface EditCoachDialogProps {
     instagramUrl: string | null;
     maxPlans?: number;
     maxStudents?: number;
+    maxGenericProfiles?: number;
     membershipExpiresAt?: Date | string | null;
   };
 }
@@ -58,6 +59,7 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
     instagramUrl: coach.instagramUrl || "",
     maxPlans: coach.maxPlans ?? 1,
     maxStudents: coach.maxStudents ?? 10,
+    maxGenericProfiles: coach.maxGenericProfiles ?? 3,
     membershipExpiresAt: coach.membershipExpiresAt
       ? new Date(coach.membershipExpiresAt).toISOString().split("T")[0]
       : "",
@@ -322,7 +324,7 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
           </div>
 
           {/* Límites SaaS y Vencimiento */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-border/50 pt-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 border-t border-border/50 pt-3">
             <div className="space-y-1.5">
               <Label htmlFor="edit-maxStudents">Cupo Alumnos *</Label>
               <Input
@@ -354,6 +356,23 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
               />
               {errors.maxPlans && (
                 <p className="text-xs text-destructive">{errors.maxPlans}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-maxGenericProfiles">Cupo Genéricos *</Label>
+              <Input
+                id="edit-maxGenericProfiles"
+                name="maxGenericProfiles"
+                type="number"
+                min={0}
+                value={values.maxGenericProfiles ?? 3}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                required
+              />
+              {errors.maxGenericProfiles && (
+                <p className="text-xs text-destructive">{errors.maxGenericProfiles}</p>
               )}
             </div>
 

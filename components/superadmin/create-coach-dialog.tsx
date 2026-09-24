@@ -33,6 +33,7 @@ export function CreateCoachDialog() {
     whatsappNumber: "",
     maxPlans: 1,
     maxStudents: 10,
+    maxGenericProfiles: 3,
     membershipExpiresAt: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -101,6 +102,7 @@ export function CreateCoachDialog() {
           whatsappNumber: "",
           maxPlans: 1,
           maxStudents: 10,
+          maxGenericProfiles: 3,
           membershipExpiresAt: "",
         });
         setOpen(false);
@@ -252,7 +254,7 @@ export function CreateCoachDialog() {
           </div>
 
           {/* Límites SaaS y Vencimiento */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-border/50 pt-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 border-t border-border/50 pt-3">
             <div className="space-y-1.5">
               <Label htmlFor="maxStudents">Cupo Alumnos *</Label>
               <Input
@@ -284,6 +286,25 @@ export function CreateCoachDialog() {
               />
               {errors.maxPlans && (
                 <p className="text-xs text-destructive">{errors.maxPlans}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="maxGenericProfiles">Genéricos *</Label>
+              <Input
+                id="maxGenericProfiles"
+                name="maxGenericProfiles"
+                type="number"
+                min={0}
+                value={values.maxGenericProfiles ?? 3}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                required
+              />
+              {errors.maxGenericProfiles && (
+                <p className="text-xs text-destructive">
+                  {errors.maxGenericProfiles}
+                </p>
               )}
             </div>
 

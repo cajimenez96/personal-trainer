@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireSuperAdminAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Users, Dumbbell, ShieldAlert } from "lucide-react";
+import { ExternalLink, ShieldAlert } from "lucide-react";
 import { CreateCoachDialog } from "@/components/superadmin/create-coach-dialog";
 import { EditCoachDialog } from "@/components/superadmin/edit-coach-dialog";
 import { CoachStatusToggle } from "@/components/superadmin/coach-status-toggle";
@@ -22,6 +22,7 @@ export default async function SuperAdminCoachesPage() {
           students: true,
           routineTemplates: true,
           plans: true,
+          genericProfiles: true,
         },
       },
     },
@@ -64,6 +65,7 @@ export default async function SuperAdminCoachesPage() {
                   <th className="py-3 px-4">Slug Portal</th>
                   <th className="py-3 px-4">Rol</th>
                   <th className="py-3 px-4 text-center">Cupo Alumnos</th>
+                  <th className="py-3 px-4 text-center">Genéricos</th>
                   <th className="py-3 px-4 text-center">Cupo Planes</th>
                   <th className="py-3 px-4 text-center">Alta</th>
                   <th className="py-3 px-4 text-center">Vencimiento</th>
@@ -124,6 +126,16 @@ export default async function SuperAdminCoachesPage() {
                         <span className="text-xs text-muted-foreground">
                           {" "}
                           / {coach.maxStudents}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-center">
+                        <span className="font-bold text-foreground">
+                          {coach._count.genericProfiles}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {" "}
+                          / {coach.maxGenericProfiles}
                         </span>
                       </td>
 

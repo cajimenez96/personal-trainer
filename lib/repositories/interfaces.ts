@@ -373,18 +373,38 @@ export interface IProgressLogRepository {
 export type GenericProfileWithTemplate = {
   id: string
   trainerId: string
-  level: GenericLevel
+  name: string
+  level?: GenericLevel | null
   passwordHash: string
   assignedTemplateId: string | null
   assignedTemplate: { id: string; name: string } | null
+  createdAt?: Date
   updatedAt: Date
+}
+
+export interface CreateGenericProfileData {
+  name: string
+  passwordHash: string
+  trainerId: string
+  assignedTemplateId?: string | null
+}
+
+export interface UpdateGenericProfileData {
+  name?: string
+  passwordHash?: string
+  assignedTemplateId?: string | null
 }
 
 export interface IGenericProfileRepository {
   findAll(trainerId?: string): Promise<GenericProfileWithTemplate[]>
+  findById(id: string, trainerId?: string): Promise<GenericProfileWithTemplate | null>
   findByLevel(level: GenericLevel, trainerId?: string): Promise<GenericProfileWithTemplate | null>
-  assignTemplate(level: GenericLevel, templateId: string | null, trainerId?: string): Promise<GenericProfileWithTemplate>
-  updatePasswordHash(level: GenericLevel, passwordHash: string, trainerId?: string): Promise<void>
+  create(data: CreateGenericProfileData): Promise<GenericProfileWithTemplate>
+  update(id: string, data: UpdateGenericProfileData, trainerId?: string): Promise<GenericProfileWithTemplate>
+  delete(id: string, trainerId?: string): Promise<void>
+  count(trainerId?: string): Promise<number>
+  assignTemplate(levelOrId: string, templateId: string | null, trainerId?: string): Promise<GenericProfileWithTemplate>
+  updatePasswordHash(levelOrId: string, passwordHash: string, trainerId?: string): Promise<void>
 }
 
 // ─────────────────────────────────────────────

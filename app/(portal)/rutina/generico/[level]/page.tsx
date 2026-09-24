@@ -3,7 +3,7 @@ import { genericProfileService } from "@/lib/services/generic-profile.service"
 import { routineTemplateService } from "@/lib/services/routine-template.service"
 import { exerciseService } from "@/lib/services/exercise.service"
 import { mapTemplateToRoutineDays } from "@/lib/mappers/template-routine.mapper"
-import { GENERIC_LEVEL_LABEL, genericLevelSchema } from "@/lib/validators/generic-profile"
+import { genericLevelSchema } from "@/lib/validators/generic-profile"
 import { RoutinePortalHeader } from "@/components/portal/routine-portal-header"
 import { RoutineDayAccordion } from "@/components/portal/routine-day-accordion"
 import { NoRoutineAssignedMessage } from "@/components/portal/no-routine-assigned-message"
@@ -16,16 +16,23 @@ export default async function RutinaGenericaPage({
 }: {
   params: Promise<{ level: string }>
 }) {
-  const { level: rawLevel } = await params
-  const parsed = genericLevelSchema.safeParse(rawLevel)
-  if (!parsed.success) redirect("/?error=not-found")
+  const { level: rawIdOrLevel } = await params
 
-  const profile = await genericProfileService.getByLevel(parsed.data)
-  const levelLabel = GENERIC_LEVEL_LABEL[parsed.data]
+  let profile = await genericProfileService.getById(rawIdOrLevel)
+  if (!profile) {
+    const parsed = genericLevelSchema.safeParse(rawIdOrLevel)
+    if (parsed.success) {
+      profile = await genericProfileService.getByLevel(parsed.data)
+    }
+  }
 
-  if (!profile?.assignedTemplateId) {
+  if (!profile) redirect("/?error=not-found")
+
+  const displayName = profile.name
+
+  if (!profile.assignedTemplateId) {
     return (
-      <NoRoutineAssignedMessage greetingName={levelLabel} backHref="/" backLabel="Volver al inicio" />
+      <NoRoutineAssignedMessage greetingName={displayName} backHref="/" backLabel="Volver al inicio" />
     )
   }
 
@@ -40,7 +47,7 @@ export default async function RutinaGenericaPage({
 
   return (
     <div className="min-h-screen bg-[#efefef] pb-12 dark:bg-background">
-      <RoutinePortalHeader greetingLabel="Hola," title={levelLabel} subtitle={template.name} />
+      <RoutinePortalHeader greetingLabel="Hola," title={displayName} subtitle={template.name} />
 
       <main className="flex flex-col gap-3 px-3 py-4 sm:px-4">
         {days.length === 0 && (

@@ -5,9 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateGenericPasswordAction } from "@/lib/actions/generic-profile.actions"
-import type { GenericLevelValue } from "@/lib/validators/generic-profile"
 
-export function GenericPasswordForm({ level }: { level: GenericLevelValue }) {
+export function GenericPasswordForm({
+  idOrLevel,
+  placeholder = "Nueva clave",
+}: {
+  idOrLevel: string
+  placeholder?: string
+}) {
   const [password, setPassword] = useState("")
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -15,7 +20,7 @@ export function GenericPasswordForm({ level }: { level: GenericLevelValue }) {
   async function handleSubmit() {
     setPending(true)
     setMessage(null)
-    const result = await updateGenericPasswordAction({ level, password })
+    const result = await updateGenericPasswordAction({ level: idOrLevel, password })
     setMessage(result.ok ? "Clave actualizada." : (result.error ?? "No se pudo actualizar."))
     if (result.ok) setPassword("")
     setPending(false)
@@ -23,19 +28,24 @@ export function GenericPasswordForm({ level }: { level: GenericLevelValue }) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={`password-${level}`} className="text-xs">
-        Nueva clave
+      <Label htmlFor={`password-${idOrLevel}`} className="text-xs">
+        Cambiar clave de acceso
       </Label>
       <div className="flex gap-2">
         <Input
-          id={`password-${level}`}
+          id={`password-${idOrLevel}`}
           type="text"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="olympia.basico"
+          placeholder={placeholder}
           className="h-9"
         />
-        <Button type="button" size="sm" onClick={handleSubmit} disabled={pending || password.length < 8}>
+        <Button
+          type="button"
+          size="sm"
+          onClick={handleSubmit}
+          disabled={pending || password.length < 6}
+        >
           {pending ? "Guardando..." : "Cambiar"}
         </Button>
       </div>

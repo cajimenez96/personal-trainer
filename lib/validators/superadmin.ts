@@ -32,6 +32,11 @@ export const createCoachSchema = z.object({
     .int("Debe ser un número entero")
     .min(1, "Debe permitir al menos 1 alumno")
     .default(10),
+  maxGenericProfiles: z.coerce
+    .number()
+    .int("Debe ser un número entero")
+    .min(0, "Debe ser al menos 0")
+    .default(3),
   membershipExpiresAt: z
     .string()
     .optional()
@@ -94,6 +99,11 @@ export const updateCoachBySuperAdminSchema = z.object({
     .int("Debe ser un número entero")
     .min(1, "Debe permitir al menos 1 alumno")
     .default(10),
+  maxGenericProfiles: z.coerce
+    .number()
+    .int("Debe ser un número entero")
+    .min(0, "Debe ser al menos 0")
+    .default(3),
   membershipExpiresAt: z
     .string()
     .optional()
