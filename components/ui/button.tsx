@@ -1,3 +1,7 @@
+"use client";
+
+import { useFormStatus } from "react-dom";
+import { Loader2 } from "lucide-react";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -43,26 +47,63 @@ const buttonVariants = cva(
   },
 );
 
+export interface ButtonProps
+  extends ButtonPrimitive.Props,
+    VariantProps<typeof buttonVariants> {
+  loading?: boolean;
+}
+
 function Button({
   className,
   variant = "default",
   size = "default",
   nativeButton,
   render,
+  loading,
+  disabled,
+  children,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
+  const { pending } = useFormStatus();
+  const isSubmit = props.type === "submit";
+  const isLoading = loading !== undefined ? loading : (isSubmit && pending);
+  const isDisabled = disabled || isLoading;
+
   return (
     <ButtonPrimitive
       data-slot="button"
+      data-loading={isLoading ? "" : undefined}
       // Base UI expects a real <button> under nativeButton=true (the
       // default). When `render` swaps in something else (e.g. a Next.js
       // <Link>), default nativeButton to false instead of warning on every
       // Button+Link composition in the app.
       nativeButton={nativeButton ?? !render}
       render={render}
+      disabled={isDisabled}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {isLoading ? (
+        <>
+          <Loader2
+            className={cn(
+              "animate-spin",
+              size === "xs" || size === "icon-xs"
+                ? "size-3"
+                : size === "sm" || size === "icon-sm"
+                  ? "size-3.5"
+                  : size === "lg" || size === "icon-lg"
+                    ? "size-5"
+                    : "size-4"
+            )}
+            aria-hidden="true"
+          />
+          <span className="sr-only">Cargando...</span>
+        </>
+      ) : (
+        children
+      )}
+    </ButtonPrimitive>
   );
 }
 

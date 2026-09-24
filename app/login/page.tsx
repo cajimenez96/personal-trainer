@@ -78,24 +78,31 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="h-screen flex justify-center items-center px-2 bg-background">
-      <div>
-        <Card className="w-xs md:w-md border-border">
-          <CardHeader className="flex flex-col items-center text-center">
-            <Image
-              src={siteConfig.branding.logoHome}
-              alt={`${siteConfig.name} Logo`}
-              width={320}
-              height={160}
-              className="max-h-24 w-auto object-contain mb-2"
-              priority
-            />
-            <CardTitle className="text-xl">Acceso a la Plataforma</CardTitle>
-            <CardDescription>
+    <div className="dark min-h-screen flex flex-col justify-center items-center px-4 bg-[#0d0d0d] text-white selection:bg-primary selection:text-white relative overflow-hidden">
+      {/* Subtle ambient brand glow */}
+      <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 h-[450px] w-[650px] rounded-full bg-primary/15 blur-[130px]" />
+
+      <div className="relative w-full max-w-md">
+        <Card className="border border-white/10 bg-[#141414] shadow-2xl backdrop-blur-md rounded-2xl">
+          <CardHeader className="flex flex-col items-center text-center pb-4 pt-6 sm:pt-8">
+            <div className="relative h-16 w-48 flex items-center justify-center mb-3">
+              <Image
+                src={siteConfig.branding.logoHome}
+                alt={`${siteConfig.name} Logo`}
+                width={320}
+                height={160}
+                className="max-h-16 w-auto object-contain"
+                priority
+              />
+            </div>
+            <CardTitle className="font-heading text-2xl font-bold uppercase tracking-tight text-white">
+              Acceso a la Plataforma
+            </CardTitle>
+            <CardDescription className="text-white/60 text-sm mt-1">
               Iniciá sesión como Administrador o Entrenador
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 pb-8 pt-2">
             <LoginForm action={login} error={error} />
           </CardContent>
         </Card>

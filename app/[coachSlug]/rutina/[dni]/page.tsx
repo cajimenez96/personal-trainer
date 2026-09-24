@@ -76,7 +76,7 @@ export default async function CoachStudentRoutinePage({
   const latestWeight = weightHistory[0] ?? null
 
   return (
-    <div className="min-h-screen bg-[#efefef] pb-12 dark:bg-background">
+    <div className="min-h-screen bg-[#0d0d0d] pb-12 text-foreground">
       <RoutinePortalHeader
         greetingLabel="Hola,"
         title={`${student.firstName} ${student.lastName}`}

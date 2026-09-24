@@ -54,10 +54,10 @@ export default async function CoachPortalLayout({
 
   if (!coach.isActive) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
-        <div className="max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h1 className="text-xl font-bold text-foreground">Entrenador no disponible</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+      <div className="dark flex min-h-screen flex-col items-center justify-center bg-[#0d0d0d] px-4 text-center text-white">
+        <div className="max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 shadow-sm">
+          <h1 className="text-xl font-bold text-white">Entrenador no disponible</h1>
+          <p className="mt-2 text-sm text-white/60">
             El portal de este entrenador se encuentra temporalmente inactivo. Por favor, ponete en contacto directo con tu profesor.
           </p>
         </div>
@@ -66,9 +66,9 @@ export default async function CoachPortalLayout({
   }
 
   return (
-    <>
+    <div className="dark min-h-screen bg-[#0d0d0d] text-foreground">
       {children}
       <Toaster />
-    </>
+    </div>
   )
 }

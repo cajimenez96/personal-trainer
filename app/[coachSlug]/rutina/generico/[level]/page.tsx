@@ -56,7 +56,7 @@ export default async function CoachRutinaGenericaPage({
   const days = mapTemplateToRoutineDays(template, exerciseById)
 
   return (
-    <div className="min-h-screen bg-[#efefef] pb-12 dark:bg-background">
+    <div className="min-h-screen bg-[#0d0d0d] pb-12 text-foreground">
       <RoutinePortalHeader greetingLabel="Hola," title={displayName} subtitle={template.name} />
 
       <main className="flex flex-col gap-3 px-3 py-4 sm:px-4">
