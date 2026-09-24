@@ -9,6 +9,7 @@ import {
   Eye,
   Sparkles,
   MessageCircle,
+  QrCode,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ import {
 } from "@/lib/validators/coach-profile";
 import { updateCoachProfileAction } from "@/lib/actions/coach-profile.actions";
 import { siteConfig } from "@/lib/config/site";
+import { PortalQrDialog } from "@/components/admin/portal-qr-dialog";
 
 interface CoachProfileFormProps {
   initialData: {
@@ -134,14 +136,20 @@ export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                     Tu Enlace de Portal Personalizado
                   </span>
-                  <Link
-                    href={`/${initialData.slug}`}
-                    target="_blank"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                  >
-                    Visitar Portal
-                    <ExternalLink className="size-3" />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <PortalQrDialog
+                      slug={initialData.slug}
+                      brandName={initialData.businessName || initialData.name}
+                    />
+                    <Link
+                      href={`/${initialData.slug}`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline bg-primary/10 hover:bg-primary/20 px-2.5 py-1.5 rounded-md transition-colors"
+                    >
+                      Visitar Portal
+                      <ExternalLink className="size-3" />
+                    </Link>
+                  </div>
                 </div>
                 <div className="font-mono text-sm font-bold text-foreground">
                   tuapp.com/{initialData.slug}
@@ -407,6 +415,25 @@ export function CoachProfileForm({ initialData }: CoachProfileFormProps) {
             )}
           </div>
         </div>
+
+        {/* Quick QR Card */}
+        <Card className="border-border">
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div className="space-y-0.5">
+              <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                <QrCode className="size-4 text-primary" />
+                Acceso Rápido por QR
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Descargá el QR de tu portal para imprimir en tu gimnasio o compartir.
+              </p>
+            </div>
+            <PortalQrDialog
+              slug={initialData.slug}
+              brandName={initialData.businessName || initialData.name}
+            />
+          </CardContent>
+        </Card>
 
         <p className="text-[11px] text-center text-muted-foreground px-4">
           Los cambios se aplicarán inmediatamente en tu enlace público al hacer
