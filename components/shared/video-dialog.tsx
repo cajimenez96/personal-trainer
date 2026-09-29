@@ -2,12 +2,12 @@
 
 import type { ReactNode } from "react"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 
 function toEmbedUrl(videoUrl: string): string | null {
   let url: URL
@@ -61,14 +61,14 @@ export function VideoDialog({
   }
 
   return (
-    <Dialog>
-      <DialogTrigger render={<button type="button" className={className} />}>
+    <ResponsiveDialog>
+      <ResponsiveDialogTrigger render={<button type="button" className={className} />}>
         {children}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Video demostrativo</DialogTitle>
-        </DialogHeader>
+      </ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="sm:max-w-2xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Video demostrativo</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <div className="aspect-video w-full overflow-hidden rounded-md bg-black">
           <iframe
             src={embedUrl}
@@ -77,7 +77,7 @@ export function VideoDialog({
             allowFullScreen
           />
         </div>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

@@ -15,13 +15,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -366,14 +366,14 @@ export function StudentSubscriptionLedgerCard({
       </CardContent>
 
       {/* Dialog: Assign / Renew Plan */}
-      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>Asignar Plan a {studentName}</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <ResponsiveDialogContent className="sm:max-w-[420px]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Asignar Plan a {studentName}</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Seleccioná el plan y la fecha de inicio. La fecha de vencimiento se calculará automáticamente.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <form onSubmit={handleAssignPlan} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="plan-select">Plan *</Label>
@@ -409,7 +409,7 @@ export function StudentSubscriptionLedgerCard({
               />
             </div>
 
-            <DialogFooter className="pt-4">
+            <ResponsiveDialogFooter className="pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -421,20 +421,20 @@ export function StudentSubscriptionLedgerCard({
               <Button type="submit" disabled={isPending || !selectedPlanId}>
                 {isPending ? "Guardando..." : "Confirmar Asignación"}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Dialog: Register Payment */}
-      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>Registrar Pago</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <ResponsiveDialogContent className="sm:max-w-[420px]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Registrar Pago</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Registrá un pago parcial o total para abonar a la cuenta de {studentName}.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <form onSubmit={handleRegisterPayment} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pay-amount">Monto a Abonar ($) *</Label>
@@ -475,7 +475,7 @@ export function StudentSubscriptionLedgerCard({
               />
             </div>
 
-            <DialogFooter className="pt-4">
+            <ResponsiveDialogFooter className="pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -487,10 +487,10 @@ export function StudentSubscriptionLedgerCard({
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Registrando..." : "Registrar Pago"}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Confirmation Dialog for Payment Deletion */}
       <ConfirmDialog

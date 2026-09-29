@@ -8,14 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import {
   updateCoachBySuperAdminSchema,
   type UpdateCoachBySuperAdminInput,
@@ -122,8 +122,8 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           <Button variant="outline" size="sm" className="gap-1 text-xs">
             <Pencil className="size-3.5" />
@@ -131,14 +131,14 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Editar Datos del Entrenador</DialogTitle>
-          <DialogDescription>
+      <ResponsiveDialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Editar Datos del Entrenador</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Modificá la información de cuenta, marca blanca y configuración del
             portal de <strong>{coach.name}</strong>.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Identidad de Cuenta */}
@@ -394,7 +394,7 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
             </div>
           </div>
 
-          <DialogFooter className="pt-3">
+          <ResponsiveDialogFooter className="pt-3">
             <Button
               type="button"
               variant="outline"
@@ -407,9 +407,9 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
               {isSubmitting && <Loader2 className="size-4 animate-spin" />}
               Guardar Cambios
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

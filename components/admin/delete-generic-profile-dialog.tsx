@@ -5,14 +5,14 @@ import { Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import { deleteGenericProfileAction } from "@/lib/actions/generic-profile.actions"
 
 interface DeleteGenericProfileDialogProps {
@@ -44,8 +44,8 @@ export function DeleteGenericProfileDialog({ profile }: DeleteGenericProfileDial
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           <Button
             variant="ghost"
@@ -57,15 +57,15 @@ export function DeleteGenericProfileDialog({ profile }: DeleteGenericProfileDial
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>¿Eliminar alumno genérico?</DialogTitle>
-          <DialogDescription>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>¿Eliminar alumno genérico?</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Estás a punto de eliminar el acceso para <strong>{profile.name}</strong>. Las personas que tengan esta clave ya no podrán ingresar a la rutina.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
-        <DialogFooter className="pt-2">
+        <ResponsiveDialogFooter className="pt-2">
           <Button
             type="button"
             variant="outline"
@@ -88,8 +88,8 @@ export function DeleteGenericProfileDialog({ profile }: DeleteGenericProfileDial
               "Confirmar Eliminación"
             )}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import {
   resetCoachPasswordSchema,
   type ResetCoachPasswordInput,
@@ -68,8 +68,8 @@ export function ResetPasswordDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           <Button variant="ghost" size="sm" className="gap-1 text-xs">
             <KeyRound className="size-3.5" />
@@ -77,14 +77,14 @@ export function ResetPasswordDialog({
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Restablecer Contraseña</DialogTitle>
-          <DialogDescription>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Restablecer Contraseña</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Establecé una nueva contraseña de acceso para el entrenador{" "}
             <strong className="text-foreground">{coachName}</strong>.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
@@ -103,7 +103,7 @@ export function ResetPasswordDialog({
             {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
 
-          <DialogFooter className="pt-2">
+          <ResponsiveDialogFooter className="pt-2">
             <Button
               type="button"
               variant="outline"
@@ -116,9 +116,9 @@ export function ResetPasswordDialog({
               {isSubmitting && <Loader2 className="size-4 animate-spin" />}
               Guardar Contraseña
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import { updateGenericProfileAction } from "@/lib/actions/generic-profile.actions"
 
 interface EditGenericProfileDialogProps {
@@ -68,8 +68,8 @@ export function EditGenericProfileDialog({ profile }: EditGenericProfileDialogPr
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           <Button variant="outline" size="sm" className="gap-1.5">
             <Pencil className="size-3.5" />
@@ -77,13 +77,13 @@ export function EditGenericProfileDialog({ profile }: EditGenericProfileDialogPr
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Editar Alumno Genérico</DialogTitle>
-          <DialogDescription>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Editar Alumno Genérico</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Modificá el nombre identificatorio o actualizá la clave de acceso.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -118,7 +118,7 @@ export function EditGenericProfileDialog({ profile }: EditGenericProfileDialogPr
             </p>
           </div>
 
-          <DialogFooter className="pt-2">
+          <ResponsiveDialogFooter className="pt-2">
             <Button
               type="button"
               variant="outline"
@@ -137,9 +137,9 @@ export function EditGenericProfileDialog({ profile }: EditGenericProfileDialogPr
                 "Guardar Cambios"
               )}
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

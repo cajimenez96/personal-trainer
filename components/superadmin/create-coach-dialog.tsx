@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import {
   createCoachSchema,
   type CreateCoachInput,
@@ -124,8 +124,8 @@ export function CreateCoachDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           <Button className="gap-2">
             <Plus className="size-4" />
@@ -133,14 +133,14 @@ export function CreateCoachDialog() {
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Dar de Alta Nuevo Profesor</DialogTitle>
-          <DialogDescription>
+      <ResponsiveDialogContent className="sm:max-w-lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Dar de Alta Nuevo Profesor</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Registrá un nuevo entrenador para crear su entorno aislado y su
             portal de alumnos con slug dedicado.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
@@ -326,7 +326,7 @@ export function CreateCoachDialog() {
             </div>
           </div>
 
-          <DialogFooter className="pt-3">
+          <ResponsiveDialogFooter className="pt-3">
             <Button
               type="button"
               variant="outline"
@@ -339,9 +339,9 @@ export function CreateCoachDialog() {
               {isSubmitting && <Loader2 className="size-4 animate-spin" />}
               Guardar y Crear Tenant
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

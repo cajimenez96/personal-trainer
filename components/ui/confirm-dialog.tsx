@@ -3,13 +3,13 @@
 import * as React from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 
 export interface ConfirmDialogProps {
@@ -49,9 +49,9 @@ export function ConfirmDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => !isLoading && onOpenChange(val)}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={(val) => !isLoading && onOpenChange(val)}>
+      <ResponsiveDialogContent className="sm:max-w-[425px]">
+        <ResponsiveDialogHeader>
           <div className="flex items-center gap-3">
             {variant === "destructive" && (
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
@@ -59,17 +59,17 @@ export function ConfirmDialog({
               </div>
             )}
             <div className="space-y-1">
-              <DialogTitle className="text-base font-semibold leading-none">
+              <ResponsiveDialogTitle className="text-base font-semibold leading-none">
                 {title}
-              </DialogTitle>
+              </ResponsiveDialogTitle>
             </div>
           </div>
-          <DialogDescription className="pt-2 text-sm text-muted-foreground leading-relaxed">
+          <ResponsiveDialogDescription className="pt-2 text-sm text-muted-foreground leading-relaxed">
             {description}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
-        <DialogFooter className="gap-2! sm:gap-0 pt-3">
+        <ResponsiveDialogFooter className="gap-2! sm:gap-0 pt-3">
           <Button
             type="button"
             variant="outline"
@@ -88,8 +88,8 @@ export function ConfirmDialog({
             {isLoading && <Loader2 className="size-4 animate-spin" />}
             {confirmText}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import {
   createMasterExerciseAction,
   updateMasterExerciseAction,
@@ -106,8 +106,8 @@ export function ExerciseDialog({ mode, exercise }: ExerciseDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           mode === "create" ? (
             <Button className="gap-2">
@@ -122,19 +122,19 @@ export function ExerciseDialog({ mode, exercise }: ExerciseDialogProps) {
           )
         }
       />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
             {mode === "create"
               ? "Agregar Ejercicio al Catálogo Maestro"
               : `Editar: ${exercise?.name}`}
-          </DialogTitle>
-          <DialogDescription>
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {mode === "create"
               ? "Este ejercicio estará disponible en la biblioteca de todos los profesores de la plataforma."
               : "Los cambios se reflejarán en el catálogo maestro."}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
@@ -196,7 +196,7 @@ export function ExerciseDialog({ mode, exercise }: ExerciseDialogProps) {
             )}
           </div>
 
-          <DialogFooter className="pt-2">
+          <ResponsiveDialogFooter className="pt-2">
             <Button
               type="button"
               variant="outline"
@@ -209,9 +209,9 @@ export function ExerciseDialog({ mode, exercise }: ExerciseDialogProps) {
               {isSubmitting && <Loader2 className="size-4 animate-spin" />}
               {mode === "create" ? "Crear Ejercicio" : "Guardar Cambios"}
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

@@ -20,13 +20,13 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -269,16 +269,16 @@ export function PlanManager({ plans, maxPlans = 1 }: PlanManagerProps) {
       )}
 
       {/* Plan Dialog (Create / Edit) */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
+      <ResponsiveDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <ResponsiveDialogContent className="sm:max-w-[425px]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>
               {editingPlan ? "Editar Plan" : "Crear Nuevo Plan"}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Definí el nombre, tarifa y duración de este plan.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="plan-name">Nombre del Plan *</Label>
@@ -350,7 +350,7 @@ export function PlanManager({ plans, maxPlans = 1 }: PlanManagerProps) {
               </div>
             )}
 
-            <DialogFooter className="pt-4">
+            <ResponsiveDialogFooter className="pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -366,10 +366,10 @@ export function PlanManager({ plans, maxPlans = 1 }: PlanManagerProps) {
                     ? "Guardar Cambios"
                     : "Crear Plan"}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Confirmation Dialog for Deletion */}
       <ConfirmDialog

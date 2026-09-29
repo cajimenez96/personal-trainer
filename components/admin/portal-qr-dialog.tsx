@@ -6,14 +6,14 @@ import { QrCode, Download, Copy, Check, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 
 interface PortalQrDialogProps {
   slug: string
@@ -100,8 +100,8 @@ export function PortalQrDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           trigger ? (
             (trigger as React.ReactElement)
@@ -113,17 +113,17 @@ export function PortalQrDialog({
           )
         }
       />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="flex items-center gap-2">
             <QrCode className="size-5 text-primary" />
             Código QR de tu Portal
-          </DialogTitle>
-          <DialogDescription>
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Tus alumnos pueden escanear este código con la cámara de su celular
             para acceder directamente a su portal y consultar sus rutinas.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <div className="flex flex-col items-center justify-center gap-4 py-4">
           {/* QR Container */}
@@ -148,7 +148,7 @@ export function PortalQrDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <ResponsiveDialogFooter className="flex-col sm:flex-row gap-2">
           <Button
             type="button"
             variant="outline"
@@ -176,8 +176,8 @@ export function PortalQrDialog({
             <Download className="size-4" />
             Descargar QR (PNG)
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

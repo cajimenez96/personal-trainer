@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import { updateStudentPortalProfileAction } from "@/lib/actions/portal-profile.actions"
 
 function getTodayLocalDate(): string {
@@ -92,8 +92,8 @@ export function StudentProfileDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           <button
             type="button"
@@ -104,20 +104,20 @@ export function StudentProfileDialog({
       >
         <UserPen className="size-3.5 text-white/80" />
         Actualizar perfil
-      </DialogTrigger>
+      </ResponsiveDialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <ResponsiveDialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2 text-lg">
               <UserPen className="size-5 text-primary" />
               Perfil de {studentName}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Actualizá tus datos personales o registrá un nuevo peso corporal para
               mantener tu progreso al día.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           {/* Resumen actual si existe */}
           <div className="grid grid-cols-3 gap-2 rounded-lg border bg-muted/40 p-3 text-center">
@@ -242,7 +242,7 @@ export function StudentProfileDialog({
             </p>
           </div>
 
-          <DialogFooter className="mt-2 flex items-center justify-end gap-2">
+          <ResponsiveDialogFooter className="mt-2 flex items-center justify-end gap-2">
             <Button
               type="button"
               variant="outline"
@@ -265,9 +265,9 @@ export function StudentProfileDialog({
                 </>
               )}
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

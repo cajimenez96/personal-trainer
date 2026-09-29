@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import { createGenericProfileAction } from "@/lib/actions/generic-profile.actions"
 
 interface CreateGenericProfileDialogProps {
@@ -76,8 +76,8 @@ export function CreateGenericProfileDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger
         render={
           <Button className="gap-2" disabled={isLimitReached}>
             <Plus className="size-4" />
@@ -85,13 +85,13 @@ export function CreateGenericProfileDialog({
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Crear Alumno Genérico</DialogTitle>
-          <DialogDescription>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Crear Alumno Genérico</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Creá un acceso compartido con nombre y contraseña. Cualquier persona que ingrese esta clave podrá ver la rutina asignada sin registrar datos personales.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         {isLimitReached ? (
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-500">
@@ -152,7 +152,7 @@ export function CreateGenericProfileDialog({
               </select>
             </div>
 
-            <DialogFooter className="pt-2">
+            <ResponsiveDialogFooter className="pt-2">
               <Button
                 type="button"
                 variant="outline"
@@ -171,10 +171,10 @@ export function CreateGenericProfileDialog({
                   "Crear Alumno"
                 )}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

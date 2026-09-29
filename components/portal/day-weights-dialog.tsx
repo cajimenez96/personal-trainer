@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { Edit3, History, Loader2, Check } from "lucide-react"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -96,8 +96,8 @@ export function DayWeightsDialogs({
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-border/60 pb-3 pt-1">
       {/* Botón Registrar Pesos */}
-      <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
-        <DialogTrigger render={
+      <ResponsiveDialog open={registerOpen} onOpenChange={setRegisterOpen}>
+        <ResponsiveDialogTrigger render={
           <button
             type="button"
             className="flex min-h-10 items-center gap-2 rounded-lg bg-[#555e69] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#434b54] active:scale-95"
@@ -105,12 +105,12 @@ export function DayWeightsDialogs({
         }>
           <Edit3 className="size-4" />
           Registrar Pesos
-        </DialogTrigger>
+        </ResponsiveDialogTrigger>
 
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Registrar Pesos de la Sesión</DialogTitle>
-          </DialogHeader>
+        <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Registrar Pesos de la Sesión</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
 
           <form onSubmit={handleSaveWeights} className="mt-3 flex flex-col gap-4">
             {blocks.map((block) => (
@@ -186,12 +186,12 @@ export function DayWeightsDialogs({
               </Button>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Botón Historial de Pesos */}
-      <Dialog open={historyOpen} onOpenChange={handleOpenHistory}>
-        <DialogTrigger render={
+      <ResponsiveDialog open={historyOpen} onOpenChange={handleOpenHistory}>
+        <ResponsiveDialogTrigger render={
           <button
             type="button"
             className="flex min-h-10 items-center gap-2 rounded-lg border border-primary/80 bg-background px-4 py-2 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-primary/5 active:scale-95"
@@ -199,12 +199,12 @@ export function DayWeightsDialogs({
         }>
           <History className="size-4" />
           Historial de Pesos
-        </DialogTrigger>
+        </ResponsiveDialogTrigger>
 
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Historial de Pesos</DialogTitle>
-          </DialogHeader>
+        <ResponsiveDialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Historial de Pesos</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
 
           {historyLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -243,8 +243,8 @@ export function DayWeightsDialogs({
               ))}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   )
 }
