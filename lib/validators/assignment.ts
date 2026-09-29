@@ -5,7 +5,7 @@ export const overrideSchema = z.object({
   sets: z.number().int().positive().optional().nullable(),
   reps: z.number().int().positive().optional().nullable(),
   repsScheme: z.string().trim().max(100).optional().nullable(),
-  weightKg: z.number().positive().optional().nullable(),
+  weightKg: z.number().nonnegative().optional().nullable(),
   intensity: z.string().trim().max(20).optional().nullable(),
   tempo: z.string().trim().max(20).optional().nullable(),
   durationSecs: z.number().int().positive().optional().nullable(),

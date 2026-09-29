@@ -78,6 +78,25 @@ function hasAdvancedValues(block: BlockState) {
   );
 }
 
+function hasAdvancedErrors(
+  dayIndex: number,
+  blockIndex: number,
+  errors: Partial<Record<string, string>>,
+) {
+  const prefix = `days.${dayIndex}.blocks.${blockIndex}.`;
+  return Object.keys(errors).some(
+    (key) =>
+      key.startsWith(prefix) &&
+      (key.endsWith("repsScheme") ||
+        key.endsWith("durationSecs") ||
+        key.endsWith("intensity") ||
+        key.endsWith("tempo") ||
+        key.endsWith("groupLabel") ||
+        key.endsWith("groupRestSecs") ||
+        key.endsWith("trainerNotes")),
+  );
+}
+
 function emptyBlock(key: string): BlockState {
   return {
     key,
@@ -195,6 +214,12 @@ export function TemplateBuilder({
     setDays((prev) =>
       prev.map((d, i) => (i === dayIndex ? { ...d, label } : d)),
     );
+    setErrors((prev) => {
+      if (!prev[`days.${dayIndex}.label`]) return prev;
+      const next = { ...prev };
+      delete next[`days.${dayIndex}.label`];
+      return next;
+    });
   }
 
   function addBlock(dayIndex: number) {
@@ -234,6 +259,18 @@ export function TemplateBuilder({
           : d,
       ),
     );
+    setErrors((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const field of Object.keys(patch)) {
+        const fieldKey = `days.${dayIndex}.blocks.${blockIndex}.${field}`;
+        if (next[fieldKey]) {
+          delete next[fieldKey];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
   }
 
   function moveBlock(dayIndex: number, blockIndex: number, direction: -1 | 1) {
@@ -255,7 +292,7 @@ export function TemplateBuilder({
   function toPayload(): CreateTemplatePayload {
     return {
       name,
-      description: description || undefined,
+      description: description.trim() || undefined,
       durationWeeks,
       days: days.map((d) => ({
         id: d.id,
@@ -264,24 +301,110 @@ export function TemplateBuilder({
           id: b.id,
           exerciseId: b.exerciseId,
           sets: b.sets,
-          reps: b.reps || undefined,
-          repsScheme: b.repsScheme || undefined,
-          weightKg: b.weightKg || undefined,
-          intensity: b.intensity || undefined,
-          tempo: b.tempo || undefined,
-          durationSecs: b.durationSecs || undefined,
-          restSecs: b.restSecs || undefined,
-          trainerNotes: b.trainerNotes || undefined,
-          groupLabel: b.groupLabel || undefined,
-          groupRestSecs: b.groupRestSecs || undefined,
+          reps: b.reps.trim() || undefined,
+          repsScheme: b.repsScheme.trim() || undefined,
+          weightKg: b.weightKg.trim() || undefined,
+          intensity: b.intensity.trim() || undefined,
+          tempo: b.tempo.trim() || undefined,
+          durationSecs: b.durationSecs.trim() || undefined,
+          restSecs: b.restSecs.trim() || undefined,
+          trainerNotes: b.trainerNotes.trim() || undefined,
+          groupLabel: b.groupLabel.trim() || undefined,
+          groupRestSecs: b.groupRestSecs.trim() || undefined,
         })),
       })),
     };
   }
 
+  function validateClient(): Partial<Record<string, string>> | null {
+    const errs: Record<string, string> = {};
+    const messages: string[] = [];
+
+    if (!name.trim()) {
+      errs.name = "El nombre es obligatorio";
+    }
+
+    const weeks = Number(durationWeeks);
+    if (!durationWeeks || isNaN(weeks) || weeks < 2) {
+      errs.durationWeeks = "La vigencia mínima es de 2 semanas (RN-01)";
+    }
+
+    days.forEach((day, dIdx) => {
+      const dayNum = dIdx + 1;
+      if (!day.label.trim()) {
+        const key = `days.${dIdx}.label`;
+        errs[key] = "La etiqueta del día es obligatoria";
+        messages.push(`Día ${dayNum}: La etiqueta del día es obligatoria`);
+      }
+
+      day.blocks.forEach((block, bIdx) => {
+        const blockNum = bIdx + 1;
+        const prefix = `days.${dIdx}.blocks.${bIdx}`;
+
+        if (!block.exerciseId) {
+          errs[`${prefix}.exerciseId`] = "Seleccioná un ejercicio";
+          messages.push(`Día ${dayNum}, Ejercicio ${blockNum} (Ejercicio): Seleccioná un ejercicio`);
+        }
+
+        if (!block.sets || isNaN(Number(block.sets)) || Number(block.sets) <= 0) {
+          errs[`${prefix}.sets`] = "Series debe ser un número positivo";
+          messages.push(`Día ${dayNum}, Ejercicio ${blockNum} (Series): Series debe ser un número positivo`);
+        }
+
+        if (block.reps.trim() !== "" && (isNaN(Number(block.reps)) || Number(block.reps) <= 0)) {
+          errs[`${prefix}.reps`] = "Repeticiones debe ser un número positivo (o dejalo vacío)";
+          messages.push(
+            `Día ${dayNum}, Ejercicio ${blockNum} (Repeticiones): Repeticiones debe ser un número positivo (o dejalo vacío)`,
+          );
+        }
+
+        if (block.weightKg.trim() !== "" && (isNaN(Number(block.weightKg)) || Number(block.weightKg) < 0)) {
+          errs[`${prefix}.weightKg`] = "El peso no puede ser negativo";
+          messages.push(`Día ${dayNum}, Ejercicio ${blockNum} (Peso): El peso no puede ser negativo`);
+        }
+
+        if (block.durationSecs.trim() !== "" && (isNaN(Number(block.durationSecs)) || Number(block.durationSecs) <= 0)) {
+          errs[`${prefix}.durationSecs`] = "La duración debe ser mayor a 0";
+          messages.push(`Día ${dayNum}, Ejercicio ${blockNum} (Duración): La duración debe ser mayor a 0`);
+        }
+
+        if (block.restSecs.trim() !== "" && (isNaN(Number(block.restSecs)) || Number(block.restSecs) < 0)) {
+          errs[`${prefix}.restSecs`] = "El descanso no puede ser negativo";
+          messages.push(`Día ${dayNum}, Ejercicio ${blockNum} (Descanso): El descanso no puede ser negativo`);
+        }
+
+        if (block.groupRestSecs.trim() !== "" && (isNaN(Number(block.groupRestSecs)) || Number(block.groupRestSecs) < 0)) {
+          errs[`${prefix}.groupRestSecs`] = "El descanso de grupo no puede ser negativo";
+          messages.push(
+            `Día ${dayNum}, Ejercicio ${blockNum} (Descanso de grupo): El descanso de grupo no puede ser negativo`,
+          );
+        }
+      });
+    });
+
+    if (messages.length > 0) {
+      errs.general = messages.join(". ");
+    }
+
+    return Object.keys(errs).length > 0 ? errs : null;
+  }
+
   async function handleSave() {
-    setPending(true);
     setErrors({});
+    const clientErrors = validateClient();
+    if (clientErrors) {
+      setErrors(clientErrors);
+      days.forEach((day, dIdx) => {
+        day.blocks.forEach((block, bIdx) => {
+          if (hasAdvancedErrors(dIdx, bIdx, clientErrors)) {
+            setExpandedBlocks((prev) => new Set([...prev, block.key]));
+          }
+        });
+      });
+      return;
+    }
+
+    setPending(true);
     try {
       const result =
         mode === "edit" && templateId
@@ -289,6 +412,13 @@ export function TemplateBuilder({
           : await createTemplateAction(toPayload());
       if (!result.ok && result.errors) {
         setErrors(result.errors);
+        days.forEach((day, dIdx) => {
+          day.blocks.forEach((block, bIdx) => {
+            if (hasAdvancedErrors(dIdx, bIdx, result.errors!)) {
+              setExpandedBlocks((prev) => new Set([...prev, block.key]));
+            }
+          });
+        });
       }
     } finally {
       setPending(false);
@@ -407,10 +537,11 @@ export function TemplateBuilder({
           </CardContent>
         </Card>
 
-        {errors.general && (
-          <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-            {errors.general}
-          </p>
+        {(errors.general || errors.days) && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+            <p className="font-semibold">Revisá los siguientes errores:</p>
+            <p className="mt-1">{errors.general || errors.days}</p>
+          </div>
         )}
         <Button
           onClick={handleSave}
@@ -430,6 +561,12 @@ export function TemplateBuilder({
   return (
     <TooltipProvider>
     <div className="flex flex-col gap-6">
+      {(errors.general || errors.days) && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+          <p className="font-semibold">Revisá los datos antes de guardar:</p>
+          <p className="mt-1">{errors.general || errors.days}</p>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Datos de la plantilla</CardTitle>
@@ -482,11 +619,17 @@ export function TemplateBuilder({
         {days.map((day, dayIndex) => (
           <Card key={day.key}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <Input
-                value={day.label}
-                onChange={(e) => updateDayLabel(dayIndex, e.target.value)}
-                className="max-w-xs font-medium"
-              />
+              <div className="flex flex-col gap-1 max-w-xs">
+                <Input
+                  value={day.label}
+                  onChange={(e) => updateDayLabel(dayIndex, e.target.value)}
+                  className={`font-medium ${errors[`days.${dayIndex}.label`] ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                  aria-invalid={!!errors[`days.${dayIndex}.label`]}
+                />
+                {errors[`days.${dayIndex}.label`] && (
+                  <p className="text-xs text-destructive">{errors[`days.${dayIndex}.label`]}</p>
+                )}
+              </div>
               <Button
                 variant="destructive"
                 size="icon"
@@ -540,7 +683,9 @@ export function TemplateBuilder({
                     {/* Esenciales: lo que se completa en casi todos los ejercicios. */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
                       <div className="sm:col-span-2 flex flex-col gap-1">
-                        <Label>Ejercicio</Label>
+                        <Label>
+                          Ejercicio <span className="text-destructive">*</span>
+                        </Label>
                         <Combobox
                           items={exercises.map((ex) => ex.id)}
                           itemToStringLabel={(id) => exerciseComboLabel(id)}
@@ -551,7 +696,14 @@ export function TemplateBuilder({
                             })
                           }
                         >
-                          <ComboboxInput placeholder="Buscar ejercicio..." />
+                          <ComboboxInput
+                            placeholder="Buscar ejercicio..."
+                            className={
+                              errors[`days.${dayIndex}.blocks.${blockIndex}.exerciseId`]
+                                ? "border-destructive focus-visible:ring-destructive"
+                                : ""
+                            }
+                          />
                           <ComboboxContent>
                             <ComboboxEmpty>Sin resultados.</ComboboxEmpty>
                             <ComboboxList>
@@ -563,11 +715,18 @@ export function TemplateBuilder({
                             </ComboboxList>
                           </ComboboxContent>
                         </Combobox>
+                        {errors[`days.${dayIndex}.blocks.${blockIndex}.exerciseId`] && (
+                          <p className="text-xs text-destructive">
+                            {errors[`days.${dayIndex}.blocks.${blockIndex}.exerciseId`]}
+                          </p>
+                        )}
                       </div>
 
                       <NumberField
                         label="Series *"
                         value={block.sets}
+                        min={1}
+                        error={errors[`days.${dayIndex}.blocks.${blockIndex}.sets`]}
                         onChange={(v) =>
                           updateBlock(dayIndex, blockIndex, { sets: v })
                         }
@@ -575,6 +734,9 @@ export function TemplateBuilder({
                       <NumberField
                         label="Reps"
                         value={block.reps}
+                        min={1}
+                        placeholder="Opcional"
+                        error={errors[`days.${dayIndex}.blocks.${blockIndex}.reps`]}
                         onChange={(v) =>
                           updateBlock(dayIndex, blockIndex, { reps: v })
                         }
@@ -582,6 +744,8 @@ export function TemplateBuilder({
                       <NumberField
                         label="Peso (kg)"
                         value={block.weightKg}
+                        min={0}
+                        error={errors[`days.${dayIndex}.blocks.${blockIndex}.weightKg`]}
                         onChange={(v) =>
                           updateBlock(dayIndex, blockIndex, { weightKg: v })
                         }
@@ -589,6 +753,8 @@ export function TemplateBuilder({
                       <NumberField
                         label="Descanso (seg)"
                         value={block.restSecs}
+                        min={0}
+                        error={errors[`days.${dayIndex}.blocks.${blockIndex}.restSecs`]}
                         onChange={(v) =>
                           updateBlock(dayIndex, blockIndex, { restSecs: v })
                         }
@@ -629,6 +795,8 @@ export function TemplateBuilder({
                         <NumberField
                           label="Duración (seg)"
                           value={block.durationSecs}
+                          min={1}
+                          error={errors[`days.${dayIndex}.blocks.${blockIndex}.durationSecs`]}
                           onChange={(v) =>
                             updateBlock(dayIndex, blockIndex, { durationSecs: v })
                           }
@@ -675,6 +843,8 @@ export function TemplateBuilder({
                         <NumberField
                           label="Descanso post-bloque (seg)"
                           value={block.groupRestSecs}
+                          min={0}
+                          error={errors[`days.${dayIndex}.blocks.${blockIndex}.groupRestSecs`]}
                           onChange={(v) =>
                             updateBlock(dayIndex, blockIndex, { groupRestSecs: v })
                           }
@@ -719,10 +889,11 @@ export function TemplateBuilder({
         </Button>
       </div>
 
-      {errors.general && (
-        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-          {errors.general}
-        </p>
+      {(errors.general || errors.days) && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <p className="font-semibold">Revisá los datos antes de guardar:</p>
+          <p className="mt-1">{errors.general || errors.days}</p>
+        </div>
       )}
 
       <div className="flex justify-end gap-3">
@@ -770,21 +941,31 @@ function NumberField({
   value,
   onChange,
   info,
+  min = 0,
+  error,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   info?: string;
+  min?: number;
+  error?: string;
+  placeholder?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
       <FieldLabel label={label} info={info} />
       <Input
         type="number"
-        min={0}
+        min={min}
         value={value}
+        placeholder={placeholder}
+        aria-invalid={!!error}
+        className={error ? "border-destructive focus-visible:ring-destructive" : ""}
         onChange={(e) => onChange(e.target.value)}
       />
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

@@ -12,6 +12,57 @@ import {
   createTemplateSchema,
   type CreateTemplatePayload,
 } from "@/lib/validators/routine-template"
+import type { z } from "zod"
+
+const FIELD_LABELS: Record<string, string> = {
+  exerciseId: "Ejercicio",
+  sets: "Series",
+  reps: "Repeticiones",
+  repsScheme: "Esquema de repeticiones",
+  weightKg: "Peso",
+  durationSecs: "Duración",
+  restSecs: "Descanso",
+  groupLabel: "Grupo",
+  groupRestSecs: "Descanso de grupo",
+  trainerNotes: "Notas del entrenador",
+  name: "Nombre",
+  durationWeeks: "Duración",
+  label: "Etiqueta del día",
+}
+
+function formatTemplateZodErrors(issues: z.ZodIssue[]): Record<string, string> {
+  const errors: Record<string, string> = {}
+  const descriptiveMessages: string[] = []
+
+  for (const issue of issues) {
+    const fullKey = issue.path.join(".")
+    if (fullKey && !errors[fullKey]) errors[fullKey] = issue.message
+
+    const rootKey = issue.path[0]
+    if (typeof rootKey === "string" && !errors[rootKey]) errors[rootKey] = issue.message
+
+    if (issue.path[0] === "days" && typeof issue.path[1] === "number") {
+      const dayNum = issue.path[1] + 1
+      let context = `Día ${dayNum}`
+      if (issue.path[2] === "blocks" && typeof issue.path[3] === "number") {
+        const blockNum = issue.path[3] + 1
+        const field = issue.path[4]
+        const fieldName =
+          typeof field === "string" ? FIELD_LABELS[field] || field : ""
+        context += `, Ejercicio ${blockNum}${fieldName ? ` (${fieldName})` : ""}`
+      } else if (issue.path[2] === "label") {
+        context += ` (Nombre)`
+      }
+      descriptiveMessages.push(`${context}: ${issue.message}`)
+    }
+  }
+
+  if (descriptiveMessages.length > 0) {
+    errors.general = descriptiveMessages.join(". ")
+  }
+
+  return errors
+}
 
 export type CreateTemplateState = {
   ok: boolean
@@ -25,12 +76,7 @@ export async function createTemplateAction(
   const parsed = createTemplateSchema.safeParse(input)
 
   if (!parsed.success) {
-    const errors: Record<string, string> = {}
-    for (const issue of parsed.error.issues) {
-      const key = issue.path[0]
-      if (typeof key === "string" && !errors[key]) errors[key] = issue.message
-    }
-    return { ok: false, errors }
+    return { ok: false, errors: formatTemplateZodErrors(parsed.error.issues) }
   }
 
   await routineTemplateService.create({ ...parsed.data, trainerId: user.id })
@@ -46,12 +92,7 @@ export async function updateTemplateAction(
   const parsed = createTemplateSchema.safeParse(input)
 
   if (!parsed.success) {
-    const errors: Record<string, string> = {}
-    for (const issue of parsed.error.issues) {
-      const key = issue.path[0]
-      if (typeof key === "string" && !errors[key]) errors[key] = issue.message
-    }
-    return { ok: false, errors }
+    return { ok: false, errors: formatTemplateZodErrors(parsed.error.issues) }
   }
 
   try {
