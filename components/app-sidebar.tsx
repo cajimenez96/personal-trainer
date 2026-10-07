@@ -51,6 +51,7 @@ const COACH_NAV_LINKS: NavItem[] = [
 const SUPERADMIN_NAV_LINKS: NavItem[] = [
   { href: "/superadmin", label: "Dashboard SaaS", icon: LayoutDashboard },
   { href: "/superadmin/coaches", label: "Profesores / Tenants", icon: Users },
+  { href: "/superadmin/planes", label: "Planes Plataforma", icon: CreditCard },
   {
     href: "/superadmin/ejercicios",
     label: "Catálogo Ejercicios",

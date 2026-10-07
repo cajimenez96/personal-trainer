@@ -44,6 +44,7 @@ export async function createCoachAction(
       slug,
       businessName,
       whatsappNumber,
+      platformPlanId,
       maxPlans,
       maxStudents,
       maxGenericProfiles,
@@ -76,25 +77,54 @@ export async function createCoachAction(
 
     const passwordHash = await bcrypt.hash(password, 10)
 
-    const coach = await db.trainer.create({
-      data: {
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        passwordHash,
-        slug: slug.toLowerCase().trim(),
-        businessName: businessName?.trim() || null,
-        whatsappNumber: whatsappNumber?.trim() || null,
-        maxPlans: maxPlans ?? 1,
-        maxStudents: maxStudents ?? 10,
-        maxGenericProfiles: maxGenericProfiles ?? 3,
-        membershipExpiresAt: membershipExpiresAt ? new Date(membershipExpiresAt) : null,
-        role: "COACH",
-        isActive: true,
-      },
-      select: {
-        id: true,
-        slug: true,
-      },
+    // Si se especificó plan, resolver datos
+    const selectedPlan = platformPlanId
+      ? await db.platformPlan.findUnique({ where: { id: platformPlanId } })
+      : null
+
+    let finalExpiresAt = membershipExpiresAt ? new Date(membershipExpiresAt) : null
+    if (!finalExpiresAt && selectedPlan) {
+      finalExpiresAt = new Date()
+      finalExpiresAt.setDate(finalExpiresAt.getDate() + selectedPlan.durationDays)
+    }
+
+    const coach = await db.$transaction(async (tx) => {
+      const newTrainer = await tx.trainer.create({
+        data: {
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          passwordHash,
+          slug: slug.toLowerCase().trim(),
+          businessName: businessName?.trim() || null,
+          whatsappNumber: whatsappNumber?.trim() || null,
+          platformPlanId: selectedPlan ? selectedPlan.id : null,
+          maxPlans: maxPlans ?? selectedPlan?.maxPlans ?? 1,
+          maxStudents: maxStudents ?? selectedPlan?.maxStudents ?? 10,
+          maxGenericProfiles: maxGenericProfiles ?? selectedPlan?.maxGenericProfiles ?? 3,
+          membershipExpiresAt: finalExpiresAt,
+          role: "COACH",
+          isActive: true,
+        },
+        select: {
+          id: true,
+          slug: true,
+        },
+      })
+
+      if (selectedPlan && finalExpiresAt) {
+        await tx.trainerSubscription.create({
+          data: {
+            trainerId: newTrainer.id,
+            planId: selectedPlan.id,
+            priceSnapshot: selectedPlan.price,
+            startDate: new Date(),
+            expiresAt: finalExpiresAt,
+            status: "ACTIVE",
+          },
+        })
+      }
+
+      return newTrainer
     })
 
     revalidatePath("/superadmin")
@@ -141,6 +171,7 @@ export async function updateCoachBySuperAdminAction(
       heroImageUrl,
       whatsappNumber,
       instagramUrl,
+      platformPlanId,
       maxPlans,
       maxStudents,
       maxGenericProfiles,
@@ -190,6 +221,7 @@ export async function updateCoachBySuperAdminAction(
         heroImageUrl: heroImageUrl?.trim() || null,
         whatsappNumber: whatsappNumber?.trim() || null,
         instagramUrl: instagramUrl?.trim() || null,
+        platformPlanId: platformPlanId ? platformPlanId : null,
         maxPlans: maxPlans ?? 1,
         maxStudents: maxStudents ?? 10,
         maxGenericProfiles: maxGenericProfiles ?? 3,

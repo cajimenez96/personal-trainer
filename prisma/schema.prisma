@@ -68,6 +68,7 @@ model Trainer {
   heroImageUrl   String?  @map("hero_image_url")
   whatsappNumber      String?   @map("whatsapp_number")
   instagramUrl        String?   @map("instagram_url")
+  platformPlanId      String?   @map("platform_plan_id")
   maxPlans            Int       @default(1) @map("max_plans")
   maxStudents         Int       @default(10) @map("max_students")
   maxGenericProfiles  Int       @default(3) @map("max_generic_profiles")
@@ -76,11 +77,14 @@ model Trainer {
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
 
-  students         Student[]
-  plans            Plan[]
-  routineTemplates RoutineTemplate[]
-  genericProfiles  GenericProfile[]
-  exercises        Exercise[]
+  platformPlan         PlatformPlan?         @relation(fields: [platformPlanId], references: [id], onDelete: SetNull)
+  trainerSubscriptions TrainerSubscription[]
+  trainerPayments      TrainerPayment[]
+  students             Student[]
+  plans                Plan[]
+  routineTemplates     RoutineTemplate[]
+  genericProfiles      GenericProfile[]
+  exercises            Exercise[]
 
   @@map("trainers")
 }
@@ -414,5 +418,71 @@ model Payment {
 
   @@index([studentId], name: "idx_payments_student")
   @@map("payments")
+}
+
+// ─────────────────────────────────────────────
+// PLATFORM PLANS & COACH SUBSCRIPTIONS (SaaS Tier)
+// ─────────────────────────────────────────────
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+}
+
+model PlatformPlan {
+  id                 String   @id @default(uuid())
+  name               String   @unique
+  description        String?
+  price              Decimal  @db.Decimal(10, 2)
+  durationDays       Int      @default(30) @map("duration_days")
+  trialDays          Int      @default(0) @map("trial_days")
+  maxStudents        Int      @default(10) @map("max_students")
+  maxPlans           Int      @default(1) @map("max_plans")
+  maxGenericProfiles Int      @default(3) @map("max_generic_profiles")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  trainers      Trainer[]
+  subscriptions TrainerSubscription[]
+
+  @@map("platform_plans")
+}
+
+model TrainerSubscription {
+  id            String             @id @default(uuid())
+  trainerId     String             @map("trainer_id")
+  planId        String             @map("plan_id")
+  priceSnapshot Decimal            @map("price_snapshot") @db.Decimal(10, 2)
+  startDate     DateTime           @map("start_date") @db.Date
+  expiresAt     DateTime           @map("expires_at") @db.Date
+  status        SubscriptionStatus @default(ACTIVE)
+  createdAt     DateTime           @default(now()) @map("created_at")
+
+  trainer  Trainer          @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  plan     PlatformPlan     @relation(fields: [planId], references: [id])
+  payments TrainerPayment[]
+
+  @@index([trainerId, status], name: "idx_trainer_subscriptions_status")
+  @@map("trainer_subscriptions")
+}
+
+model TrainerPayment {
+  id             String               @id @default(uuid())
+  trainerId      String               @map("trainer_id")
+  subscriptionId String?              @map("subscription_id")
+  amount         Decimal              @db.Decimal(10, 2)
+  paidAt         DateTime             @map("paid_at") @db.Date
+  paymentMethod  String?              @map("payment_method")
+  notes          String?
+  createdAt      DateTime             @default(now()) @map("created_at")
+
+  trainer      Trainer              @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  subscription TrainerSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([trainerId], name: "idx_trainer_payments_trainer")
+  @@map("trainer_payments")
 }
 

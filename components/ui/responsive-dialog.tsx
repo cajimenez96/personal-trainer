@@ -157,7 +157,7 @@ function ResponsiveDialogFooter({
 }: React.HTMLAttributes<HTMLDivElement>) {
   const isMobile = useIsMobile()
   if (isMobile) {
-    return <DrawerFooter className={cn("px-4 pt-2 pb-0", className)} {...props} />
+    return <DrawerFooter className={cn("px-4 py-2", className)} {...props} />
   }
   return <DialogFooter className={className} {...props} />
 }

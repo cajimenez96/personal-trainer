@@ -35,14 +35,24 @@ interface EditCoachDialogProps {
     heroImageUrl: string | null;
     whatsappNumber: string | null;
     instagramUrl: string | null;
+    platformPlanId?: string | null;
     maxPlans?: number;
     maxStudents?: number;
     maxGenericProfiles?: number;
     membershipExpiresAt?: Date | string | null;
   };
+  plans?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    durationDays: number;
+    maxStudents: number;
+    maxPlans: number;
+    maxGenericProfiles: number;
+  }>;
 }
 
-export function EditCoachDialog({ coach }: EditCoachDialogProps) {
+export function EditCoachDialog({ coach, plans = [] }: EditCoachDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [values, setValues] = useState<UpdateCoachBySuperAdminInput>({
@@ -57,6 +67,7 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
     heroImageUrl: coach.heroImageUrl || "",
     whatsappNumber: coach.whatsappNumber || "",
     instagramUrl: coach.instagramUrl || "",
+    platformPlanId: coach.platformPlanId || "",
     maxPlans: coach.maxPlans ?? 1,
     maxStudents: coach.maxStudents ?? 10,
     maxGenericProfiles: coach.maxGenericProfiles ?? 3,
@@ -322,6 +333,42 @@ export function EditCoachDialog({ coach }: EditCoachDialogProps) {
               )}
             </div>
           </div>
+
+          {/* Plan SaaS */}
+          {plans.length > 0 && (
+            <div className="space-y-1.5 border-t border-border/50 pt-3">
+              <Label htmlFor="edit-platformPlanId">Plan de Plataforma SaaS Asignado</Label>
+              <select
+                id="edit-platformPlanId"
+                name="platformPlanId"
+                value={values.platformPlanId ?? ""}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const selected = plans.find((p) => p.id === selectedId);
+                  setValues((prev) => ({
+                    ...prev,
+                    platformPlanId: selectedId,
+                    ...(selected
+                      ? {
+                          maxStudents: selected.maxStudents,
+                          maxPlans: selected.maxPlans,
+                          maxGenericProfiles: selected.maxGenericProfiles,
+                        }
+                      : {}),
+                  }));
+                }}
+                disabled={isSubmitting}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <option value="">Sin plan asignado / Personalizado</option>
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — ${p.price.toLocaleString("es-AR")} ({p.maxStudents} alumnos, {p.maxPlans} planes, {p.maxGenericProfiles} genéricos)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Límites SaaS y Vencimiento */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 border-t border-border/50 pt-3">

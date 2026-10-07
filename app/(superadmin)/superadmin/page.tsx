@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { CreateCoachDialog } from "@/components/superadmin/create-coach-dialog"
+import { platformPlanService } from "@/lib/services/platform-plan.service"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +25,7 @@ export default async function SuperAdminDashboardPage() {
     activeStudents,
     activeRoutines,
     recentCoaches,
+    platformPlans,
   ] = await Promise.all([
     db.trainer.count(),
     db.trainer.count({ where: { isActive: true } }),
@@ -39,6 +41,7 @@ export default async function SuperAdminDashboardPage() {
         },
       },
     }),
+    platformPlanService.list(false),
   ])
 
   return (
@@ -55,7 +58,7 @@ export default async function SuperAdminDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CreateCoachDialog />
+          <CreateCoachDialog plans={platformPlans} />
           <Button
             variant="outline"
             render={<Link href="/superadmin/coaches" />}

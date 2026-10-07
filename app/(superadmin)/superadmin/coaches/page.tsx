@@ -8,25 +8,40 @@ import { CreateCoachDialog } from "@/components/superadmin/create-coach-dialog";
 import { EditCoachDialog } from "@/components/superadmin/edit-coach-dialog";
 import { CoachStatusToggle } from "@/components/superadmin/coach-status-toggle";
 import { ResetPasswordDialog } from "@/components/superadmin/reset-password-dialog";
+import { platformPlanService } from "@/lib/services/platform-plan.service";
 
 export const dynamic = "force-dynamic";
 
 export default async function SuperAdminCoachesPage() {
   const currentAdmin = await requireSuperAdminAuth();
 
-  const coaches = await db.trainer.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: {
-        select: {
-          students: true,
-          routineTemplates: true,
-          plans: true,
-          genericProfiles: true,
+  const [coaches, platformPlans] = await Promise.all([
+    db.trainer.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        platformPlan: true,
+        _count: {
+          select: {
+            students: true,
+            routineTemplates: true,
+            plans: true,
+            genericProfiles: true,
+          },
         },
       },
-    },
-  });
+    }),
+    platformPlanService.list(false),
+  ]);
+
+  const serializedCoaches = coaches.map((coach) => ({
+    ...coach,
+    platformPlan: coach.platformPlan
+      ? {
+          ...coach.platformPlan,
+          price: Number(coach.platformPlan.price),
+        }
+      : null,
+  }));
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -40,7 +55,7 @@ export default async function SuperAdminCoachesPage() {
             (slugs) y el estado de sus cuentas.
           </p>
         </div>
-        <CreateCoachDialog />
+        <CreateCoachDialog plans={platformPlans} />
       </div>
 
       <Card className="border-border">
@@ -74,7 +89,7 @@ export default async function SuperAdminCoachesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {coaches.map((coach) => {
+                {serializedCoaches.map((coach) => {
                   const isCurrent = coach.id === currentAdmin.id;
                   return (
                     <tr
@@ -113,9 +128,19 @@ export default async function SuperAdminCoachesPage() {
                             SuperAdmin
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">
-                            Coach
-                          </span>
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className="text-xs text-muted-foreground">
+                              Coach
+                            </span>
+                            {coach.platformPlan && (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] py-0 px-1.5 font-normal border-primary/30 text-primary"
+                              >
+                                {coach.platformPlan.name}
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </td>
 
@@ -191,7 +216,7 @@ export default async function SuperAdminCoachesPage() {
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <EditCoachDialog coach={coach} />
+                          <EditCoachDialog coach={coach} plans={platformPlans} />
                           <ResetPasswordDialog
                             trainerId={coach.id}
                             coachName={coach.name}

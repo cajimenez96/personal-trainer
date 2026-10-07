@@ -22,6 +22,7 @@ export const createCoachSchema = z.object({
     .max(30, "El número de WhatsApp no puede exceder 30 caracteres")
     .optional()
     .or(z.literal("")),
+  platformPlanId: z.string().optional().nullable().or(z.literal("")),
   maxPlans: z.coerce
     .number()
     .int("Debe ser un número entero")
@@ -89,6 +90,7 @@ export const updateCoachBySuperAdminSchema = z.object({
     .max(100, "El usuario o URL de Instagram no puede exceder 100 caracteres")
     .optional()
     .or(z.literal("")),
+  platformPlanId: z.string().optional().nullable().or(z.literal("")),
   maxPlans: z.coerce
     .number()
     .int("Debe ser un número entero")
