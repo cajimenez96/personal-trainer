@@ -99,7 +99,7 @@ const EXERCISES: {
   {
     name: "Aperturas / Cruce de poleas (Cable Flyes)",
     primaryMuscle: "Pectoral mayor",
-    secondaryMuscle: "Deltoides anterior, bíceps braquial (cabeza corta)",
+    secondaryMuscle: "Deltoides anterior, tríceps braquial",
     videoUrl: "https://www.youtube.com/shorts/Iwe6AmxVf7o",
   },
   {
@@ -111,15 +111,13 @@ const EXERCISES: {
   {
     name: "Dominadas pronas (Pull-ups)",
     primaryMuscle: "Dorsal ancho",
-    secondaryMuscle:
-      "Bíceps braquial, braquial anterior, redondo mayor, trapecio medio/inferior",
+    secondaryMuscle: "Bíceps braquial, braquial anterior, redondo mayor, trapecio medio/inferior",
     videoUrl: "https://www.youtube.com/shorts/eGo4IYlbE5g",
   },
   {
     name: "Remo con barra (Pendlay o 45°)",
     primaryMuscle: "Espalda media (Dorsal / Romboides)",
-    secondaryMuscle:
-      "Trapecio, deltoides posterior, bíceps braquial, erectores espinales",
+    secondaryMuscle: "Trapecio, deltoides posterior, bíceps braquial, erectores espinales",
     videoUrl: "https://www.youtube.com/shorts/FWJR5Ve8gkY",
   },
   {
@@ -137,8 +135,7 @@ const EXERCISES: {
   {
     name: "Press militar de pie con barra (OHP)",
     primaryMuscle: "Deltoides anterior",
-    secondaryMuscle:
-      "Deltoides lateral, tríceps braquial, trapecio superior, core",
+    secondaryMuscle: "Deltoides lateral, tríceps braquial, trapecio superior, core",
     videoUrl: "https://www.youtube.com/shorts/2yjwXTZQDDI",
   },
   {
@@ -195,6 +192,444 @@ const EXERCISES: {
     secondaryMuscle: "Flexores de cadera (psoas ilíaco), antebrazos",
     videoUrl: "https://www.youtube.com/shorts/hdng3Nm1x_E",
   },
+  {
+    name: "Sentadilla frontal con barra",
+    primaryMuscle: "Cuádriceps",
+    secondaryMuscle: "Glúteos, aductores, abdomen, erectores espinales",
+    videoUrl: "",
+  },
+  {
+    name: "Sentadilla con barra alta",
+    primaryMuscle: "Cuádriceps",
+    secondaryMuscle: "Glúteos, aductores, core",
+    videoUrl: "",
+  },
+  {
+    name: "Sentadilla en máquina Smith",
+    primaryMuscle: "Cuádriceps",
+    secondaryMuscle: "Glúteos, aductores, isquiosurales",
+    videoUrl: "",
+  },
+  {
+    name: "Hack squat en máquina",
+    primaryMuscle: "Cuádriceps",
+    secondaryMuscle: "Glúteos, aductores",
+    videoUrl: "",
+  },
+  {
+    name: "Prensa horizontal",
+    primaryMuscle: "Cuádriceps",
+    secondaryMuscle: "Glúteos, aductores, isquiosurales",
+    videoUrl: "",
+  },
+  {
+    name: "Zancadas caminando con mancuernas",
+    primaryMuscle: "Cuádriceps / Glúteo mayor",
+    secondaryMuscle: "Isquiosurales, aductores, core",
+    videoUrl: "",
+  },
+  {
+    name: "Zancada atrás con mancuernas",
+    primaryMuscle: "Glúteo mayor / Cuádriceps",
+    secondaryMuscle: "Isquiosurales, aductores, core",
+    videoUrl: "",
+  },
+  {
+    name: "Step-up con mancuernas",
+    primaryMuscle: "Glúteo mayor / Cuádriceps",
+    secondaryMuscle: "Isquiosurales, gemelos, core",
+    videoUrl: "",
+  },
+  {
+    name: "Peso muerto rumano con mancuernas",
+    primaryMuscle: "Isquiosurales",
+    secondaryMuscle: "Glúteo mayor, erectores espinales, antebrazos",
+    videoUrl: "",
+  },
+  {
+    name: "Peso muerto rumano a una pierna con mancuerna",
+    primaryMuscle: "Isquiosurales / Glúteo mayor",
+    secondaryMuscle: "Glúteo medio, aductores, core",
+    videoUrl: "",
+  },
+  {
+    name: "Buenos días con barra",
+    primaryMuscle: "Isquiosurales",
+    secondaryMuscle: "Glúteo mayor, erectores espinales",
+    videoUrl: "",
+  },
+  {
+    name: "Buenos días en Smith",
+    primaryMuscle: "Isquiosurales",
+    secondaryMuscle: "Glúteo mayor, erectores espinales",
+    videoUrl: "",
+  },
+  {
+    name: "Curl femoral sentado",
+    primaryMuscle: "Isquiosurales",
+    secondaryMuscle: "Gemelos (gastrocnemio)",
+    videoUrl: "",
+  },
+  {
+    name: "Curl femoral de pie unilateral en máquina",
+    primaryMuscle: "Isquiosurales",
+    secondaryMuscle: "Gemelos",
+    videoUrl: "",
+  },
+  {
+    name: "Curl femoral acostado unilateral",
+    primaryMuscle: "Isquiosurales",
+    secondaryMuscle: "Gemelos",
+    videoUrl: "",
+  },
+  {
+    name: "Aductores en máquina",
+    primaryMuscle: "Aductores",
+    secondaryMuscle: "Glúteo mayor, pectíneo",
+    videoUrl: "",
+  },
+  {
+    name: "Aductores en polea baja",
+    primaryMuscle: "Aductores",
+    secondaryMuscle: "Pectíneo, gracilis",
+    videoUrl: "",
+  },
+  {
+    name: "Abductores en máquina",
+    primaryMuscle: "Glúteo medio / Glúteo menor",
+    secondaryMuscle: "Tensor de la fascia lata",
+    videoUrl: "",
+  },
+  {
+    name: "Abducción de cadera en polea baja",
+    primaryMuscle: "Glúteo medio",
+    secondaryMuscle: "Glúteo menor, tensor de la fascia lata",
+    videoUrl: "",
+  },
+  {
+    name: "Patada de glúteo en polea baja",
+    primaryMuscle: "Glúteo mayor",
+    secondaryMuscle: "Isquiosurales, glúteo medio",
+    videoUrl: "https://www.youtube.com/watch?v=5iXaaPuR2ko",
+  },
+  {
+    name: "Hip thrust en máquina",
+    primaryMuscle: "Glúteo mayor",
+    secondaryMuscle: "Isquiosurales, aductor mayor",
+    videoUrl: "",
+  },
+  {
+    name: "Hip thrust con barra",
+    primaryMuscle: "Glúteo mayor",
+    secondaryMuscle: "Isquiosurales, aductor mayor",
+    videoUrl: "",
+  },
+  {
+    name: "Glute bridge con barra",
+    primaryMuscle: "Glúteo mayor",
+    secondaryMuscle: "Isquiosurales, aductores",
+    videoUrl: "",
+  },
+  {
+    name: "Pull-through en polea",
+    primaryMuscle: "Glúteo mayor",
+    secondaryMuscle: "Isquiosurales, erectores espinales",
+    videoUrl: "",
+  },
+  {
+    name: "Elevación de talones en prensa",
+    primaryMuscle: "Gemelos (Gastrocnemio)",
+    secondaryMuscle: "Sóleo",
+    videoUrl: "",
+  },
+  {
+    name: "Elevación de talones en máquina de gemelos",
+    primaryMuscle: "Gemelos (Gastrocnemio)",
+    secondaryMuscle: "Sóleo",
+    videoUrl: "",
+  },
+  {
+    name: "Elevación de talones sentado en máquina",
+    primaryMuscle: "Sóleo",
+    secondaryMuscle: "Gemelos (gastrocnemio)",
+    videoUrl: "",
+  },
+  {
+    name: "Press plano en máquina",
+    primaryMuscle: "Pectoral mayor",
+    secondaryMuscle: "Deltoides anterior, tríceps braquial",
+    videoUrl: "https://www.youtube.com/watch?v=RFjvDpDN3ic",
+  },
+  {
+    name: "Press inclinado en máquina",
+    primaryMuscle: "Pectoral mayor (haz clavicular)",
+    secondaryMuscle: "Deltoides anterior, tríceps braquial",
+    videoUrl: "",
+  },
+  {
+    name: "Press declinado en máquina",
+    primaryMuscle: "Pectoral mayor (medio/inferior)",
+    secondaryMuscle: "Tríceps braquial, deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Apertura en máquina (Pec Deck)",
+    primaryMuscle: "Pectoral mayor",
+    secondaryMuscle: "Deltoides anterior",
+    videoUrl: "https://www.youtube.com/watch?v=mrS3x_IaccQ",
+  },
+  {
+    name: "Cruce de poleas alto a bajo",
+    primaryMuscle: "Pectoral mayor (fibras esternales/inferiores)",
+    secondaryMuscle: "Deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Cruce de poleas bajo a alto",
+    primaryMuscle: "Pectoral mayor (haz clavicular)",
+    secondaryMuscle: "Deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Press cerrado con barra",
+    primaryMuscle: "Tríceps braquial",
+    secondaryMuscle: "Pectoral mayor, deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Press inclinado con barra",
+    primaryMuscle: "Pectoral mayor (haz clavicular)",
+    secondaryMuscle: "Deltoides anterior, tríceps braquial",
+    videoUrl: "",
+  },
+  {
+    name: "Press con mancuernas plano",
+    primaryMuscle: "Pectoral mayor",
+    secondaryMuscle: "Deltoides anterior, tríceps braquial",
+    videoUrl: "",
+  },
+  {
+    name: "Press con mancuernas declinado",
+    primaryMuscle: "Pectoral mayor (fibras inferiores)",
+    secondaryMuscle: "Tríceps braquial, deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Press militar con máquina",
+    primaryMuscle: "Deltoides anterior",
+    secondaryMuscle: "Deltoides lateral, tríceps braquial, trapecio superior",
+    videoUrl: "https://www.youtube.com/watch?v=6-FxadmQrSM",
+  },
+  {
+    name: "Press Arnold con mancuernas",
+    primaryMuscle: "Deltoides anterior",
+    secondaryMuscle: "Deltoides lateral, tríceps braquial",
+    videoUrl: "",
+  },
+  {
+    name: "Press sentado con mancuernas",
+    primaryMuscle: "Deltoides anterior",
+    secondaryMuscle: "Deltoides lateral, tríceps braquial",
+    videoUrl: "",
+  },
+  {
+    name: "Elevación lateral unilateral en polea",
+    primaryMuscle: "Deltoides lateral",
+    secondaryMuscle: "Trapecio superior, deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Elevación lateral en máquina",
+    primaryMuscle: "Deltoides lateral",
+    secondaryMuscle: "Trapecio superior",
+    videoUrl: "",
+  },
+  {
+    name: "Elevación frontal con mancuernas",
+    primaryMuscle: "Deltoides anterior",
+    secondaryMuscle: "Deltoides lateral, trapecio superior",
+    videoUrl: "",
+  },
+  {
+    name: "Elevación frontal en polea",
+    primaryMuscle: "Deltoides anterior",
+    secondaryMuscle: "Deltoides lateral, pectoral superior",
+    videoUrl: "",
+  },
+  {
+    name: "Reverse fly en máquina",
+    primaryMuscle: "Deltoides posterior",
+    secondaryMuscle: "Romboides, trapecio medio, infraespinoso",
+    videoUrl: "",
+  },
+  {
+    name: "Face pull en polea con cuerda",
+    primaryMuscle: "Deltoides posterior",
+    secondaryMuscle: "Trapecio medio/inferior, rotadores externos",
+    videoUrl: "",
+  },
+  {
+    name: "Remo al mentón con polea",
+    primaryMuscle: "Deltoides lateral",
+    secondaryMuscle: "Trapecio superior, bíceps",
+    videoUrl: "",
+  },
+  {
+    name: "Encogimientos con barra",
+    primaryMuscle: "Trapecio superior",
+    secondaryMuscle: "Elevador de la escápula, antebrazos",
+    videoUrl: "",
+  },
+  {
+    name: "Encogimientos con mancuernas",
+    primaryMuscle: "Trapecio superior",
+    secondaryMuscle: "Elevador de la escápula, antebrazos",
+    videoUrl: "",
+  },
+  {
+    name: "Remo sentado en polea",
+    primaryMuscle: "Dorsal ancho / Espalda media",
+    secondaryMuscle: "Romboides, trapecio, bíceps",
+    videoUrl: "",
+  },
+  {
+    name: "Remo sentado con agarre neutro",
+    primaryMuscle: "Dorsal ancho / Romboides",
+    secondaryMuscle: "Trapecio medio, bíceps",
+    videoUrl: "",
+  },
+  {
+    name: "Remo en máquina con pecho apoyado",
+    primaryMuscle: "Espalda media",
+    secondaryMuscle: "Dorsal ancho, romboides, deltoides posterior, bíceps",
+    videoUrl: "",
+  },
+  {
+    name: "Remo unilateral en máquina",
+    primaryMuscle: "Dorsal ancho",
+    secondaryMuscle: "Romboides, trapecio, bíceps",
+    videoUrl: "",
+  },
+  {
+    name: "Jalón al pecho agarre neutro",
+    primaryMuscle: "Dorsal ancho",
+    secondaryMuscle: "Bíceps, braquial, redondo mayor",
+    videoUrl: "",
+  },
+  {
+    name: "Jalón al pecho agarre supino",
+    primaryMuscle: "Dorsal ancho",
+    secondaryMuscle: "Bíceps braquial, braquial anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Jalón unilateral en polea",
+    primaryMuscle: "Dorsal ancho",
+    secondaryMuscle: "Bíceps, redondo mayor",
+    videoUrl: "",
+  },
+  {
+    name: "Pullover en polea alta con cuerda",
+    primaryMuscle: "Dorsal ancho",
+    secondaryMuscle: "Redondo mayor, tríceps (cabeza larga)",
+    videoUrl: "",
+  },
+  {
+    name: "Pullover en máquina",
+    primaryMuscle: "Dorsal ancho",
+    secondaryMuscle: "Redondo mayor, tríceps (cabeza larga)",
+    videoUrl: "",
+  },
+  {
+    name: "Dominadas asistidas en máquina",
+    primaryMuscle: "Dorsal ancho",
+    secondaryMuscle: "Bíceps, redondo mayor, trapecio",
+    videoUrl: "",
+  },
+  {
+    name: "Extensión de tríceps sobre la cabeza con cuerda",
+    primaryMuscle: "Tríceps braquial (cabeza larga)",
+    secondaryMuscle: "Ancóneo, antebrazos",
+    videoUrl: "",
+  },
+  {
+    name: "Extensión de tríceps unilateral en polea",
+    primaryMuscle: "Tríceps braquial",
+    secondaryMuscle: "Ancóneo, antebrazos",
+    videoUrl: "",
+  },
+  {
+    name: "Extensión de tríceps con barra recta en polea",
+    primaryMuscle: "Tríceps braquial (cabezas lateral y medial)",
+    secondaryMuscle: "Antebrazos",
+    videoUrl: "",
+  },
+  {
+    name: "Fondos asistidos en máquina",
+    primaryMuscle: "Tríceps braquial / Pectoral mayor",
+    secondaryMuscle: "Deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Press de tríceps en máquina",
+    primaryMuscle: "Tríceps braquial",
+    secondaryMuscle: "Pectoral mayor, deltoides anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Bíceps Scott en máquina",
+    primaryMuscle: "Bíceps braquial",
+    secondaryMuscle: "Braquial anterior, braquiorradial",
+    videoUrl: "",
+  },
+  {
+    name: "Curl Scott con barra Z",
+    primaryMuscle: "Bíceps braquial",
+    secondaryMuscle: "Braquial anterior, braquiorradial",
+    videoUrl: "",
+  },
+  {
+    name: "Curl de pie en polea baja con barra recta",
+    primaryMuscle: "Bíceps braquial",
+    secondaryMuscle: "Braquial anterior, braquiorradial",
+    videoUrl: "",
+  },
+  {
+    name: "Curl de pie en polea baja con cuerda",
+    primaryMuscle: "Bíceps braquial",
+    secondaryMuscle: "Braquial anterior, braquiorradial",
+    videoUrl: "",
+  },
+  {
+    name: "Curl martillo con soga en polea baja",
+    primaryMuscle: "Braquial / Braquiorradial",
+    secondaryMuscle: "Bíceps braquial",
+    videoUrl: "https://www.youtube.com/watch?v=QsFmiZAEZG0",
+  },
+  {
+    name: "Curl unilateral en polea baja",
+    primaryMuscle: "Bíceps braquial",
+    secondaryMuscle: "Braquial anterior, braquiorradial",
+    videoUrl: "",
+  },
+  {
+    name: "Curl concentrado con mancuerna",
+    primaryMuscle: "Bíceps braquial",
+    secondaryMuscle: "Braquial anterior",
+    videoUrl: "",
+  },
+  {
+    name: "Curl inclinado con mancuernas",
+    primaryMuscle: "Bíceps braquial (cabeza larga)",
+    secondaryMuscle: "Braquial anterior, braquiorradial",
+    videoUrl: "",
+  },
+  {
+    name: "Curl predicador con mancuernas",
+    primaryMuscle: "Bíceps braquial",
+    secondaryMuscle: "Braquial anterior, braquiorradial",
+    videoUrl: "",
+  },
 ];
 
 const OBJETIVOS = [
@@ -215,37 +650,22 @@ const MODALIDADES = [
 
 async function main() {
   console.log("\n=================================================");
-  console.log("🏋️  RESET & SEED DE BASE DE DATOS (SUPERADMIN + MASTER)");
+  console.log("🌱 SINCRONIZACIÓN Y SEED DE PLATAFORMA (IDEMPOTENTE)");
   console.log("=================================================");
-
-  console.log("🧹 Limpiando base de datos completa...");
-  // Borrado en orden inverso a dependencias de foreign keys
-  await db.trainerPayment.deleteMany();
-  await db.trainerSubscription.deleteMany();
-  await db.payment.deleteMany();
-  await db.studentSubscription.deleteMany();
-  await db.bodyWeightLog.deleteMany();
-  await db.progressLog.deleteMany();
-  await db.routineOverride.deleteMany();
-  await db.assignedRoutine.deleteMany();
-  await db.exerciseBlock.deleteMany();
-  await db.trainingDay.deleteMany();
-  await db.routineTemplate.deleteMany();
-  await db.genericProfile.deleteMany();
-  await db.plan.deleteMany();
-  await db.student.deleteMany();
-  await db.exercise.deleteMany();
-  await db.trainer.deleteMany();
-  await db.platformPlan.deleteMany();
-  await db.objetivo.deleteMany();
-  await db.modalidad.deleteMany();
-  console.log("✅ Tablas limpiadas por completo.");
 
   // 1. SuperAdmin (Dueño de la plataforma)
   const { email, password, name } = getSuperAdminCredentials();
   const superAdminHash = await bcrypt.hash(password, 10);
-  const superAdmin = await db.trainer.create({
-    data: {
+  const superAdmin = await db.trainer.upsert({
+    where: { email },
+    update: {
+      name,
+      role: "SUPERADMIN",
+      isActive: true,
+      maxPlans: 999,
+      maxStudents: 9999,
+    },
+    create: {
       email,
       passwordHash: superAdminHash,
       name,
@@ -256,12 +676,12 @@ async function main() {
       maxStudents: 9999,
     },
   });
-  console.log(`✅ SuperAdmin creado: ${superAdmin.email}`);
+  console.log(`✅ SuperAdmin sincronizado: ${superAdmin.email}`);
 
   // 2. Planes de Plataforma (SaaS Tiers para Entrenadores)
-  console.log("💼 Creando planes de plataforma...");
-  const planBasico = await db.platformPlan.create({
-    data: {
+  console.log("💼 Sincronizando planes de plataforma...");
+  const PLATFORM_PLANS = [
+    {
       name: "Plan Inicial",
       description: "Ideal para entrenadores que recién comienzan a digitalizar sus alumnos.",
       price: 15000,
@@ -271,10 +691,7 @@ async function main() {
       maxPlans: 2,
       maxGenericProfiles: 3,
     },
-  });
-
-  const planPro = await db.platformPlan.create({
-    data: {
+    {
       name: "Plan Pro",
       description: "Para entrenadores activos con cartera consolidada de alumnos.",
       price: 30000,
@@ -284,10 +701,7 @@ async function main() {
       maxPlans: 10,
       maxGenericProfiles: 10,
     },
-  });
-
-  const planElite = await db.platformPlan.create({
-    data: {
+    {
       name: "Plan Elite / Gimnasio",
       description: "Para centros de entrenamiento y coaches de alto volumen.",
       price: 60000,
@@ -297,353 +711,333 @@ async function main() {
       maxPlans: 50,
       maxGenericProfiles: 30,
     },
-  });
-  console.log("✅ 3 planes de plataforma creados con períodos de prueba (Inicial, Pro, Elite)");
+  ];
 
-  // 3. Entrenador Principal (Santiago Ramón — Cuenta limpia sin mock data)
-  const coachEmail = process.env.SEED_ADMIN_EMAIL || "sramon@coach.com";
-  const coachPassword = process.env.SEED_ADMIN_PASSWORD || "SRamon2026";
-  const coachName = process.env.SEED_ADMIN_NAME || "Santiago Ramón";
-  const coachHash = await bcrypt.hash(coachPassword, 10);
+  let planPro = null;
+  for (const plan of PLATFORM_PLANS) {
+    const saved = await db.platformPlan.upsert({
+      where: { name: plan.name },
+      update: {
+        description: plan.description,
+        durationDays: plan.durationDays,
+        trialDays: plan.trialDays,
+        maxStudents: plan.maxStudents,
+        maxPlans: plan.maxPlans,
+        maxGenericProfiles: plan.maxGenericProfiles,
+      },
+      create: plan,
+    });
+    if (saved.name === "Plan Pro") planPro = saved;
+  }
+  console.log("✅ Planes de plataforma sincronizados (Inicial, Pro, Elite)");
 
-  const expiresDate = new Date();
-  expiresDate.setDate(expiresDate.getDate() + 30);
+  // 3. Taxonomías base (Objetivos y Modalidades)
+  console.log("🏷️ Sincronizando taxonomías base...");
+  const objetivosCreated = [];
+  for (const label of OBJETIVOS) {
+    const o = await db.objetivo.upsert({
+      where: { label },
+      update: {},
+      create: { label },
+    });
+    objetivosCreated.push(o);
+  }
 
-  const santiagoCoach = await db.trainer.create({
-    data: {
-      email: coachEmail,
-      passwordHash: coachHash,
-      name: coachName,
-      role: "COACH",
-      slug: "santiago-ramon",
-      businessName: "SR Fitness Coaching",
-      whatsappNumber: "+5491144556677",
-      platformPlanId: planPro.id,
-      maxStudents: planPro.maxStudents,
-      maxPlans: planPro.maxPlans,
-      maxGenericProfiles: planPro.maxGenericProfiles,
-      membershipExpiresAt: expiresDate,
-      isActive: true,
-    },
-  });
-
-  const subSantiago = await db.trainerSubscription.create({
-    data: {
-      trainerId: santiagoCoach.id,
-      planId: planPro.id,
-      priceSnapshot: planPro.price,
-      startDate: new Date(),
-      expiresAt: expiresDate,
-      status: "ACTIVE",
-    },
-  });
-
-  await db.trainerPayment.create({
-    data: {
-      trainerId: santiagoCoach.id,
-      subscriptionId: subSantiago.id,
-      amount: planPro.price,
-      paidAt: new Date(),
-      paymentMethod: "Transferencia Bancaria",
-      notes: "Pago de suscripción Plan Pro",
-    },
-  });
-  console.log(`✅ Entrenador principal creado sin datos mock: ${santiagoCoach.email}`);
-
-  // 3.1. Entrenador Demo para Pruebas (Aislado de la cuenta de Santiago)
-  const demoCoachHash = await bcrypt.hash("CoachDemo2026!", 10);
-  const demoCoach = await db.trainer.create({
-    data: {
-      email: "demo@coach.com",
-      passwordHash: demoCoachHash,
-      name: "Profesor Demo",
-      role: "COACH",
-      slug: "coach-demo",
-      businessName: "Demo Fitness Lab",
-      whatsappNumber: "+5491199887766",
-      platformPlanId: planPro.id,
-      maxStudents: planPro.maxStudents,
-      maxPlans: planPro.maxPlans,
-      maxGenericProfiles: planPro.maxGenericProfiles,
-      membershipExpiresAt: expiresDate,
-      isActive: true,
-    },
-  });
-
-  const subDemo = await db.trainerSubscription.create({
-    data: {
-      trainerId: demoCoach.id,
-      planId: planPro.id,
-      priceSnapshot: planPro.price,
-      startDate: new Date(),
-      expiresAt: expiresDate,
-      status: "ACTIVE",
-    },
-  });
-
-  await db.trainerPayment.create({
-    data: {
-      trainerId: demoCoach.id,
-      subscriptionId: subDemo.id,
-      amount: planPro.price,
-      paidAt: new Date(),
-      paymentMethod: "Efectivo",
-      notes: "Suscripción Demo de pruebas",
-    },
-  });
-  console.log(`✅ Entrenador demo creado para testing con datos mock: ${demoCoach.email}`);
+  const modalidadesCreated = [];
+  for (const label of MODALIDADES) {
+    const m = await db.modalidad.upsert({
+      where: { label },
+      update: {},
+      create: { label },
+    });
+    modalidadesCreated.push(m);
+  }
+  console.log(`✅ Taxonomías sincronizadas (${OBJETIVOS.length} objetivos, ${MODALIDADES.length} modalidades)`);
 
   // 4. Ejercicios (Biblioteca compartida master)
   console.log("📚 Sincronizando catálogo master de ejercicios...");
+  let createdCount = 0;
+  let updatedCount = 0;
   for (const exercise of EXERCISES) {
-    await db.exercise.create({
-      data: {
-        ...exercise,
-        trainerId: null,
-      },
+    const existing = await db.exercise.findFirst({
+      where: { name: exercise.name, trainerId: null },
     });
+
+    if (!existing) {
+      await db.exercise.create({
+        data: {
+          ...exercise,
+          trainerId: null,
+        },
+      });
+      createdCount++;
+    } else {
+      await db.exercise.update({
+        where: { id: existing.id },
+        data: {
+          primaryMuscle: exercise.primaryMuscle,
+          secondaryMuscle: exercise.secondaryMuscle,
+          videoUrl: exercise.videoUrl || existing.videoUrl,
+        },
+      });
+      updatedCount++;
+    }
   }
-  console.log(`✅ ${EXERCISES.length} ejercicios master sincronizados`);
+  console.log(`✅ ${EXERCISES.length} ejercicios master sincronizados (${createdCount} nuevos, ${updatedCount} actualizados)`);
 
-  // 5. Taxonomías base
-  const objetivosCreated = [];
-  for (const label of OBJETIVOS) {
-    const o = await db.objetivo.create({ data: { label } });
-    objetivosCreated.push(o);
+  // 5. Entrenador Demo opcional para pruebas locales (Solo si no existe)
+  if (planPro) {
+    const existingDemoCoach = await db.trainer.findUnique({
+      where: { email: "demo@coach.com" },
+    });
+
+    if (!existingDemoCoach) {
+      console.log("👤 Creando entrenador demo de pruebas (primera vez)...");
+      const expiresDate = new Date();
+      expiresDate.setDate(expiresDate.getDate() + 30);
+      const demoCoachHash = await bcrypt.hash("CoachDemo2026!", 10);
+
+      const demoCoach = await db.trainer.create({
+        data: {
+          email: "demo@coach.com",
+          passwordHash: demoCoachHash,
+          name: "Profesor Demo",
+          role: "COACH",
+          slug: "coach-demo",
+          businessName: "Demo Fitness Lab",
+          whatsappNumber: "+5491199887766",
+          platformPlanId: planPro.id,
+          maxStudents: planPro.maxStudents,
+          maxPlans: planPro.maxPlans,
+          maxGenericProfiles: planPro.maxGenericProfiles,
+          membershipExpiresAt: expiresDate,
+          isActive: true,
+        },
+      });
+
+      const subDemo = await db.trainerSubscription.create({
+        data: {
+          trainerId: demoCoach.id,
+          planId: planPro.id,
+          priceSnapshot: planPro.price,
+          startDate: new Date(),
+          expiresAt: expiresDate,
+          status: "ACTIVE",
+        },
+      });
+
+      await db.trainerPayment.create({
+        data: {
+          trainerId: demoCoach.id,
+          subscriptionId: subDemo.id,
+          amount: planPro.price,
+          paidAt: new Date(),
+          paymentMethod: "Efectivo",
+          notes: "Suscripción Demo de pruebas",
+        },
+      });
+
+      // Planes para sus alumnos
+      const coachPlanMensual = await db.plan.create({
+        data: {
+          trainerId: demoCoach.id,
+          name: "Plan Mensual Estándar",
+          description: "Seguimiento personalizado, rutina mensual y soporte vía WhatsApp.",
+          price: 25000,
+          durationDays: 30,
+          isActive: true,
+        },
+      });
+
+      const coachPlanTrimestral = await db.plan.create({
+        data: {
+          trainerId: demoCoach.id,
+          name: "Plan Trimestral Avanzado",
+          description: "Plan de 12 semanas con ajustes quincenales y evaluación antropométrica.",
+          price: 65000,
+          durationDays: 90,
+          isActive: true,
+        },
+      });
+
+      // Plantilla de Rutina demo
+      const routineTemplate = await db.routineTemplate.create({
+        data: {
+          trainerId: demoCoach.id,
+          name: "Hipertrofia Torso-Pierna (4 Días)",
+          description: "Rutina dividida en 4 días enfocada en sobrecarga progresiva y desarrollo muscular.",
+          durationWeeks: 4,
+        },
+      });
+
+      const masterExercises = await db.exercise.findMany({ take: 6 });
+      if (masterExercises.length >= 3) {
+        const day1 = await db.trainingDay.create({
+          data: {
+            templateId: routineTemplate.id,
+            label: "Día 1 – Torso Fuerza e Hipertrofia",
+            dayOrder: 1,
+          },
+        });
+
+        const day2 = await db.trainingDay.create({
+          data: {
+            templateId: routineTemplate.id,
+            label: "Día 2 – Pierna y Core",
+            dayOrder: 2,
+          },
+        });
+
+        await db.exerciseBlock.create({
+          data: {
+            trainingDayId: day1.id,
+            exerciseId: masterExercises[0].id,
+            sets: 4,
+            reps: 8,
+            restSecs: 90,
+            blockOrder: 1,
+            trainerNotes: "Controlar el tempo 3-0-1-0.",
+          },
+        });
+
+        await db.exerciseBlock.create({
+          data: {
+            trainingDayId: day2.id,
+            exerciseId: masterExercises[1].id,
+            sets: 4,
+            reps: 10,
+            restSecs: 120,
+            blockOrder: 1,
+          },
+        });
+      }
+
+      // Alumnos demo
+      const objHipertrofia = objetivosCreated.find((o) => o.label === "Hipertrofia")?.id;
+      const objGrasa = objetivosCreated.find((o) => o.label === "Pérdida de Grasa")?.id;
+      const objFuerza = objetivosCreated.find((o) => o.label === "Fuerza")?.id;
+      const modGimnasio = modalidadesCreated.find((m) => m.label === "Gimnasio")?.id;
+      const modHibrido = modalidadesCreated.find((m) => m.label === "Híbrido")?.id;
+
+      const hoy = new Date();
+      const en30Dias = new Date();
+      en30Dias.setDate(hoy.getDate() + 25);
+
+      const alumno1 = await db.student.create({
+        data: {
+          trainerId: demoCoach.id,
+          dni: "38123456",
+          firstName: "Juan",
+          lastName: "Pérez",
+          email: "juan.perez@gmail.com",
+          phone: "+5491122334455",
+          objetivoId: objHipertrofia,
+          secondaryGoals: "Aumentar masa en brazos y hombros",
+          nivel: "intermedio",
+          modalidadId: modGimnasio,
+          membershipStartsAt: hoy,
+          paymentExpiresAt: en30Dias,
+          height: 178,
+          age: 28,
+          healthNotes: "Molestia leve en rodilla izquierda.",
+          isActive: true,
+        },
+      });
+
+      const subAlumno1 = await db.studentSubscription.create({
+        data: {
+          studentId: alumno1.id,
+          planId: coachPlanMensual.id,
+          priceSnapshot: coachPlanMensual.price,
+          startDate: hoy,
+          expiresAt: en30Dias,
+        },
+      });
+
+      await db.payment.create({
+        data: {
+          studentId: alumno1.id,
+          subscriptionId: subAlumno1.id,
+          amount: coachPlanMensual.price,
+          paidAt: hoy,
+          notes: "Pago del mes en efectivo",
+        },
+      });
+
+      await db.assignedRoutine.create({
+        data: {
+          studentId: alumno1.id,
+          templateId: routineTemplate.id,
+          status: "active",
+          assignedAt: hoy,
+        },
+      });
+
+      const alumno2 = await db.student.create({
+        data: {
+          trainerId: demoCoach.id,
+          dni: "40987654",
+          firstName: "Martina",
+          lastName: "Giménez",
+          email: "martina.gimenez@hotmail.com",
+          phone: "+5491155667788",
+          objetivoId: objGrasa,
+          nivel: "principiante",
+          modalidadId: modGimnasio,
+          membershipStartsAt: hoy,
+          paymentExpiresAt: en30Dias,
+          height: 165,
+          age: 24,
+          isActive: true,
+        },
+      });
+
+      const subAlumno2 = await db.studentSubscription.create({
+        data: {
+          studentId: alumno2.id,
+          planId: coachPlanTrimestral.id,
+          priceSnapshot: coachPlanTrimestral.price,
+          startDate: hoy,
+          expiresAt: new Date(Date.now() + 85 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      await db.payment.create({
+        data: {
+          studentId: alumno2.id,
+          subscriptionId: subAlumno2.id,
+          amount: coachPlanTrimestral.price,
+          paidAt: hoy,
+        },
+      });
+
+      const alumno3 = await db.student.create({
+        data: {
+          trainerId: demoCoach.id,
+          dni: "35444333",
+          firstName: "Lucas",
+          lastName: "Díaz",
+          email: "lucas.diaz@outlook.com",
+          phone: "+5491188990011",
+          objetivoId: objFuerza,
+          nivel: "avanzado",
+          modalidadId: modHibrido,
+          membershipStartsAt: hoy,
+          paymentExpiresAt: en30Dias,
+          height: 182,
+          age: 33,
+          isActive: true,
+        },
+      });
+
+      console.log(`✅ Entrenador demo creado para testing con datos mock: ${demoCoach.email}`);
+    } else {
+      console.log("ℹ️ Entrenador demo ya existe, conservando sus datos existentes.");
+    }
   }
-  const modalidadesCreated = [];
-  for (const label of MODALIDADES) {
-    const m = await db.modalidad.create({ data: { label } });
-    modalidadesCreated.push(m);
-  }
-  console.log(
-    `✅ Taxonomías sincronizadas (${OBJETIVOS.length} objetivos, ${MODALIDADES.length} modalidades)`
-  );
-
-  // 6. Planes de entrenamiento creados por el Coach para sus alumnos
-  console.log("📋 Creando planes de entrenamiento para el coach demo...");
-  const coachPlanMensual = await db.plan.create({
-    data: {
-      trainerId: demoCoach.id,
-      name: "Plan Mensual Estándar",
-      description: "Seguimiento personalizado, rutina mensual y soporte vía WhatsApp.",
-      price: 25000,
-      durationDays: 30,
-      isActive: true,
-    },
-  });
-
-  const coachPlanTrimestral = await db.plan.create({
-    data: {
-      trainerId: demoCoach.id,
-      name: "Plan Trimestral Avanzado",
-      description: "Plan de 12 semanas con ajustes quincenales y evaluación antropométrica.",
-      price: 65000,
-      durationDays: 90,
-      isActive: true,
-    },
-  });
-  console.log("✅ 2 planes de entrenamiento del coach creados");
-
-  // 7. Plantilla de Rutina de ejemplo para el Coach
-  console.log("📋 Creando plantilla de rutina para el coach demo...");
-  const routineTemplate = await db.routineTemplate.create({
-    data: {
-      trainerId: demoCoach.id,
-      name: "Hipertrofia Torso-Pierna (4 Días)",
-      description: "Rutina dividida en 4 días enfocada en sobrecarga progresiva y desarrollo muscular.",
-      durationWeeks: 4,
-    },
-  });
-
-  const masterExercises = await db.exercise.findMany({ take: 6 });
-  if (masterExercises.length >= 4) {
-    const day1 = await db.trainingDay.create({
-      data: {
-        templateId: routineTemplate.id,
-        label: "Día 1 – Torso Fuerza e Hipertrofia",
-        dayOrder: 1,
-      },
-    });
-
-    const day2 = await db.trainingDay.create({
-      data: {
-        templateId: routineTemplate.id,
-        label: "Día 2 – Pierna y Core",
-        dayOrder: 2,
-      },
-    });
-
-    await db.exerciseBlock.create({
-      data: {
-        trainingDayId: day1.id,
-        exerciseId: masterExercises[0].id,
-        sets: 4,
-        reps: 8,
-        restSecs: 90,
-        blockOrder: 1,
-        trainerNotes: "Controlar el tempo 3-0-1-0 y mantener escápulas retraídas.",
-      },
-    });
-
-    await db.exerciseBlock.create({
-      data: {
-        trainingDayId: day1.id,
-        exerciseId: masterExercises[1].id,
-        sets: 3,
-        reps: 10,
-        restSecs: 60,
-        blockOrder: 2,
-      },
-    });
-
-    await db.exerciseBlock.create({
-      data: {
-        trainingDayId: day2.id,
-        exerciseId: masterExercises[2].id,
-        sets: 4,
-        reps: 10,
-        restSecs: 120,
-        blockOrder: 1,
-        trainerNotes: "Profundidad paralela, activación de glúteo.",
-      },
-    });
-  }
-  console.log("✅ Plantilla de rutina con días y bloques de ejercicios creada");
-
-  // 8. Alumnos Demo del Coach
-  console.log("👥 Creando alumnos demo para el coach...");
-  const objHipertrofia = objetivosCreated.find((o) => o.label === "Hipertrofia")?.id;
-  const objGrasa = objetivosCreated.find((o) => o.label === "Pérdida de Grasa")?.id;
-  const objFuerza = objetivosCreated.find((o) => o.label === "Fuerza")?.id;
-  const modGimnasio = modalidadesCreated.find((m) => m.label === "Gimnasio")?.id;
-  const modHibrido = modalidadesCreated.find((m) => m.label === "Híbrido")?.id;
-
-  const hoy = new Date();
-  const en30Dias = new Date();
-  en30Dias.setDate(hoy.getDate() + 25);
-
-  const alumno1 = await db.student.create({
-    data: {
-      trainerId: demoCoach.id,
-      dni: "38123456",
-      firstName: "Juan",
-      lastName: "Pérez",
-      email: "juan.perez@gmail.com",
-      phone: "+5491122334455",
-      objetivoId: objHipertrofia,
-      secondaryGoals: "Aumentar masa en brazos y hombros",
-      nivel: "intermedio",
-      modalidadId: modGimnasio,
-      membershipStartsAt: hoy,
-      paymentExpiresAt: en30Dias,
-      height: 178,
-      age: 28,
-      healthNotes: "Molestia leve en rodilla izquierda al flexionar más de 90°.",
-      isActive: true,
-    },
-  });
-
-  const subAlumno1 = await db.studentSubscription.create({
-    data: {
-      studentId: alumno1.id,
-      planId: coachPlanMensual.id,
-      priceSnapshot: coachPlanMensual.price,
-      startDate: hoy,
-      expiresAt: en30Dias,
-    },
-  });
-
-  await db.payment.create({
-    data: {
-      studentId: alumno1.id,
-      subscriptionId: subAlumno1.id,
-      amount: coachPlanMensual.price,
-      paidAt: hoy,
-      notes: "Pago del mes en efectivo",
-    },
-  });
-
-  await db.assignedRoutine.create({
-    data: {
-      studentId: alumno1.id,
-      templateId: routineTemplate.id,
-      status: "active",
-      assignedAt: hoy,
-    },
-  });
-
-  await db.bodyWeightLog.create({
-    data: {
-      studentId: alumno1.id,
-      loggedDate: hoy,
-      weightKg: 78.5,
-    },
-  });
-
-  const alumno2 = await db.student.create({
-    data: {
-      trainerId: demoCoach.id,
-      dni: "40987654",
-      firstName: "Martina",
-      lastName: "Giménez",
-      email: "martina.gimenez@hotmail.com",
-      phone: "+5491155667788",
-      objetivoId: objGrasa,
-      secondaryGoals: "Tonificación general y mejora aeróbica",
-      nivel: "principiante",
-      modalidadId: modGimnasio,
-      membershipStartsAt: hoy,
-      paymentExpiresAt: en30Dias,
-      height: 165,
-      age: 24,
-      isActive: true,
-    },
-  });
-
-  const subAlumno2 = await db.studentSubscription.create({
-    data: {
-      studentId: alumno2.id,
-      planId: coachPlanTrimestral.id,
-      priceSnapshot: coachPlanTrimestral.price,
-      startDate: hoy,
-      expiresAt: new Date(Date.now() + 85 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  await db.payment.create({
-    data: {
-      studentId: alumno2.id,
-      subscriptionId: subAlumno2.id,
-      amount: coachPlanTrimestral.price,
-      paidAt: hoy,
-      notes: "Transferencia bancaria comprobante #9412",
-    },
-  });
-
-  const alumno3 = await db.student.create({
-    data: {
-      trainerId: demoCoach.id,
-      dni: "35444333",
-      firstName: "Lucas",
-      lastName: "Díaz",
-      email: "lucas.diaz@outlook.com",
-      phone: "+5491188990011",
-      objetivoId: objFuerza,
-      nivel: "avanzado",
-      modalidadId: modHibrido,
-      membershipStartsAt: hoy,
-      paymentExpiresAt: en30Dias,
-      height: 182,
-      age: 33,
-      isActive: true,
-    },
-  });
-
-  console.log(`✅ 3 alumnos demo creados con rutinas, suscripciones y pagos para ${demoCoach.name}`);
 
   console.log("\n=================================================");
-  console.log("✨ BASE DE DATOS LOCAL REINICIADA Y LISTA PARA PRUEBAS");
+  console.log("✨ BASE DE DATOS SINCRONIZADA SIN PÉRDIDA DE DATOS");
   console.log("=================================================");
   console.log("📋 DATOS DE ACCESO SUPERADMIN:");
   console.log(`   URL:      http://localhost:3000/login`);
@@ -652,12 +1046,7 @@ async function main() {
   console.log(`   Rol:      SUPERADMIN`);
   console.log(`   Destino:  /superadmin y /superadmin/planes`);
   console.log("-------------------------------------------------");
-  console.log("📋 ENTRENADOR PRINCIPAL (Santiago Ramón):");
-  console.log(`   Email:    ${coachEmail}`);
-  console.log(`   Password: ${coachPassword}`);
-  console.log(`   Estado:   Cuenta limpia, lista para operar`);
-  console.log("-------------------------------------------------");
-  console.log("📋 ENTRENADOR DEMO (Para pruebas):");
+  console.log("📋 DATOS DE ACCESO COACH DEMO (Si fue inicializado):");
   console.log(`   Email:    demo@coach.com`);
   console.log(`   Password: CoachDemo2026!`);
   console.log(`   Alumnos:  Juan Pérez, Martina Giménez, Lucas Díaz`);
